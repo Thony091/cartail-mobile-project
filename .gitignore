@@ -1,0 +1,112 @@
+# =======================================================
+# Archivo .gitignore recomendado para proyectos Flutter
+# =======================================================
+
+# Archivos de Metadatos del Sistema Operativo
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# --- Flutter y Dart ---
+# Directorios de compilación y artefactos
+build/
+.dart_tool/
+
+# Archivos de configuración de paquetes
+.packages
+.flutter-plugins*
+.flutter-plugins-dependencies*
+pubspec.lock
+
+# Archivos de caché de Pub
+.pub-cache/
+
+# --- Archivos de IDEs ---
+# IntelliJ / Android Studio
+.idea/
+*.iml
+*.iws
+
+# Visual Studio Code
+.vscode/
+
+# --- Android ---
+# Archivos generados y específicos del entorno local
+android/app/build/
+android/.gradle/
+android/gradle/
+android/local.properties
+android/key.properties
+android/gradlew
+android/gradlew.bat
+*.jks
+*.keystore
+
+# --- iOS (Xcode) ---
+# Archivos generados y específicos del usuario
+ios/build/
+ios/Pods/
+ios/Runner/Assets.xcassets/
+ios/.symlinks/
+ios/Flutter/App.framework
+ios/Flutter/Flutter.framework
+ios/Flutter/ephemeral/
+*.hmap
+*.ipa
+*.dSYM.zip
+*.dSYM
+*.xcworkspace
+xcuserdata/
+DerivedData/
+Runner.xcworkspace/
+
+# --- macOS ---
+macos/build/
+macos/Pods/
+macos/Flutter/ephemeral/
+macos/.symlinks/
+
+# --- Linux, Windows, Web (si aplica) ---
+linux/build/
+windows/build/
+web/build/
+
+# --- Firebase (manteniendo tu configuración) ---
+# Es una buena práctica ignorar estos archivos que contienen claves
+google-services.json
+GoogleService-Info.plist
+firebase_app_id_file.json
+.firebase/
+firebase.json
+.firebaserc
+
+# --- Variables de Entorno (manteniendo tu configuración) ---
+.env
+.env.*
+*.env
+!.env.example
+
+# --- FVM (manteniendo tu configuración) ---
+.fvm/
+
+# --- Logs y reportes ---
+*.log
+logs/
+coverage/
+test-reports/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# --- Otros ---
+# Bases de datos locales
+*.db
+*.sqlite
+*.sqlite3
+
+# Archivos de dependencias (por si se usa en algún script)
+node_modules/

@@ -1,5 +1,6 @@
 import 'package:animate_do/animate_do.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../presentation_container.dart';
 import 'modern_scaffold_with_drawer.dart';
@@ -19,7 +20,7 @@ class ModernHelpPage extends StatelessWidget {
             begin: Alignment.topCenter,
             end: Alignment.bottomCenter,
             colors: [
-              const Color(0xFF667eea).withOpacity(0.1),
+              const Color(0xFF667eea).withValues(alpha: 0.1),
               const Color(0xFFf8fafc),
             ],
           ),
@@ -55,9 +56,9 @@ class ModernHelpPage extends StatelessWidget {
               
               // Búsqueda
               FadeInLeft(
-                child: ModernInputField(
+                child: const ModernInputField(
                   hint: 'Buscar en la ayuda...',
-                  prefixIcon: const Icon(Icons.search),
+                  prefixIcon: Icon(Icons.search),
                 ),
               ),
               
@@ -65,10 +66,10 @@ class ModernHelpPage extends StatelessWidget {
               
               // Categorías de ayuda
               FadeInRight(
-                child: Column(
+                child: const Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    const Text(
+                    Text(
                       'Temas de Ayuda',
                       style: TextStyle(
                         fontSize: 20,
@@ -76,14 +77,14 @@ class ModernHelpPage extends StatelessWidget {
                         color: Color(0xFF2c3e50),
                       ),
                     ),
-                    const SizedBox(height: 20),
+                    SizedBox(height: 20),
                     
-                    _buildHelpCategory(
-                      'Servicios',
-                      'Información sobre nuestros servicios de detailing',
-                      Icons.build,
-                      const Color(0xFF3498db),
-                      [
+                    HelpCategoryWidget(
+                      title: 'Servicios',
+                      subtitle: 'Información sobre nuestros servicios de detailing',
+                      icon: Icons.build,
+                      color: Color(0xFF3498db),
+                      questions: [
                         '¿Qué incluye el servicio de detailing premium?',
                         '¿Cuánto tiempo toma cada servicio?',
                         '¿Qué productos utilizan?',
@@ -91,14 +92,14 @@ class ModernHelpPage extends StatelessWidget {
                       ],
                     ),
                     
-                    const SizedBox(height: 16),
+                    SizedBox(height: 16),
                     
-                    _buildHelpCategory(
-                      'Reservas',
-                      'Todo sobre cómo agendar y gestionar citas',
-                      Icons.calendar_today,
-                      const Color(0xFF27ae60),
-                      [
+                    HelpCategoryWidget(
+                      title: 'Reservas',
+                      subtitle: 'Todo sobre cómo agendar y gestionar citas',
+                      icon: Icons.calendar_today,
+                      color: Color(0xFF27ae60),
+                      questions: [
                         '¿Cómo puedo agendar una cita?',
                         '¿Puedo cancelar mi reserva?',
                         '¿Con cuánta anticipación debo reservar?',
@@ -106,14 +107,14 @@ class ModernHelpPage extends StatelessWidget {
                       ],
                     ),
                     
-                    const SizedBox(height: 16),
+                    SizedBox(height: 16),
                     
-                    _buildHelpCategory(
-                      'Pagos',
-                      'Métodos de pago y facturación',
-                      Icons.payment,
-                      const Color(0xFFf39c12),
-                      [
+                    HelpCategoryWidget(
+                      title: 'Pagos',
+                      subtitle: 'Métodos de pago y facturación',
+                      icon: Icons.payment,
+                      color: Color(0xFFf39c12),
+                      questions: [
                         '¿Qué métodos de pago aceptan?',
                         '¿Puedo pagar en cuotas?',
                         '¿Emiten factura?',
@@ -121,14 +122,14 @@ class ModernHelpPage extends StatelessWidget {
                       ],
                     ),
                     
-                    const SizedBox(height: 16),
+                    SizedBox(height: 16),
                     
-                    _buildHelpCategory(
-                      'Cuenta',
-                      'Gestión de tu perfil y configuraciones',
-                      Icons.person,
-                      const Color(0xFFe74c3c),
-                      [
+                    HelpCategoryWidget(
+                      title: 'Cuenta',
+                      subtitle: 'Gestión de tu perfil y configuraciones',
+                      icon: Icons.person,
+                      color: Color(0xFFe74c3c),
+                      questions: [
                         '¿Cómo cambio mi contraseña?',
                         '¿Cómo actualizo mis datos?',
                         '¿Puedo eliminar mi cuenta?',
@@ -181,7 +182,7 @@ class ModernHelpPage extends StatelessWidget {
                               backgroundColor: const Color(0xFF3498db),
                             )
                           ),
-                          SizedBox(width: 10),
+                          const SizedBox(width: 10),
                           ElevatedButton.icon(
                             onPressed: (){}, 
                             label: const Text(
@@ -196,26 +197,6 @@ class ModernHelpPage extends StatelessWidget {
                               backgroundColor: const Color(0xFF27ae60),
                             )
                           ),
-                          // Expanded(
-                          //   child: ModernButton(
-                          //     text: 'Contactar',
-                          //     icon: Icons.email,
-                          //     onPressed: () {
-                          //       // Navegar a contacto
-                          //     },
-                          //   ),
-                          // ),
-                          // const SizedBox(width: 12),
-                          // Expanded(
-                          //   child: ModernButton(
-                          //     text: 'WhatsApp',
-                          //     style: ModernButtonStyle.success,
-                          //     icon: Icons.message,
-                          //     onPressed: () {
-                          //       // Abrir WhatsApp
-                          //     },
-                          //   ),
-                          // ),
                         ],
                       ),
                     ],
@@ -229,14 +210,32 @@ class ModernHelpPage extends StatelessWidget {
     );
   }
 
-  Widget _buildHelpCategory(String title, String subtitle, IconData icon, Color color, List<String> questions) {
+}
+
+class HelpCategoryWidget extends ConsumerWidget {
+  final String title;
+  final String subtitle;
+  final IconData icon;
+  final Color color;
+  final List<String> questions;
+  const HelpCategoryWidget({
+    super.key,
+    required this.title,
+    required this.subtitle,
+    required this.icon,
+    required this.color,
+    required this.questions,
+  });
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
     return ModernCard(
       child: ExpansionTile(
         leading: Container(
           width: 48,
           height: 48,
           decoration: BoxDecoration(
-            color: color.withOpacity(0.1),
+            color: color.withValues(alpha: .1),
             borderRadius: BorderRadius.circular(12),
           ),
           child: Icon(icon, color: color, size: 24),

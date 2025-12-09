@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart'; // Asegúrate de importar esto
+import 'package:flutter/services.dart'; 
 
 class ModernInputField extends StatefulWidget {
   final String? label;
@@ -8,11 +8,8 @@ class ModernInputField extends StatefulWidget {
   final bool obscureText;
   final TextInputType? keyboardType;
   final int maxLines;
-  // --- CAMBIOS AQUÍ ---
-  final TextEditingController? controller; // Agregado
-  final List<TextInputFormatter>? inputFormatters; // Agregado
-  // final String initialValue; // Eliminado
-  // --- FIN DE CAMBIOS ---
+  final TextEditingController? controller; 
+  final List<TextInputFormatter>? inputFormatters; 
   final Function(String)? onChanged;
   final Function(String)? onFieldSubmitted;
   final String? Function(String?)? validator;
@@ -29,11 +26,8 @@ class ModernInputField extends StatefulWidget {
     this.obscureText = false,
     this.keyboardType = TextInputType.text,
     this.maxLines = 1,
-    // --- CAMBIOS AQUÍ ---
-    this.controller, // Agregado
-    this.inputFormatters, // Agregado
-    // this.initialValue = '', // Eliminado
-    // --- FIN DE CAMBIOS ---
+    this.controller, 
+    this.inputFormatters,
     this.onChanged,
     this.onFieldSubmitted,
     this.validator,
@@ -92,22 +86,22 @@ class _ModernInputFieldState extends State<ModernInputField> {
             borderRadius: BorderRadius.circular(12),
             border: Border.all(
               color: widget.errorMessage != null
-                  ? const Color(0xFFe74c3c)
-                  : _isFocused
-                      ? const Color(0xFF3498db)
-                      : const Color(0xFFe2e8f0),
+                ? const Color(0xFFe74c3c)
+                : _isFocused
+                  ? const Color(0xFF3498db)
+                  : const Color(0xFFe2e8f0),
               width: 2,
             ),
             boxShadow: _isFocused
-                ? [
-                    BoxShadow(
-                      color: const Color(0xFF3498db).withOpacity(0.1),
-                      blurRadius: 8,
-                      offset: const Offset(0, 0),
-                      spreadRadius: 3,
-                    ),
-                  ]
-                : null,
+              ? [
+                  BoxShadow(
+                    color: const Color(0xFF3498db).withValues(alpha: 0.1),
+                    blurRadius: 8,
+                    offset: const Offset(0, 0),
+                    spreadRadius: 3,
+                  ),
+                ]
+              : null,
           ),
           child: TextFormField(
             focusNode: _focusNode,
@@ -119,11 +113,8 @@ class _ModernInputFieldState extends State<ModernInputField> {
             obscureText: widget.obscureText,
             keyboardType: widget.keyboardType,
             maxLines: widget.maxLines,
-            // --- CAMBIOS AQUÍ ---
             controller: widget.controller,           // Agregado
             inputFormatters: widget.inputFormatters, // Agregado
-            // initialValue: widget.initialValue,    // Eliminado
-            // --- FIN DE CAMBIOS ---
             style: const TextStyle(
               fontSize: 16,
               color: Color(0xFF2c3e50),

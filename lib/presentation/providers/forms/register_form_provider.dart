@@ -70,6 +70,12 @@ class RegisterFormNotifier extends StateNotifier<RegisterFormState> {
     );
   }
 
+  onObscurePasswordChanged( bool value ) {
+    state = state.copyWith(
+      isObscurePassword: value,
+    );
+  }
+
   Future<bool> onFormSubmit() async {
 
     try {
@@ -125,9 +131,7 @@ class RegisterFormNotifier extends StateNotifier<RegisterFormState> {
         password 
       ])
     );
-
   }
-
 }
 
 class RegisterFormState {
@@ -135,6 +139,7 @@ class RegisterFormState {
   final bool isPosting;
   final bool isFormPosted;
   final bool isValid;
+  final bool isObscurePassword;
   final Name name;
   final Rut rut;
   final Birthday birthday;
@@ -143,20 +148,22 @@ class RegisterFormState {
   final Password password;
 
   RegisterFormState({
-    this.isPosting      = false,
-    this.isFormPosted   = false,
-    this.isValid        = false,
-    this.name           = const Name.pure(),
-    this.rut            = const Rut.pure(),
-    this.birthday       = const Birthday.pure(),
-    this.email          = const Email.pure(),
-    this.phone          = const Phone.pure(),
-    this.password       = const Password.pure()
+    this.isPosting          = false,
+    this.isFormPosted       = false,
+    this.isValid            = false,
+    this.isObscurePassword  = true,
+    this.name               = const Name.pure(),
+    this.rut                = const Rut.pure(),
+    this.birthday           = const Birthday.pure(),
+    this.email              = const Email.pure(),
+    this.phone              = const Phone.pure(),
+    this.password           = const Password.pure()
   });
 
   RegisterFormState copyWith({
-    bool?       isPosting,
+    bool?       isObscurePassword,
     bool?       isFormPosted,
+    bool?       isPosting,
     bool?       isValid,
     Name?       name,
     Rut?        rut,
@@ -165,6 +172,7 @@ class RegisterFormState {
     Phone?      phone,
     Password?   password,
   }) => RegisterFormState(
+    isObscurePassword: isObscurePassword ?? this.isObscurePassword,
     isPosting: isPosting ?? this.isPosting,
     isFormPosted: isFormPosted ?? this.isFormPosted,
     isValid: isValid ?? this.isValid,
@@ -180,6 +188,7 @@ class RegisterFormState {
   String toString() {
     return '''
       RegisterFormState:
+        obscurePassword: $isObscurePassword
         isPosting: $isPosting
         isFormPosted: $isFormPosted
         isValid: $isValid

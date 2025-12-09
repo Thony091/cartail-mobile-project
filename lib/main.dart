@@ -44,7 +44,10 @@ class MainApp extends ConsumerWidget {
         return MediaQuery(
           // Asegurar que el texto no se escale más allá de ciertos límites
           data: MediaQuery.of(context).copyWith(
-            textScaler: MediaQuery.of(context).textScaler.clamp( minScaleFactor: 0.8, maxScaleFactor: 1.2),
+            textScaler: MediaQuery.of(context).textScaler.clamp( 
+              minScaleFactor: 0.8, 
+              maxScaleFactor: 1.2
+            ),
           ),
           child: child!,
         );

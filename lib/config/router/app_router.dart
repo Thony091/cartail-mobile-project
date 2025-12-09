@@ -5,24 +5,23 @@ import 'package:portafolio_project/presentation/pages/auth/modern_check_auth_sta
 import 'package:portafolio_project/presentation/pages/auth/modern_config_reservations_page.dart';
 import 'package:portafolio_project/presentation/pages/auth/modern_config_services_page.dart';
 import 'package:portafolio_project/presentation/pages/auth/modern_edit_profile.dart';
-import 'package:portafolio_project/presentation/pages/auth/modern_login_page.dart';
+import 'package:portafolio_project/presentation/pages/auth/login/components/modern_login_page.dart';
 import 'package:portafolio_project/presentation/pages/auth/modern_profile_page.dart';
 
-import '../../presentation/pages/auth/modern_about_page.dart';
+import '../../presentation/pages/auth/about/modern_about_page.dart';
 import '../../presentation/pages/auth/modern_config_products_page.dart';
 import '../../presentation/pages/auth/modern_config_works_page.dart';
 import '../../presentation/pages/auth/modern_help_page.dart';
-import '../../presentation/pages/auth/modern_home_page.dart';
+import '../../presentation/pages/auth/home/modern_home_page.dart';
 import '../../presentation/pages/auth/modern_messages_page.dart';
 import '../../presentation/pages/auth/modern_out_works.dart';
 import '../../presentation/pages/auth/modern_product_detail_page.dart';
-import '../../presentation/pages/auth/modern_register_page.dart';
+import '../../presentation/pages/auth/register/modern_register_page.dart';
 import '../../presentation/pages/auth/modern_reservations_page.dart';
 import '../../presentation/pages/auth/modern_reset_password_page.dart';
 import '../../presentation/pages/auth/modern_service_detail_page.dart';
-import '../../presentation/pages/auth/modern_service_page.dart';
+import '../../presentation/pages/auth/service/modern_service_page.dart';
 import '../../presentation/pages/auth/modern_work_detail_page.dart';
-import '../../presentation/pages/our_works/our_works_container.dart';
 import '../../presentation/pages/unfinished/modern_checkout_page.dart';
 import '../../presentation/presentation_container.dart';
 import 'router.dart';
@@ -47,8 +46,6 @@ final goRouterProvider = Provider( (ref) {
           path: '/',
           name: ModernHomePage.name,
           builder: (context, state) => const ModernHomePage(),
-          // name: HomePage.name,
-          // builder: (context, state) => const HomePage(),
         ),
 
         //* Login
@@ -56,8 +53,6 @@ final goRouterProvider = Provider( (ref) {
           path: '/login',
           name: ModernLoginPage.name,
           builder: (context, state) => const ModernLoginPage(),
-          // name: LoginPage.name,
-          // builder: (context, state) => const LoginPage(),
         ),
 
         //* Register
@@ -65,17 +60,13 @@ final goRouterProvider = Provider( (ref) {
           path: '/register',
           name: ModernRegisterPage.name,
           builder: (context, state) => const ModernRegisterPage(),
-          // name: RegisterPage.name,
-          // builder: (context, state) => const RegisterPage(),
         ),
 
         //* Reset Password
         GoRoute(
           path: '/reset-password',
           name: ModernResetPasswordPage.name,
-          // name: ResetPasswordPage.name,
           builder: (context, state) => const ModernResetPasswordPage(),
-          // builder: (context, state) => const ResetPasswordPage(),
         ),
 
         //* Pago
@@ -90,30 +81,22 @@ final goRouterProvider = Provider( (ref) {
           path: '/products',
           name: ModernProductsPage.name,
           builder: (context, state) => const ModernProductsPage(),
-          // name: ProductsPage.name,
-          // builder: (context, state) => const ProductsPage(),
         ),
-          // routes: 
-          //   [
+        
         //* Product Detail
         GoRoute(
           path: '/product/:id',
           name: ModernProductDetailPage.name,
           builder: (context, state) => ModernProductDetailPage(
-          // name: ProductDetailPage.name,
-          // builder: (context, state) => ProductDetailPage(
             productId: state.params['id'] ?? 'no-id'
           ),
         ),
-          //   ],
 
         //* Reservations
         GoRoute(
           path: '/reservations',
           name: ModernReservationsPage.name,
-          // name: ReservationsPage.name,
           builder: (context, state) => const ModernReservationsPage(),
-          // builder: (context, state) => const ReservationsPage(),
         ),
 
         //* Services
@@ -147,17 +130,13 @@ final goRouterProvider = Provider( (ref) {
         GoRoute(
           path: '/profile-user',
           name: ModernProfilePage.name,
-          // name: ProfileUserPage.name,
           builder: (context, state) => const ModernProfilePage(),
-          // builder: (context, state) => const ProfileUserPage(),
         ),
         //* Edit Profile
         GoRoute(
           path: '/edit-user-profile',
           name: ModernEditProfilePage.name,
-          // name: EditUserProfilePage.name,
           builder: (context, state) => const ModernEditProfilePage(),
-          // builder: (context, state) => const EditUserProfilePage(),
         ),
 
         //* Shoping Cart
@@ -171,17 +150,13 @@ final goRouterProvider = Provider( (ref) {
         GoRoute(
           path: '/our-works',
           name: ModernOurWorksPage.name,
-          // name: OurWorksPage.name,
           builder: (context, state) => const ModernOurWorksPage(),
-          // builder: (context, state) => const OurWorksPage(),
         ),
         //* Work Edit
         GoRoute(
           path: '/work-edit/:id',
           name: ModernWorkDetailPage.name,
           builder: (context, state) => ModernWorkDetailPage(
-          // name: OurWorkEditPage.name,
-          // builder: (context, state) => OurWorkEditPage(
             workId: state.params['id'] ?? 'no-id'
           ),
         ),
@@ -192,8 +167,6 @@ final goRouterProvider = Provider( (ref) {
           path: '/messages',
           name:  ModernMessagesPage.name,
           builder: (context, state) => const ModernMessagesPage(),
-          // name:  MessagesPage.name,
-          // builder: (context, state) => const MessagesPage(),
         ),
         // //* ConfigMessagesResponsePage
         // GoRoute(
@@ -231,8 +204,6 @@ final goRouterProvider = Provider( (ref) {
           builder: (context, state) => ModernMessageResponsePage(
             messageId: state.params['id'] ?? 'no-id'
           ),
-          // name: ContactTicketsPage.name,
-          // builder: (context, state) => const ContactTicketsPage(),
         ),
         //* ReservaionPage
         GoRoute(

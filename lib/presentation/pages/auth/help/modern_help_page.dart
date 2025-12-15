@@ -2,12 +2,12 @@ import 'package:animate_do/animate_do.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import '../../presentation_container.dart';
-import 'modern_scaffold_with_drawer.dart';
+import '../../../presentation_container.dart';
+import '../modern_scaffold_with_drawer.dart';
 
 class ModernHelpPage extends StatelessWidget {
   static const name = 'ModernHelpPage';
-  
+
   const ModernHelpPage({super.key});
 
   @override
@@ -41,19 +41,16 @@ class ModernHelpPage extends StatelessWidget {
                   ),
                 ),
               ),
-              
+
               const SizedBox(height: 8),
-              
+
               const Text(
                 'Encuentra respuestas a las preguntas más frecuentes',
-                style: TextStyle(
-                  fontSize: 16,
-                  color: Color(0xFF7f8c8d),
-                ),
+                style: TextStyle(fontSize: 16, color: Color(0xFF7f8c8d)),
               ),
-              
+
               const SizedBox(height: 32),
-              
+
               // Búsqueda
               FadeInLeft(
                 child: const ModernInputField(
@@ -61,9 +58,9 @@ class ModernHelpPage extends StatelessWidget {
                   prefixIcon: Icon(Icons.search),
                 ),
               ),
-              
+
               const SizedBox(height: 32),
-              
+
               // Categorías de ayuda
               FadeInRight(
                 child: const Column(
@@ -78,10 +75,11 @@ class ModernHelpPage extends StatelessWidget {
                       ),
                     ),
                     SizedBox(height: 20),
-                    
+
                     HelpCategoryWidget(
                       title: 'Servicios',
-                      subtitle: 'Información sobre nuestros servicios de detailing',
+                      subtitle:
+                          'Información sobre nuestros servicios de detailing',
                       icon: Icons.build,
                       color: Color(0xFF3498db),
                       questions: [
@@ -91,9 +89,9 @@ class ModernHelpPage extends StatelessWidget {
                         '¿Ofrecen garantía en sus servicios?',
                       ],
                     ),
-                    
+
                     SizedBox(height: 16),
-                    
+
                     HelpCategoryWidget(
                       title: 'Reservas',
                       subtitle: 'Todo sobre cómo agendar y gestionar citas',
@@ -106,9 +104,9 @@ class ModernHelpPage extends StatelessWidget {
                         '¿Qué pasa si llego tarde?',
                       ],
                     ),
-                    
+
                     SizedBox(height: 16),
-                    
+
                     HelpCategoryWidget(
                       title: 'Pagos',
                       subtitle: 'Métodos de pago y facturación',
@@ -121,9 +119,9 @@ class ModernHelpPage extends StatelessWidget {
                         '¿Manejan planes corporativos?',
                       ],
                     ),
-                    
+
                     SizedBox(height: 16),
-                    
+
                     HelpCategoryWidget(
                       title: 'Cuenta',
                       subtitle: 'Gestión de tu perfil y configuraciones',
@@ -139,9 +137,9 @@ class ModernHelpPage extends StatelessWidget {
                   ],
                 ),
               ),
-              
+
               const SizedBox(height: 32),
-              
+
               // Contacto
               FadeInUp(
                 child: ModernCard(
@@ -169,10 +167,10 @@ class ModernHelpPage extends StatelessWidget {
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
                           ElevatedButton.icon(
-                            onPressed: (){}, 
+                            onPressed: () {},
                             label: const Text(
                               'Contactar',
-                              style: TextStyle(fontSize: 14)
+                              style: TextStyle(fontSize: 14),
                             ),
                             icon: const Icon(Icons.email),
                             style: ElevatedButton.styleFrom(
@@ -180,14 +178,14 @@ class ModernHelpPage extends StatelessWidget {
                                 borderRadius: BorderRadius.circular(10),
                               ),
                               backgroundColor: const Color(0xFF3498db),
-                            )
+                            ),
                           ),
                           const SizedBox(width: 10),
                           ElevatedButton.icon(
-                            onPressed: (){}, 
+                            onPressed: () {},
                             label: const Text(
-                              'WhatsApp', 
-                              style: TextStyle(fontSize: 14)
+                              'WhatsApp',
+                              style: TextStyle(fontSize: 14),
                             ),
                             icon: const Icon(Icons.message),
                             style: ElevatedButton.styleFrom(
@@ -195,7 +193,7 @@ class ModernHelpPage extends StatelessWidget {
                                 borderRadius: BorderRadius.circular(10),
                               ),
                               backgroundColor: const Color(0xFF27ae60),
-                            )
+                            ),
                           ),
                         ],
                       ),
@@ -209,7 +207,6 @@ class ModernHelpPage extends StatelessWidget {
       ),
     );
   }
-
 }
 
 class HelpCategoryWidget extends ConsumerWidget {
@@ -250,19 +247,13 @@ class HelpCategoryWidget extends ConsumerWidget {
         ),
         subtitle: Text(
           subtitle,
-          style: const TextStyle(
-            fontSize: 14,
-            color: Color(0xFF7f8c8d),
-          ),
+          style: const TextStyle(fontSize: 14, color: Color(0xFF7f8c8d)),
         ),
         children: questions.map((question) {
           return ListTile(
             title: Text(
               question,
-              style: const TextStyle(
-                fontSize: 14,
-                color: Color(0xFF2c3e50),
-              ),
+              style: const TextStyle(fontSize: 14, color: Color(0xFF2c3e50)),
             ),
             trailing: const Icon(
               Icons.chevron_right,

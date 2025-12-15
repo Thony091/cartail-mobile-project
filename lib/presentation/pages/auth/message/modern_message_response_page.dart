@@ -1,4 +1,3 @@
-
 import 'package:animate_do/animate_do.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -7,23 +6,22 @@ import 'package:mailto/mailto.dart';
 import 'package:portafolio_project/presentation/pages/auth/modern_scaffold_with_drawer.dart';
 import 'package:url_launcher/url_launcher.dart';
 
-import '../../shared/widgets/modern_button.dart';
-import '../../shared/widgets/modern_card.dart';
+import '../../../shared/widgets/modern_button.dart';
+import '../../../shared/widgets/modern_card.dart';
 
 class ModernMessageResponsePage extends ConsumerStatefulWidget {
   final String messageId;
   static const name = 'ModernMessageResponsePage';
-  
-  const ModernMessageResponsePage({
-    super.key,
-    required this.messageId,
-  });
+
+  const ModernMessageResponsePage({super.key, required this.messageId});
 
   @override
-  ModernMessageResponsePageState createState() => ModernMessageResponsePageState();
+  ModernMessageResponsePageState createState() =>
+      ModernMessageResponsePageState();
 }
 
-class ModernMessageResponsePageState extends ConsumerState<ModernMessageResponsePage> {
+class ModernMessageResponsePageState
+    extends ConsumerState<ModernMessageResponsePage> {
   final TextEditingController _responseController = TextEditingController();
   final FocusNode _focusNode = FocusNode();
   bool _isSending = false;
@@ -45,7 +43,7 @@ class ModernMessageResponsePageState extends ConsumerState<ModernMessageResponse
   @override
   Widget build(BuildContext context) {
     // final messageState = ref.watch(messageProvider(widget.messageId));
-    
+
     // Datos simulados para el ejemplo - reemplazar con messageState.message
     final message = _getSimulatedMessage();
 
@@ -75,12 +73,10 @@ class ModernMessageResponsePageState extends ConsumerState<ModernMessageResponse
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               // Información del mensaje original
-              FadeInDown(
-                child: _buildOriginalMessageCard(message),
-              ),
-              
+              FadeInDown(child: _buildOriginalMessageCard(message)),
+
               const SizedBox(height: 24),
-              
+
               // Editor de respuesta
               FadeInUp(
                 delay: const Duration(milliseconds: 200),
@@ -190,9 +186,9 @@ class ModernMessageResponsePageState extends ConsumerState<ModernMessageResponse
                 ),
               ],
             ),
-            
+
             const SizedBox(height: 16),
-            
+
             Row(
               children: [
                 const Icon(
@@ -210,11 +206,7 @@ class ModernMessageResponsePageState extends ConsumerState<ModernMessageResponse
                 ),
                 if (message.phone != null) ...[
                   const SizedBox(width: 16),
-                  const Icon(
-                    Icons.phone,
-                    size: 14,
-                    color: Color(0xFF7f8c8d),
-                  ),
+                  const Icon(Icons.phone, size: 14, color: Color(0xFF7f8c8d)),
                   const SizedBox(width: 4),
                   Text(
                     message.phone!,
@@ -226,13 +218,13 @@ class ModernMessageResponsePageState extends ConsumerState<ModernMessageResponse
                 ],
               ],
             ),
-            
+
             const SizedBox(height: 16),
-            
+
             const Divider(),
-            
+
             const SizedBox(height: 16),
-            
+
             const Text(
               'Mensaje:',
               style: TextStyle(
@@ -296,29 +288,24 @@ class ModernMessageResponsePageState extends ConsumerState<ModernMessageResponse
                 ),
               ],
             ),
-            
+
             const SizedBox(height: 20),
-            
+
             // Campo de texto para la respuesta
             Container(
               decoration: BoxDecoration(
                 color: Colors.white,
                 borderRadius: BorderRadius.circular(16),
-                border: Border.all(
-                  color: Colors.grey[300]!,
-                  width: 1,
-                ),
+                border: Border.all(color: Colors.grey[300]!, width: 1),
               ),
               child: TextField(
                 controller: _responseController,
                 focusNode: _focusNode,
                 maxLines: 12,
                 decoration: InputDecoration(
-                  hintText: 'Escribe tu respuesta aquí...\n\nHola ${message.name},\n\nGracias por contactarnos...',
-                  hintStyle: TextStyle(
-                    color: Colors.grey[400],
-                    fontSize: 15,
-                  ),
+                  hintText:
+                      'Escribe tu respuesta aquí...\n\nHola ${message.name},\n\nGracias por contactarnos...',
+                  hintStyle: TextStyle(color: Colors.grey[400], fontSize: 15),
                   border: InputBorder.none,
                   contentPadding: const EdgeInsets.all(16),
                 ),
@@ -329,9 +316,9 @@ class ModernMessageResponsePageState extends ConsumerState<ModernMessageResponse
                 ),
               ),
             ),
-            
+
             const SizedBox(height: 16),
-            
+
             // Plantillas rápidas
             const Text(
               'Plantillas rápidas:',
@@ -360,9 +347,9 @@ class ModernMessageResponsePageState extends ConsumerState<ModernMessageResponse
                 ),
               ],
             ),
-            
+
             const SizedBox(height: 24),
-            
+
             // Botones de acción
             Row(
               children: [
@@ -400,16 +387,11 @@ class ModernMessageResponsePageState extends ConsumerState<ModernMessageResponse
         _focusNode.requestFocus();
       },
       child: Container(
-        padding: const EdgeInsets.symmetric(
-          horizontal: 12,
-          vertical: 8,
-        ),
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
         decoration: BoxDecoration(
           color: const Color(0xFF3498db).withOpacity(0.1),
           borderRadius: BorderRadius.circular(12),
-          border: Border.all(
-            color: const Color(0xFF3498db).withOpacity(0.3),
-          ),
+          border: Border.all(color: const Color(0xFF3498db).withOpacity(0.3)),
         ),
         child: Row(
           mainAxisSize: MainAxisSize.min,
@@ -467,10 +449,10 @@ class ModernMessageResponsePageState extends ConsumerState<ModernMessageResponse
       final uri = Uri.parse(mailtoLink.toString());
       if (await canLaunchUrl(uri)) {
         await launchUrl(uri);
-        
+
         // Marcar como respondido
         // ref.read(messageProvider(widget.messageId).notifier).markAsReplied();
-        
+
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(
@@ -478,7 +460,7 @@ class ModernMessageResponsePageState extends ConsumerState<ModernMessageResponse
               backgroundColor: Color(0xFF27ae60),
             ),
           );
-          
+
           // Volver a la lista de mensajes después de un delay
           Future.delayed(const Duration(seconds: 2), () {
             if (mounted) {
@@ -530,8 +512,18 @@ class ModernMessageResponsePageState extends ConsumerState<ModernMessageResponse
       return 'Ayer';
     } else {
       final months = [
-        'Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun',
-        'Jul', 'Ago', 'Sep', 'Oct', 'Nov', 'Dic'
+        'Ene',
+        'Feb',
+        'Mar',
+        'Abr',
+        'May',
+        'Jun',
+        'Jul',
+        'Ago',
+        'Sep',
+        'Oct',
+        'Nov',
+        'Dic',
       ];
       return '${date.day} ${months[date.month - 1]} ${date.year}';
     }
@@ -543,7 +535,8 @@ class ModernMessageResponsePageState extends ConsumerState<ModernMessageResponse
       name: 'Carlos Mendoza',
       email: 'carlos@email.com',
       phone: '+56 9 1234 5678',
-      message: 'Hola, quisiera consultar por el servicio de detailing para mi auto. ¿Cuánto tiempo demora y cuál es el precio? También me gustaría saber si trabajan los fines de semana.',
+      message:
+          'Hola, quisiera consultar por el servicio de detailing para mi auto. ¿Cuánto tiempo demora y cuál es el precio? También me gustaría saber si trabajan los fines de semana.',
       date: DateTime.now().subtract(const Duration(hours: 2)),
       isRead: true,
     );

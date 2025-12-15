@@ -1,16 +1,45 @@
 import 'package:flutter/material.dart';
+import '../../../../domain/domain.dart';
 
 class MenuHeaderWidget extends StatelessWidget {
   final String userName;
   final bool isAuthenticated;
-  final bool isAdmin;
+  final UserRole userRole;
 
   const MenuHeaderWidget({
     super.key,
     required this.userName,
     required this.isAuthenticated,
-    required this.isAdmin,
+    required this.userRole,
   });
+
+  /// Obtiene el label del rol para mostrar en la UI
+  String get roleLabel {
+    switch (userRole) {
+      case UserRole.guest:
+        return 'Invitado';
+      case UserRole.user:
+        return 'Usuario';
+      case UserRole.operator:
+        return 'Operario';
+      case UserRole.admin:
+        return 'Administrador';
+    }
+  }
+
+  /// Obtiene el icono apropiado según el rol
+  IconData get roleIcon {
+    switch (userRole) {
+      case UserRole.guest:
+        return Icons.person_outline;
+      case UserRole.user:
+        return Icons.person;
+      case UserRole.operator:
+        return Icons.engineering;
+      case UserRole.admin:
+        return Icons.admin_panel_settings;
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -18,10 +47,7 @@ class MenuHeaderWidget extends StatelessWidget {
       padding: const EdgeInsets.all(24),
       decoration: const BoxDecoration(
         gradient: LinearGradient(
-          colors: [
-            Color(0xFF2c3e50),
-            Color(0xFF34495e),
-          ],
+          colors: [Color(0xFF2c3e50), Color(0xFF34495e)],
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
         ),
@@ -34,17 +60,14 @@ class MenuHeaderWidget extends StatelessWidget {
               Container(
                 width: 50,
                 height: 50,
-                decoration:  BoxDecoration(
+                decoration: BoxDecoration(
                   gradient: const LinearGradient(
-                    colors: [
-                      Color(0xFF3498db),
-                      Color(0xFF2980b9),
-                    ],
+                    colors: [Color(0xFF3498db), Color(0xFF2980b9)],
                   ),
                   borderRadius: BorderRadius.circular(25),
                   boxShadow: [
                     BoxShadow(
-                      color: Colors.black.withValues( alpha: .2),
+                      color: Colors.black.withValues(alpha: .2),
                       blurRadius: 8,
                       offset: const Offset(0, 2),
                     ),
@@ -71,7 +94,7 @@ class MenuHeaderWidget extends StatelessWidget {
                   Text(
                     'Centro Automotriz',
                     style: TextStyle(
-                      color: Colors.white.withValues( alpha: .8),
+                      color: Colors.white.withValues(alpha: .8),
                       fontSize: 12,
                     ),
                   ),
@@ -79,7 +102,7 @@ class MenuHeaderWidget extends StatelessWidget {
               ),
             ],
           ),
-          
+
           if (isAuthenticated) ...[
             const SizedBox(height: 20),
             // Información del usuario
@@ -89,14 +112,10 @@ class MenuHeaderWidget extends StatelessWidget {
                   width: 40,
                   height: 40,
                   decoration: BoxDecoration(
-                    color: Colors.white.withValues( alpha: .2),
+                    color: Colors.white.withValues(alpha: .2),
                     borderRadius: BorderRadius.circular(20),
                   ),
-                  child: Icon(
-                    isAdmin ? Icons.admin_panel_settings : Icons.person,
-                    color: Colors.white,
-                    size: 20,
-                  ),
+                  child: Icon(roleIcon, color: Colors.white, size: 20),
                 ),
                 const SizedBox(width: 12),
                 Expanded(
@@ -113,9 +132,9 @@ class MenuHeaderWidget extends StatelessWidget {
                         overflow: TextOverflow.ellipsis,
                       ),
                       Text(
-                        isAdmin ? 'Administrador' : 'Usuario',
+                        roleLabel,
                         style: TextStyle(
-                          color: Colors.white.withValues( alpha: .8),
+                          color: Colors.white.withValues(alpha: .8),
                           fontSize: 12,
                         ),
                       ),

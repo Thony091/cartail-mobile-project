@@ -3,23 +3,22 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_staggered_grid_view/flutter_staggered_grid_view.dart';
 
-import '../../shared/widgets/widgets.dart';
-import 'modern_scaffold_with_drawer.dart';
+import '../../../shared/widgets/widgets.dart';
+import '../modern_scaffold_with_drawer.dart';
 
 class ModernOurWorksPage extends ConsumerStatefulWidget {
   static const name = 'ModernOurWorksPage';
-  
+
   const ModernOurWorksPage({super.key});
 
   @override
   ModernOurWorksPageState createState() => ModernOurWorksPageState();
 }
 
-class ModernOurWorksPageState extends ConsumerState<ModernOurWorksPage> 
+class ModernOurWorksPageState extends ConsumerState<ModernOurWorksPage>
     with TickerProviderStateMixin {
-  
   late TabController _tabController;
-  
+
   @override
   void initState() {
     super.initState();
@@ -36,7 +35,7 @@ class ModernOurWorksPageState extends ConsumerState<ModernOurWorksPage>
   Widget build(BuildContext context) {
     // final worksState = ref.watch(worksProvider);
     // final authState = ref.watch(authProvider);
-    
+
     final bool isAdmin = false; // authState.userData?.isAdmin ?? false
     final List<WorkData> works = _getSimulatedWorks();
 
@@ -47,10 +46,7 @@ class ModernOurWorksPageState extends ConsumerState<ModernOurWorksPage>
           gradient: LinearGradient(
             begin: Alignment.topCenter,
             end: Alignment.bottomCenter,
-            colors: [
-              Colors.black.withOpacity(0.05),
-              const Color(0xFFf8fafc),
-            ],
+            colors: [Colors.black.withOpacity(0.05), const Color(0xFFf8fafc)],
           ),
         ),
         child: Column(
@@ -89,15 +85,21 @@ class ModernOurWorksPageState extends ConsumerState<ModernOurWorksPage>
                 ],
               ),
             ),
-            
+
             // Contenido de las tabs
             Expanded(
               child: TabBarView(
                 controller: _tabController,
                 children: [
                   _buildWorksGrid(works, isAdmin),
-                  _buildWorksGrid(works.where((w) => w.category == 'Detailing').toList(), isAdmin),
-                  _buildWorksGrid(works.where((w) => w.category == 'Restauración').toList(), isAdmin),
+                  _buildWorksGrid(
+                    works.where((w) => w.category == 'Detailing').toList(),
+                    isAdmin,
+                  ),
+                  _buildWorksGrid(
+                    works.where((w) => w.category == 'Restauración').toList(),
+                    isAdmin,
+                  ),
                 ],
               ),
             ),
@@ -157,7 +159,9 @@ class ModernOurWorksPageState extends ConsumerState<ModernOurWorksPage>
           children: [
             // Imagen
             ClipRRect(
-              borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
+              borderRadius: const BorderRadius.vertical(
+                top: Radius.circular(20),
+              ),
               child: AspectRatio(
                 aspectRatio: 1.2,
                 child: work.image.isNotEmpty
@@ -185,7 +189,7 @@ class ModernOurWorksPageState extends ConsumerState<ModernOurWorksPage>
                       ),
               ),
             ),
-            
+
             // Contenido
             Padding(
               padding: const EdgeInsets.all(16),
@@ -214,7 +218,10 @@ class ModernOurWorksPageState extends ConsumerState<ModernOurWorksPage>
                   ),
                   const SizedBox(height: 12),
                   Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 8,
+                      vertical: 4,
+                    ),
                     decoration: BoxDecoration(
                       color: _getCategoryColor(work.category).withOpacity(0.1),
                       borderRadius: BorderRadius.circular(12),
@@ -241,8 +248,16 @@ class ModernOurWorksPageState extends ConsumerState<ModernOurWorksPage>
     return Dismissible(
       key: Key(work.id),
       direction: DismissDirection.horizontal,
-      background: _buildDismissBackground(Colors.blue, Icons.edit, Alignment.centerLeft),
-      secondaryBackground: _buildDismissBackground(Colors.red, Icons.delete, Alignment.centerRight),
+      background: _buildDismissBackground(
+        Colors.blue,
+        Icons.edit,
+        Alignment.centerLeft,
+      ),
+      secondaryBackground: _buildDismissBackground(
+        Colors.red,
+        Icons.delete,
+        Alignment.centerRight,
+      ),
       confirmDismiss: (direction) async {
         if (direction == DismissDirection.startToEnd) {
           // Editar trabajo
@@ -281,9 +296,9 @@ class ModernOurWorksPageState extends ConsumerState<ModernOurWorksPage>
                       ),
               ),
             ),
-            
+
             const SizedBox(width: 16),
-            
+
             // Información
             Expanded(
               child: Column(
@@ -309,7 +324,10 @@ class ModernOurWorksPageState extends ConsumerState<ModernOurWorksPage>
                   ),
                   const SizedBox(height: 8),
                   Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 8,
+                      vertical: 4,
+                    ),
                     decoration: BoxDecoration(
                       color: _getCategoryColor(work.category).withOpacity(0.1),
                       borderRadius: BorderRadius.circular(12),
@@ -326,7 +344,7 @@ class ModernOurWorksPageState extends ConsumerState<ModernOurWorksPage>
                 ],
               ),
             ),
-            
+
             // Acciones
             Column(
               children: [
@@ -382,17 +400,18 @@ class ModernOurWorksPageState extends ConsumerState<ModernOurWorksPage>
           const SizedBox(height: 8),
           const Text(
             'Agrega algunos trabajos para mostrar',
-            style: TextStyle(
-              fontSize: 14,
-              color: Color(0xFF7f8c8d),
-            ),
+            style: TextStyle(fontSize: 14, color: Color(0xFF7f8c8d)),
           ),
         ],
       ),
     );
   }
 
-  Widget _buildDismissBackground(Color color, IconData icon, Alignment alignment) {
+  Widget _buildDismissBackground(
+    Color color,
+    IconData icon,
+    Alignment alignment,
+  ) {
     return Container(
       decoration: BoxDecoration(
         color: color,
@@ -444,7 +463,7 @@ class ModernOurWorksPageState extends ConsumerState<ModernOurWorksPage>
                 borderRadius: BorderRadius.circular(2),
               ),
             ),
-            
+
             // Imagen principal
             Expanded(
               flex: 2,
@@ -458,10 +477,7 @@ class ModernOurWorksPageState extends ConsumerState<ModernOurWorksPage>
                 child: work.image.isNotEmpty
                     ? ClipRRect(
                         borderRadius: BorderRadius.circular(20),
-                        child: Image.network(
-                          work.image,
-                          fit: BoxFit.cover,
-                        ),
+                        child: Image.network(work.image, fit: BoxFit.cover),
                       )
                     : const Icon(
                         Icons.car_repair,
@@ -470,7 +486,7 @@ class ModernOurWorksPageState extends ConsumerState<ModernOurWorksPage>
                       ),
               ),
             ),
-            
+
             // Información
             Expanded(
               flex: 1,
@@ -489,9 +505,14 @@ class ModernOurWorksPageState extends ConsumerState<ModernOurWorksPage>
                     ),
                     const SizedBox(height: 8),
                     Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 12,
+                        vertical: 6,
+                      ),
                       decoration: BoxDecoration(
-                        color: _getCategoryColor(work.category).withOpacity(0.1),
+                        color: _getCategoryColor(
+                          work.category,
+                        ).withOpacity(0.1),
                         borderRadius: BorderRadius.circular(20),
                       ),
                       child: Text(
@@ -524,23 +545,26 @@ class ModernOurWorksPageState extends ConsumerState<ModernOurWorksPage>
 
   Future<bool> _showDeleteWorkConfirmation(WorkData work) async {
     return await showDialog<bool>(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Eliminar Trabajo'),
-        content: Text('¿Estás seguro de que deseas eliminar "${work.name}"?'),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(context).pop(false),
-            child: const Text('Cancelar'),
+          context: context,
+          builder: (context) => AlertDialog(
+            title: const Text('Eliminar Trabajo'),
+            content: Text(
+              '¿Estás seguro de que deseas eliminar "${work.name}"?',
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.of(context).pop(false),
+                child: const Text('Cancelar'),
+              ),
+              ModernButton(
+                text: 'Eliminar',
+                style: ModernButtonStyle.danger,
+                onPressed: () => Navigator.of(context).pop(true),
+              ),
+            ],
           ),
-          ModernButton(
-            text: 'Eliminar',
-            style: ModernButtonStyle.danger,
-            onPressed: () => Navigator.of(context).pop(true),
-          ),
-        ],
-      ),
-    ) ?? false;
+        ) ??
+        false;
   }
 
   List<WorkData> _getSimulatedWorks() {
@@ -548,21 +572,24 @@ class ModernOurWorksPageState extends ConsumerState<ModernOurWorksPage>
       WorkData(
         id: '1',
         name: 'Detailing Renault Duster',
-        description: 'Limpieza profunda y encerado completo de Renault Duster 2022. Incluye lavado interior, tratamiento de cueros y protección cerámica.',
+        description:
+            'Limpieza profunda y encerado completo de Renault Duster 2022. Incluye lavado interior, tratamiento de cueros y protección cerámica.',
         category: 'Detailing',
         image: '',
       ),
       WorkData(
         id: '2',
         name: 'Restauración MINI Cooper',
-        description: 'Restauración completa de MINI Cooper Works. Pintura, detailing premium y modificaciones personalizadas.',
+        description:
+            'Restauración completa de MINI Cooper Works. Pintura, detailing premium y modificaciones personalizadas.',
         category: 'Restauración',
         image: '',
       ),
       WorkData(
         id: '3',
         name: 'Protección Cerámica BMW',
-        description: 'Aplicación de protección cerámica premium en BMW Serie 3. Duración de 3 años con garantía.',
+        description:
+            'Aplicación de protección cerámica premium en BMW Serie 3. Duración de 3 años con garantía.',
         category: 'Detailing',
         image: '',
       ),

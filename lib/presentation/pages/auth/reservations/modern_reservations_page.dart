@@ -2,21 +2,22 @@ import 'package:animate_do/animate_do.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import '../../shared/widgets/modern_button.dart';
-import '../../shared/widgets/modern_card.dart';
-import '../../shared/widgets/modern_input_field.dart';
-import 'modern_scaffold_with_drawer.dart';
+import '../../../shared/widgets/modern_button.dart';
+import '../../../shared/widgets/modern_card.dart';
+import '../../../shared/widgets/modern_input_field.dart';
+import '../modern_scaffold_with_drawer.dart';
 
 class ModernReservationsPage extends ConsumerStatefulWidget {
   static const name = 'ModernReservationsPage';
-  
+
   const ModernReservationsPage({super.key});
 
   @override
   ModernReservationsPageState createState() => ModernReservationsPageState();
 }
 
-class ModernReservationsPageState extends ConsumerState<ModernReservationsPage> {
+class ModernReservationsPageState
+    extends ConsumerState<ModernReservationsPage> {
   final _formKey = GlobalKey<FormState>();
   String? _selectedService;
   DateTime? _selectedDate;
@@ -41,7 +42,7 @@ class ModernReservationsPageState extends ConsumerState<ModernReservationsPage> 
             begin: Alignment.topCenter,
             end: Alignment.bottomCenter,
             colors: [
-              const Color(0xFF667eea).withValues( alpha: .1 ),
+              const Color(0xFF667eea).withValues(alpha: .1),
               const Color(0xFFf8fafc),
             ],
           ),
@@ -65,7 +66,9 @@ class ModernReservationsPageState extends ConsumerState<ModernReservationsPage> 
                           borderRadius: BorderRadius.circular(40),
                           boxShadow: [
                             BoxShadow(
-                              color: const Color(0xFF27ae60).withValues( alpha: .3 ),
+                              color: const Color(
+                                0xFF27ae60,
+                              ).withValues(alpha: .3),
                               blurRadius: 20,
                               offset: const Offset(0, 8),
                             ),
@@ -99,9 +102,9 @@ class ModernReservationsPageState extends ConsumerState<ModernReservationsPage> 
                   ),
                 ),
               ),
-              
+
               const SizedBox(height: 24),
-              
+
               // Formulario de reserva
               FadeInUp(
                 child: ModernCard(
@@ -119,7 +122,7 @@ class ModernReservationsPageState extends ConsumerState<ModernReservationsPage> 
                           ),
                         ),
                         const SizedBox(height: 20),
-                        
+
                         // Nombre
                         ModernInputField(
                           label: 'Nombre Completo',
@@ -132,9 +135,9 @@ class ModernReservationsPageState extends ConsumerState<ModernReservationsPage> 
                             return null;
                           },
                         ),
-                        
+
                         const SizedBox(height: 16),
-                        
+
                         // RUT
                         ModernInputField(
                           label: 'RUT',
@@ -147,9 +150,9 @@ class ModernReservationsPageState extends ConsumerState<ModernReservationsPage> 
                             return null;
                           },
                         ),
-                        
+
                         const SizedBox(height: 16),
-                        
+
                         // Email
                         ModernInputField(
                           label: 'Correo Electrónico',
@@ -163,9 +166,9 @@ class ModernReservationsPageState extends ConsumerState<ModernReservationsPage> 
                             return null;
                           },
                         ),
-                        
+
                         const SizedBox(height: 16),
-                        
+
                         // Servicio
                         const Text(
                           'Selecciona el Servicio',
@@ -176,14 +179,12 @@ class ModernReservationsPageState extends ConsumerState<ModernReservationsPage> 
                           ),
                         ),
                         const SizedBox(height: 12),
-                        
+
                         Container(
                           decoration: BoxDecoration(
                             color: Colors.white,
                             borderRadius: BorderRadius.circular(12),
-                            border: Border.all(
-                              color: const Color(0xFFe2e8f0),
-                            ),
+                            border: Border.all(color: const Color(0xFFe2e8f0)),
                           ),
                           child: DropdownButtonFormField<String>(
                             value: _selectedService,
@@ -227,9 +228,9 @@ class ModernReservationsPageState extends ConsumerState<ModernReservationsPage> 
                             },
                           ),
                         ),
-                        
+
                         const SizedBox(height: 16),
-                        
+
                         // Fecha
                         const Text(
                           'Selecciona la Fecha',
@@ -240,7 +241,7 @@ class ModernReservationsPageState extends ConsumerState<ModernReservationsPage> 
                           ),
                         ),
                         const SizedBox(height: 12),
-                        
+
                         InkWell(
                           onTap: () => _selectDate(context),
                           child: Container(
@@ -274,9 +275,9 @@ class ModernReservationsPageState extends ConsumerState<ModernReservationsPage> 
                             ),
                           ),
                         ),
-                        
+
                         const SizedBox(height: 16),
-                        
+
                         // Hora
                         const Text(
                           'Selecciona la Hora',
@@ -287,7 +288,7 @@ class ModernReservationsPageState extends ConsumerState<ModernReservationsPage> 
                           ),
                         ),
                         const SizedBox(height: 12),
-                        
+
                         InkWell(
                           onTap: () => _selectTime(context),
                           child: Container(
@@ -321,9 +322,9 @@ class ModernReservationsPageState extends ConsumerState<ModernReservationsPage> 
                             ),
                           ),
                         ),
-                        
+
                         const SizedBox(height: 24),
-                        
+
                         // Botón de reservar
                         SizedBox(
                           width: double.infinity,
@@ -340,9 +341,9 @@ class ModernReservationsPageState extends ConsumerState<ModernReservationsPage> 
                   ),
                 ),
               ),
-              
+
               const SizedBox(height: 24),
-              
+
               // Información adicional
               FadeInUp(
                 delay: const Duration(milliseconds: 100),
@@ -359,19 +360,19 @@ class ModernReservationsPageState extends ConsumerState<ModernReservationsPage> 
                         ),
                       ),
                       const SizedBox(height: 16),
-                      
+
                       _buildInfoItem(
                         Icons.schedule,
                         'Horario de Atención',
                         'Lunes a Viernes: 9:00 - 19:00\nSábados: 9:00 - 14:00',
                       ),
-                      
+
                       _buildInfoItem(
                         Icons.cancel,
                         'Cancelaciones',
                         'Puedes cancelar con 24 horas de anticipación',
                       ),
-                      
+
                       _buildInfoItem(
                         Icons.payment,
                         'Pago',
@@ -398,14 +399,10 @@ class ModernReservationsPageState extends ConsumerState<ModernReservationsPage> 
             width: 40,
             height: 40,
             decoration: BoxDecoration(
-              color: const Color(0xFF3498db).withValues( alpha: .1 ),
+              color: const Color(0xFF3498db).withValues(alpha: .1),
               borderRadius: BorderRadius.circular(10),
             ),
-            child: Icon(
-              icon,
-              color: const Color(0xFF3498db),
-              size: 20,
-            ),
+            child: Icon(icon, color: const Color(0xFF3498db), size: 20),
           ),
           const SizedBox(width: 16),
           Expanded(
@@ -457,7 +454,7 @@ class ModernReservationsPageState extends ConsumerState<ModernReservationsPage> 
         );
       },
     );
-    
+
     if (picked != null && picked != _selectedDate) {
       setState(() {
         _selectedDate = picked;
@@ -483,7 +480,7 @@ class ModernReservationsPageState extends ConsumerState<ModernReservationsPage> 
         );
       },
     );
-    
+
     if (picked != null && picked != _selectedTime) {
       setState(() {
         _selectedTime = picked;
@@ -501,18 +498,18 @@ class ModernReservationsPageState extends ConsumerState<ModernReservationsPage> 
         _showSnackBar('Por favor selecciona una hora');
         return;
       }
-      
+
       setState(() {
         _isLoading = true;
       });
-      
+
       // Simular llamada a API
       await Future.delayed(const Duration(seconds: 2));
-      
+
       setState(() {
         _isLoading = false;
       });
-      
+
       if (mounted) {
         _showSuccessDialog();
       }
@@ -525,9 +522,7 @@ class ModernReservationsPageState extends ConsumerState<ModernReservationsPage> 
         content: Text(message),
         backgroundColor: const Color(0xFFe74c3c),
         behavior: SnackBarBehavior.floating,
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(10),
-        ),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
       ),
     );
   }
@@ -536,9 +531,7 @@ class ModernReservationsPageState extends ConsumerState<ModernReservationsPage> 
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(20),
-        ),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
         content: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
@@ -546,7 +539,7 @@ class ModernReservationsPageState extends ConsumerState<ModernReservationsPage> 
               width: 80,
               height: 80,
               decoration: BoxDecoration(
-                color: const Color(0xFF27ae60).withValues( alpha: .1 ),
+                color: const Color(0xFF27ae60).withValues(alpha: .1),
                 borderRadius: BorderRadius.circular(40),
               ),
               child: const Icon(
@@ -568,10 +561,7 @@ class ModernReservationsPageState extends ConsumerState<ModernReservationsPage> 
             const Text(
               'Tu reserva ha sido confirmada. Recibirás un correo con los detalles.',
               textAlign: TextAlign.center,
-              style: TextStyle(
-                fontSize: 14,
-                color: Color(0xFF7f8c8d),
-              ),
+              style: TextStyle(fontSize: 14, color: Color(0xFF7f8c8d)),
             ),
             const SizedBox(height: 24),
             SizedBox(

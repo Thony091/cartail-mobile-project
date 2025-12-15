@@ -3,15 +3,13 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:portafolio_project/presentation/shared/widgets/side-menu-components/components.dart';
 
+import '../../../domain/domain.dart';
 import '../../providers/auth_provider.dart';
 
 class ModernSideMenu extends ConsumerStatefulWidget {
   final GlobalKey<ScaffoldState> scaffoldKey;
 
-  const ModernSideMenu({
-    super.key,
-    required this.scaffoldKey,
-  });
+  const ModernSideMenu({super.key, required this.scaffoldKey});
 
   @override
   ModernSideMenuState createState() => ModernSideMenuState();
@@ -19,7 +17,6 @@ class ModernSideMenu extends ConsumerStatefulWidget {
 
 class ModernSideMenuState extends ConsumerState<ModernSideMenu>
     with SingleTickerProviderStateMixin {
-
   late AnimationController _animationController;
   late Animation<double> _animation;
 
@@ -59,14 +56,11 @@ class ModernSideMenuState extends ConsumerState<ModernSideMenu>
               gradient: const LinearGradient(
                 begin: Alignment.topCenter,
                 end: Alignment.bottomCenter,
-                colors: [
-                  Colors.white,
-                  Color(0xFFf8fafc),
-                ],
+                colors: [Colors.white, Color(0xFFf8fafc)],
               ),
               boxShadow: [
                 BoxShadow(
-                  color: Colors.black.withValues( alpha: .1),
+                  color: Colors.black.withValues(alpha: .1),
                   blurRadius: 20,
                   offset: const Offset(5, 0),
                 ),
@@ -78,8 +72,9 @@ class ModernSideMenuState extends ConsumerState<ModernSideMenu>
                   // Header del menú
                   MenuHeaderWidget(
                     userName: authState.userData?.nombre ?? 'Invitado',
-                    isAuthenticated: authState.authStatus == AuthStatus.authenticated,
-                    isAdmin: authState.userData?.isAdmin ?? false,
+                    isAuthenticated:
+                        authState.authStatus == AuthStatus.authenticated,
+                    userRole: authState.userRole,
                   ),
                   // _buildMenuHeader(authState.userData!.nombre, authState.authStatus, authState.userData!.isAdmin),
                   // _buildMenuHeader(userName, isAuthenticated, isAdmin),
@@ -90,7 +85,7 @@ class ModernSideMenuState extends ConsumerState<ModernSideMenu>
                       padding: const EdgeInsets.symmetric(vertical: 16),
                       children: [
                         MenuSectionWidget(
-                        // _buildMenuSection(
+                          // _buildMenuSection(
                           title: "NAVEGACIÓN",
                           items: [
                             MenuItemData(
@@ -100,33 +95,39 @@ class ModernSideMenuState extends ConsumerState<ModernSideMenu>
                               onTap: () => context.go('/'),
                               // onTap: () => _navigateTo(context, '/'),
                             ),
-                            if ( authState.authStatus == AuthStatus.authenticated  && authState.userData?.isAdmin == true) ...[
+                            if (authState.authStatus ==
+                                    AuthStatus.authenticated &&
+                                authState.userData?.isAdmin == true) ...[
                               MenuItemData(
                                 icon: Icons.build_outlined,
                                 activeIcon: Icons.build,
                                 title: "Gest. de Servicios",
-                                onTap: () => context.push ('/admin-config-services'),
+                                onTap: () =>
+                                    context.push('/admin-config-services'),
                                 // onTap: () => _navigateTo(context, '/services'),
                               ),
                               MenuItemData(
                                 icon: Icons.calendar_today_outlined,
                                 activeIcon: Icons.calendar_today,
                                 title: "Gest. de Reservas",
-                                onTap: () => context.push('/admin-config-reservations'),
+                                onTap: () =>
+                                    context.push('/admin-config-reservations'),
                                 // onTap: () => _navigateTo(context, '/reservas-config'),
                               ),
                               MenuItemData(
                                 icon: Icons.store_mall_directory,
                                 activeIcon: Icons.store,
                                 title: "Gest. de Productos",
-                                onTap: () => context.push('/admin-config-products'),
+                                onTap: () =>
+                                    context.push('/admin-config-products'),
                                 // onTap: () => _navigateTo(context, '/our-works'),
                               ),
                               MenuItemData(
                                 icon: Icons.diamond_outlined,
                                 activeIcon: Icons.diamond,
                                 title: "Gest. de Trabajos",
-                                onTap: () => context.push('/admin-config-works'),
+                                onTap: () =>
+                                    context.push('/admin-config-works'),
                                 // onTap: () => _navigateTo(context, '/our-works'),
                               ),
                               MenuItemData(
@@ -162,7 +163,11 @@ class ModernSideMenuState extends ConsumerState<ModernSideMenu>
                                 // onTap: () => _navigateTo(context, '/reservations'),
                               ),
                             ],
-                            if ( authState.userData?.isAdmin == false || authState.authStatus == AuthStatus.notAuthenticated || authState.authStatus == AuthStatus.authenticated ) ...[
+                            if (authState.userData?.isAdmin == false ||
+                                authState.authStatus ==
+                                    AuthStatus.notAuthenticated ||
+                                authState.authStatus ==
+                                    AuthStatus.authenticated) ...[
                               MenuItemData(
                                 icon: Icons.store_mall_directory,
                                 activeIcon: Icons.store_mall_directory,
@@ -171,30 +176,50 @@ class ModernSideMenuState extends ConsumerState<ModernSideMenu>
                                 // onTap: () => context.push('/shoping-cart'),
                                 // onTap: () => Navigator.of(context).push(MaterialPageRoute(builder: (context) => const ModernCartPage())),
                               ),
-                            ]
-                          ]
+                            ],
+                          ],
                         ),
 
-                        if ( authState.authStatus == AuthStatus.authenticated ) ...[
+                        if (authState.authStatus ==
+                            AuthStatus.authenticated) ...[
                           MenuSectionWidget(
                             title: "CUENTA",
                             items: [
-                            // _buildMenuSection("CUENTA", [
+                              // _buildMenuSection("CUENTA", [
                               MenuItemData(
                                 icon: Icons.person_outline,
                                 activeIcon: Icons.person,
                                 title: "Mi Perfil",
                                 // onTap: () => Navigator.of(context).push(MaterialPageRoute(builder: (context) => const ModernProfilePage())),
-                                onTap: () => context.push ('/profile-user'),
+                                onTap: () => context.push('/profile-user'),
                               ),
                               MenuItemData(
                                 icon: Icons.history,
                                 activeIcon: Icons.history,
-                                title: "Historial",
-                                onTap: () => context.push('/history'),
-                                // onTap: () => _navigateTo(context, '/history'),
+                                title: "Mi Historial",
+                                onTap: () => context.push('/my-history'),
                               ),
-                              if ( authState.userData?.isAdmin == false ) ...[
+                              // Opciones específicas para operarios
+                              if (authState.userRole == UserRole.operator) ...[
+                                MenuItemData(
+                                  icon: Icons.assignment_outlined,
+                                  activeIcon: Icons.assignment,
+                                  title: "Mis Tickets",
+                                  onTap: () =>
+                                      context.push('/my-assigned-tickets'),
+                                ),
+                              ],
+                              // Opciones específicas para administradores
+                              if (authState.userRole == UserRole.admin) ...[
+                                MenuItemData(
+                                  icon: Icons.dashboard_outlined,
+                                  activeIcon: Icons.dashboard,
+                                  title: "Todos los Tickets",
+                                  onTap: () =>
+                                      context.push('/admin-all-tickets'),
+                                ),
+                              ],
+                              if (authState.userData?.isAdmin == false) ...[
                                 MenuItemData(
                                   icon: Icons.shopping_cart_outlined,
                                   activeIcon: Icons.shopping_cart,
@@ -203,29 +228,33 @@ class ModernSideMenuState extends ConsumerState<ModernSideMenu>
                                   // onTap: () => _navigateTo(context, '/cart'),
                                 ),
                               ],
-                            ]
+                            ],
                           ),
                         ] else ...[
-                          if ( authState.userData?.isAdmin == false || authState.authStatus == AuthStatus.notAuthenticated || authState.authStatus == AuthStatus.authenticated ) ...[
+                          if (authState.userData?.isAdmin == false ||
+                              authState.authStatus ==
+                                  AuthStatus.notAuthenticated ||
+                              authState.authStatus ==
+                                  AuthStatus.authenticated) ...[
                             MenuSectionWidget(
                               title: "CUENTA",
                               items: [
-                                  MenuItemData(
-                                    icon: Icons.shopping_cart_outlined,
-                                    activeIcon: Icons.shopping_cart,
-                                    title: "Mi Carrito",
-                                    onTap: () => context.push('/shoping-cart'),
-                                    // onTap: () => _navigateTo(context, '/cart'),
-                                  ),
-                                ],
-                            )
+                                MenuItemData(
+                                  icon: Icons.shopping_cart_outlined,
+                                  activeIcon: Icons.shopping_cart,
+                                  title: "Mi Carrito",
+                                  onTap: () => context.push('/shoping-cart'),
+                                  // onTap: () => _navigateTo(context, '/cart'),
+                                ),
+                              ],
+                            ),
                           ],
                         ],
 
                         MenuSectionWidget(
                           title: "SOPORTE",
                           items: [
-                          // _buildMenuSection("SOPORTE", [
+                            // _buildMenuSection("SOPORTE", [
                             MenuItemData(
                               icon: Icons.help_outline,
                               activeIcon: Icons.help,
@@ -242,14 +271,17 @@ class ModernSideMenuState extends ConsumerState<ModernSideMenu>
                               // onTap: () => Navigator.of(context).push(MaterialPageRoute(builder: (context) => const ModernAboutPage())),
                               // onTap: () => _navigateTo(context, '/about'),
                             ),
-                          ]
+                          ],
                         ),
                       ],
                     ),
                   ),
 
                   // Footer del menú
-                  MenuFooterWidget( isAuthenticated: authState.authStatus == AuthStatus.authenticated ),
+                  MenuFooterWidget(
+                    isAuthenticated:
+                        authState.authStatus == AuthStatus.authenticated,
+                  ),
                   // _buildMenuFooter(authState.authStatus == AuthStatus.authenticated),
                 ],
               ),

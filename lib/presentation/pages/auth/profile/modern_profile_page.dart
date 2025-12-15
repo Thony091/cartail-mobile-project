@@ -1,14 +1,14 @@
 import 'package:animate_do/animate_do.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:portafolio_project/presentation/pages/auth/modern_edit_profile.dart';
+import 'package:portafolio_project/presentation/pages/auth/profile/modern_edit_profile.dart';
 
-import '../../presentation_container.dart';
-import 'modern_scaffold_with_drawer.dart';
+import '../../../presentation_container.dart';
+import '../modern_scaffold_with_drawer.dart';
 
 class ModernProfilePage extends ConsumerStatefulWidget {
   static const name = 'ModernProfilePage';
-  
+
   const ModernProfilePage({super.key});
 
   @override
@@ -48,34 +48,26 @@ class ModernProfilePageState extends ConsumerState<ModernProfilePage> {
           child: Column(
             children: [
               // Header del perfil
-              FadeInDown(
-                child: _buildProfileHeader(userData),
-              ),
-              
+              FadeInDown(child: _buildProfileHeader(userData)),
+
               const SizedBox(height: 32),
-              
+
               // Información personal
-              FadeInLeft(
-                child: _buildPersonalInfo(userData),
-              ),
-              
+              FadeInLeft(child: _buildPersonalInfo(userData)),
+
               const SizedBox(height: 24),
-              
+
               // Estadísticas (solo para admin)
               if (userData.isAdmin) ...[
-                FadeInRight(
-                  child: _buildAdminStats(),
-                ),
+                FadeInRight(child: _buildAdminStats()),
                 const SizedBox(height: 24),
               ],
-              
+
               // Configuración
-              FadeInUp(
-                child: _buildSettingsSection(),
-              ),
-              
+              FadeInUp(child: _buildSettingsSection()),
+
               const SizedBox(height: 24),
-              
+
               // Acciones
               FadeInUp(
                 delay: const Duration(milliseconds: 200),
@@ -120,12 +112,14 @@ class ModernProfilePageState extends ConsumerState<ModernProfilePage> {
                         ),
                       )
                     : Icon(
-                        userData.isAdmin ? Icons.admin_panel_settings : Icons.person,
+                        userData.isAdmin
+                            ? Icons.admin_panel_settings
+                            : Icons.person,
                         color: Colors.white,
                         size: 40,
                       ),
               ),
-              
+
               // Botón editar avatar
               Positioned(
                 bottom: 0,
@@ -150,9 +144,9 @@ class ModernProfilePageState extends ConsumerState<ModernProfilePage> {
               ),
             ],
           ),
-          
+
           const SizedBox(height: 16),
-          
+
           // Nombre y rol
           Text(
             userData.name,
@@ -162,13 +156,13 @@ class ModernProfilePageState extends ConsumerState<ModernProfilePage> {
               color: Color(0xFF2c3e50),
             ),
           ),
-          
+
           const SizedBox(height: 4),
-          
+
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
             decoration: BoxDecoration(
-              color: userData.isAdmin 
+              color: userData.isAdmin
                   ? const Color(0xFFf39c12).withOpacity(0.1)
                   : const Color(0xFF3498db).withOpacity(0.1),
               borderRadius: BorderRadius.circular(20),
@@ -178,22 +172,26 @@ class ModernProfilePageState extends ConsumerState<ModernProfilePage> {
               style: TextStyle(
                 fontSize: 14,
                 fontWeight: FontWeight.w600,
-                color: userData.isAdmin 
+                color: userData.isAdmin
                     ? const Color(0xFFf39c12)
                     : const Color(0xFF3498db),
               ),
             ),
           ),
-          
+
           const SizedBox(height: 16),
-          
+
           // Botón editar perfil
           ModernButton(
             text: 'Editar Perfil',
             style: ModernButtonStyle.secondary,
             icon: Icons.edit,
             onPressed: () {
-              Navigator.of(context).push(MaterialPageRoute(builder: (context) => const ModernEditProfilePage()));
+              Navigator.of(context).push(
+                MaterialPageRoute(
+                  builder: (context) => const ModernEditProfilePage(),
+                ),
+              );
               // Navegar a editar perfil
             },
           ),
@@ -215,13 +213,13 @@ class ModernProfilePageState extends ConsumerState<ModernProfilePage> {
               color: Color(0xFF2c3e50),
             ),
           ),
-          
+
           const SizedBox(height: 20),
-          
+
           _buildInfoItem(Icons.email, 'Correo Electrónico', userData.email),
           _buildInfoItem(Icons.phone, 'Teléfono', userData.phone),
           _buildInfoItem(Icons.badge, 'RUT', userData.rut),
-          
+
           if (userData.bio.isNotEmpty) ...[
             const SizedBox(height: 16),
             _buildInfoItem(Icons.info, 'Biografía', userData.bio, maxLines: 3),
@@ -231,7 +229,12 @@ class ModernProfilePageState extends ConsumerState<ModernProfilePage> {
     );
   }
 
-  Widget _buildInfoItem(IconData icon, String label, String value, {int maxLines = 1}) {
+  Widget _buildInfoItem(
+    IconData icon,
+    String label,
+    String value, {
+    int maxLines = 1,
+  }) {
     return Padding(
       padding: const EdgeInsets.only(bottom: 16),
       child: Row(
@@ -244,15 +247,11 @@ class ModernProfilePageState extends ConsumerState<ModernProfilePage> {
               color: const Color(0xFF3498db).withOpacity(0.1),
               borderRadius: BorderRadius.circular(12),
             ),
-            child: Icon(
-              icon,
-              color: const Color(0xFF3498db),
-              size: 20,
-            ),
+            child: Icon(icon, color: const Color(0xFF3498db), size: 20),
           ),
-          
+
           const SizedBox(width: 16),
-          
+
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -297,29 +296,45 @@ class ModernProfilePageState extends ConsumerState<ModernProfilePage> {
               color: Color(0xFF2c3e50),
             ),
           ),
-          
+
           const SizedBox(height: 20),
-          
+
           Row(
             children: [
               Expanded(
-                child: _buildStatItem('Servicios', '24', const Color(0xFF3498db)),
+                child: _buildStatItem(
+                  'Servicios',
+                  '24',
+                  const Color(0xFF3498db),
+                ),
               ),
               Expanded(
-                child: _buildStatItem('Trabajos', '156', const Color(0xFF27ae60)),
+                child: _buildStatItem(
+                  'Trabajos',
+                  '156',
+                  const Color(0xFF27ae60),
+                ),
               ),
             ],
           ),
-          
+
           const SizedBox(height: 16),
-          
+
           Row(
             children: [
               Expanded(
-                child: _buildStatItem('Reservas', '89', const Color(0xFFf39c12)),
+                child: _buildStatItem(
+                  'Reservas',
+                  '89',
+                  const Color(0xFFf39c12),
+                ),
               ),
               Expanded(
-                child: _buildStatItem('Mensajes', '12', const Color(0xFFe74c3c)),
+                child: _buildStatItem(
+                  'Mensajes',
+                  '12',
+                  const Color(0xFFe74c3c),
+                ),
               ),
             ],
           ),
@@ -372,42 +387,37 @@ class ModernProfilePageState extends ConsumerState<ModernProfilePage> {
               color: Color(0xFF2c3e50),
             ),
           ),
-          
+
           const SizedBox(height: 16),
-          
+
           _buildSettingItem(
             Icons.notifications,
             'Notificaciones',
             'Gestionar notificaciones push',
             () {},
           ),
-          
+
           _buildSettingItem(
             Icons.security,
             'Privacidad y Seguridad',
             'Configurar seguridad de la cuenta',
             () {},
           ),
-          
-          _buildSettingItem(
-            Icons.language,
-            'Idioma',
-            'Español (Chile)',
-            () {},
-          ),
-          
-          _buildSettingItem(
-            Icons.dark_mode,
-            'Tema',
-            'Claro',
-            () {},
-          ),
+
+          _buildSettingItem(Icons.language, 'Idioma', 'Español (Chile)', () {}),
+
+          _buildSettingItem(Icons.dark_mode, 'Tema', 'Claro', () {}),
         ],
       ),
     );
   }
 
-  Widget _buildSettingItem(IconData icon, String title, String subtitle, VoidCallback onTap) {
+  Widget _buildSettingItem(
+    IconData icon,
+    String title,
+    String subtitle,
+    VoidCallback onTap,
+  ) {
     return ListTile(
       contentPadding: EdgeInsets.zero,
       leading: Container(
@@ -417,11 +427,7 @@ class ModernProfilePageState extends ConsumerState<ModernProfilePage> {
           color: const Color(0xFF7f8c8d).withOpacity(0.1),
           borderRadius: BorderRadius.circular(12),
         ),
-        child: Icon(
-          icon,
-          color: const Color(0xFF7f8c8d),
-          size: 20,
-        ),
+        child: Icon(icon, color: const Color(0xFF7f8c8d), size: 20),
       ),
       title: Text(
         title,
@@ -433,15 +439,9 @@ class ModernProfilePageState extends ConsumerState<ModernProfilePage> {
       ),
       subtitle: Text(
         subtitle,
-        style: const TextStyle(
-          fontSize: 14,
-          color: Color(0xFF7f8c8d),
-        ),
+        style: const TextStyle(fontSize: 14, color: Color(0xFF7f8c8d)),
       ),
-      trailing: const Icon(
-        Icons.chevron_right,
-        color: Color(0xFF7f8c8d),
-      ),
+      trailing: const Icon(Icons.chevron_right, color: Color(0xFF7f8c8d)),
       onTap: onTap,
     );
   }
@@ -460,7 +460,6 @@ class ModernProfilePageState extends ConsumerState<ModernProfilePage> {
             },
           ),
         ),
-        
       ],
     );
   }
@@ -481,9 +480,9 @@ class ModernProfilePageState extends ConsumerState<ModernProfilePage> {
                 color: Color(0xFF2c3e50),
               ),
             ),
-            
+
             const SizedBox(height: 20),
-            
+
             ModernButton(
               text: 'Tomar Foto',
               icon: Icons.camera_alt,
@@ -492,9 +491,9 @@ class ModernProfilePageState extends ConsumerState<ModernProfilePage> {
                 // Tomar foto
               },
             ),
-            
+
             const SizedBox(height: 12),
-            
+
             ModernButton(
               text: 'Seleccionar de Galería',
               style: ModernButtonStyle.secondary,

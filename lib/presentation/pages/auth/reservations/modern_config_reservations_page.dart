@@ -3,22 +3,23 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:portafolio_project/presentation/shared/widgets/modern_card.dart';
 
-import '../../shared/widgets/modern_button.dart';
-import '../../shared/widgets/modern_input_field.dart';
-import 'modern_scaffold_with_drawer.dart';
+import '../../../shared/widgets/modern_button.dart';
+import '../../../shared/widgets/modern_input_field.dart';
+import '../modern_scaffold_with_drawer.dart';
 
 class ModernConfigReservationsPage extends ConsumerStatefulWidget {
   static const name = 'ModernConfigReservationsPage';
-  
+
   const ModernConfigReservationsPage({super.key});
 
   @override
-  ModernConfigReservationsPageState createState() => ModernConfigReservationsPageState();
+  ModernConfigReservationsPageState createState() =>
+      ModernConfigReservationsPageState();
 }
 
-class ModernConfigReservationsPageState extends ConsumerState<ModernConfigReservationsPage> 
+class ModernConfigReservationsPageState
+    extends ConsumerState<ModernConfigReservationsPage>
     with SingleTickerProviderStateMixin {
-  
   late TabController _tabController;
   String _searchQuery = '';
   String _filterStatus = 'Todas';
@@ -47,7 +48,7 @@ class ModernConfigReservationsPageState extends ConsumerState<ModernConfigReserv
   Widget build(BuildContext context) {
     // Simulación de datos
     final List<ReservationData> reservations = _getSimulatedReservations();
-    
+
     return ModernScaffoldWithDrawer(
       title: 'Gestión de Reservas',
       appBarActions: [
@@ -100,7 +101,7 @@ class ModernConfigReservationsPageState extends ConsumerState<ModernConfigReserv
                 ),
               ),
             ),
-            
+
             // Tabs
             FadeInLeft(
               child: Container(
@@ -133,7 +134,7 @@ class ModernConfigReservationsPageState extends ConsumerState<ModernConfigReserv
                 ),
               ),
             ),
-            
+
             // Lista de reservas
             Expanded(
               child: TabBarView(
@@ -152,7 +153,12 @@ class ModernConfigReservationsPageState extends ConsumerState<ModernConfigReserv
     );
   }
 
-  Widget _buildStatCard(String value, String label, IconData icon, Color color) {
+  Widget _buildStatCard(
+    String value,
+    String label,
+    IconData icon,
+    Color color,
+  ) {
     return ModernCard(
       child: Column(
         children: [
@@ -177,10 +183,7 @@ class ModernConfigReservationsPageState extends ConsumerState<ModernConfigReserv
           const SizedBox(height: 4),
           Text(
             label,
-            style: const TextStyle(
-              fontSize: 12,
-              color: Color(0xFF7f8c8d),
-            ),
+            style: const TextStyle(fontSize: 12, color: Color(0xFF7f8c8d)),
           ),
         ],
       ),
@@ -189,11 +192,11 @@ class ModernConfigReservationsPageState extends ConsumerState<ModernConfigReserv
 
   Widget _buildReservationsList(List<ReservationData> reservations) {
     final filteredReservations = reservations.where((reservation) {
-      final matchesSearch = reservation.clientName
-          .toLowerCase()
-          .contains(_searchQuery.toLowerCase());
-      final matchesFilter = _filterStatus == 'Todas' || 
-          reservation.status == _filterStatus;
+      final matchesSearch = reservation.clientName.toLowerCase().contains(
+        _searchQuery.toLowerCase(),
+      );
+      final matchesFilter =
+          _filterStatus == 'Todas' || reservation.status == _filterStatus;
       return matchesSearch && matchesFilter;
     }).toList();
 
@@ -221,7 +224,7 @@ class ModernConfigReservationsPageState extends ConsumerState<ModernConfigReserv
 
   Widget _buildReservationCard(ReservationData reservation) {
     final statusColor = _getStatusColor(reservation.status);
-    
+
     return Dismissible(
       key: Key(reservation.id),
       background: _buildDismissBackground(
@@ -276,9 +279,9 @@ class ModernConfigReservationsPageState extends ConsumerState<ModernConfigReserv
                       ),
                     ),
                   ),
-                  
+
                   const SizedBox(width: 16),
-                  
+
                   // Información del cliente
                   Expanded(
                     child: Column(
@@ -303,7 +306,7 @@ class ModernConfigReservationsPageState extends ConsumerState<ModernConfigReserv
                       ],
                     ),
                   ),
-                  
+
                   // Estado
                   Container(
                     padding: const EdgeInsets.symmetric(
@@ -325,9 +328,9 @@ class ModernConfigReservationsPageState extends ConsumerState<ModernConfigReserv
                   ),
                 ],
               ),
-              
+
               const SizedBox(height: 16),
-              
+
               // Detalles de la reserva
               Row(
                 children: [
@@ -345,9 +348,9 @@ class ModernConfigReservationsPageState extends ConsumerState<ModernConfigReserv
                   ),
                 ],
               ),
-              
+
               const SizedBox(height: 12),
-              
+
               Row(
                 children: [
                   Expanded(
@@ -358,9 +361,9 @@ class ModernConfigReservationsPageState extends ConsumerState<ModernConfigReserv
                   ),
                 ],
               ),
-              
+
               const SizedBox(height: 16),
-              
+
               // Acciones
               Row(
                 children: [
@@ -395,19 +398,12 @@ class ModernConfigReservationsPageState extends ConsumerState<ModernConfigReserv
   Widget _buildDetailItem(IconData icon, String text) {
     return Row(
       children: [
-        Icon(
-          icon,
-          size: 16,
-          color: const Color(0xFF7f8c8d),
-        ),
+        Icon(icon, size: 16, color: const Color(0xFF7f8c8d)),
         const SizedBox(width: 8),
         Expanded(
           child: Text(
             text,
-            style: const TextStyle(
-              fontSize: 13,
-              color: Color(0xFF7f8c8d),
-            ),
+            style: const TextStyle(fontSize: 13, color: Color(0xFF7f8c8d)),
             overflow: TextOverflow.ellipsis,
           ),
         ),
@@ -445,17 +441,18 @@ class ModernConfigReservationsPageState extends ConsumerState<ModernConfigReserv
           const SizedBox(height: 8),
           const Text(
             'No se encontraron reservas con los filtros aplicados',
-            style: TextStyle(
-              fontSize: 14,
-              color: Color(0xFF7f8c8d),
-            ),
+            style: TextStyle(fontSize: 14, color: Color(0xFF7f8c8d)),
           ),
         ],
       ),
     );
   }
 
-  Widget _buildDismissBackground(Color color, IconData icon, Alignment alignment) {
+  Widget _buildDismissBackground(
+    Color color,
+    IconData icon,
+    Alignment alignment,
+  ) {
     return Container(
       margin: const EdgeInsets.only(bottom: 16),
       decoration: BoxDecoration(
@@ -490,17 +487,15 @@ class ModernConfigReservationsPageState extends ConsumerState<ModernConfigReserv
   bool _isToday(DateTime date) {
     final now = DateTime.now();
     return date.year == now.year &&
-           date.month == now.month &&
-           date.day == now.day;
+        date.month == now.month &&
+        date.day == now.day;
   }
 
   void _showSearchDialog() {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(20),
-        ),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
         title: const Text('Buscar Reserva'),
         content: ModernInputField(
           hint: 'Nombre del cliente...',
@@ -526,9 +521,7 @@ class ModernConfigReservationsPageState extends ConsumerState<ModernConfigReserv
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(20),
-        ),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
         title: const Text('Filtrar por Estado'),
         content: Column(
           mainAxisSize: MainAxisSize.min,
@@ -555,9 +548,7 @@ class ModernConfigReservationsPageState extends ConsumerState<ModernConfigReserv
     return showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(20),
-        ),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
         title: Text(title),
         content: Text(message),
         actions: [
@@ -579,9 +570,7 @@ class ModernConfigReservationsPageState extends ConsumerState<ModernConfigReserv
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(20),
-        ),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
         content: Column(
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -666,10 +655,7 @@ class ModernConfigReservationsPageState extends ConsumerState<ModernConfigReserv
           Expanded(
             child: Text(
               value,
-              style: const TextStyle(
-                fontSize: 14,
-                color: Color(0xFF2c3e50),
-              ),
+              style: const TextStyle(fontSize: 14, color: Color(0xFF2c3e50)),
             ),
           ),
         ],

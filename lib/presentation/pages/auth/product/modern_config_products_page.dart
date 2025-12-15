@@ -1,31 +1,36 @@
-
 import 'package:animate_do/animate_do.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
-import '../../shared/widgets/modern_button.dart';
-import '../../shared/widgets/modern_card.dart';
-import '../../shared/widgets/modern_floating_action_button.dart';
-import '../../shared/widgets/modern_input_field.dart';
-import 'modern_scaffold_with_drawer.dart';
+import '../../../shared/widgets/modern_button.dart';
+import '../../../shared/widgets/modern_card.dart';
+import '../../../shared/widgets/modern_floating_action_button.dart';
+import '../../../shared/widgets/modern_input_field.dart';
+import '../modern_scaffold_with_drawer.dart';
 
 class ModernConfigProductsPage extends ConsumerStatefulWidget {
   static const name = 'ModernConfigProductsPage';
-  
+
   const ModernConfigProductsPage({super.key});
 
   @override
-  ModernConfigProductsPageState createState() => ModernConfigProductsPageState();
+  ModernConfigProductsPageState createState() =>
+      ModernConfigProductsPageState();
 }
 
-class ModernConfigProductsPageState extends ConsumerState<ModernConfigProductsPage> {
+class ModernConfigProductsPageState
+    extends ConsumerState<ModernConfigProductsPage> {
   String _searchQuery = '';
   String _selectedCategory = 'Todos';
   bool _showOnlyInStock = false;
-  
+
   final List<String> _categories = [
-    'Todos', 'Productos de Limpieza', 'Accesorios', 'Herramientas', 'Repuestos'
+    'Todos',
+    'Productos de Limpieza',
+    'Accesorios',
+    'Herramientas',
+    'Repuestos',
   ];
 
   @override
@@ -38,7 +43,7 @@ class ModernConfigProductsPageState extends ConsumerState<ModernConfigProductsPa
   @override
   Widget build(BuildContext context) {
     // final productsState = ref.watch(productsProvider);
-    
+
     // Datos simulados para el ejemplo - reemplazar con productsState.products
     final List<ProductData> products = _getSimulatedProducts();
 
@@ -70,15 +75,11 @@ class ModernConfigProductsPageState extends ConsumerState<ModernConfigProductsPa
           child: CustomScrollView(
             slivers: [
               // Header con estadísticas
-              SliverToBoxAdapter(
-                child: _buildHeaderSection(products),
-              ),
-              
+              SliverToBoxAdapter(child: _buildHeaderSection(products)),
+
               // Lista de productos
               if (products.isEmpty)
-                SliverFillRemaining(
-                  child: _buildEmptyState(),
-                )
+                SliverFillRemaining(child: _buildEmptyState())
               else
                 _buildProductsList(products),
             ],
@@ -96,7 +97,7 @@ class ModernConfigProductsPageState extends ConsumerState<ModernConfigProductsPa
   Widget _buildHeaderSection(List<ProductData> products) {
     final inStock = products.where((p) => p.stock > 0).length;
     final lowStock = products.where((p) => p.stock > 0 && p.stock < 10).length;
-    
+
     return Container(
       padding: const EdgeInsets.all(20),
       child: Column(
@@ -113,13 +114,10 @@ class ModernConfigProductsPageState extends ConsumerState<ModernConfigProductsPa
           const SizedBox(height: 8),
           Text(
             'Gestiona tu catálogo de productos',
-            style: TextStyle(
-              fontSize: 16,
-              color: Colors.grey[600],
-            ),
+            style: TextStyle(fontSize: 16, color: Colors.grey[600]),
           ),
           const SizedBox(height: 20),
-          
+
           // Estadísticas
           Row(
             children: [
@@ -151,9 +149,9 @@ class ModernConfigProductsPageState extends ConsumerState<ModernConfigProductsPa
               ),
             ],
           ),
-          
+
           const SizedBox(height: 16),
-          
+
           // Toggle de filtro rápido
           CheckboxListTile(
             value: _showOnlyInStock,
@@ -167,7 +165,12 @@ class ModernConfigProductsPageState extends ConsumerState<ModernConfigProductsPa
     );
   }
 
-  Widget _buildStatCard(String label, String value, IconData icon, Color color) {
+  Widget _buildStatCard(
+    String label,
+    String value,
+    IconData icon,
+    Color color,
+  ) {
     return Container(
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
@@ -195,13 +198,7 @@ class ModernConfigProductsPageState extends ConsumerState<ModernConfigProductsPa
             ),
           ),
           const SizedBox(height: 2),
-          Text(
-            label,
-            style: TextStyle(
-              fontSize: 12,
-              color: Colors.grey[600],
-            ),
-          ),
+          Text(label, style: TextStyle(fontSize: 12, color: Colors.grey[600])),
         ],
       ),
     );
@@ -209,20 +206,17 @@ class ModernConfigProductsPageState extends ConsumerState<ModernConfigProductsPa
 
   Widget _buildProductsList(List<ProductData> products) {
     final filteredProducts = _filterProducts(products);
-    
+
     return SliverPadding(
       padding: const EdgeInsets.symmetric(horizontal: 20),
       sliver: SliverList(
-        delegate: SliverChildBuilderDelegate(
-          (context, index) {
-            final product = filteredProducts[index];
-            return FadeInUp(
-              delay: Duration(milliseconds: index * 50),
-              child: _buildProductCard(product),
-            );
-          },
-          childCount: filteredProducts.length,
-        ),
+        delegate: SliverChildBuilderDelegate((context, index) {
+          final product = filteredProducts[index];
+          return FadeInUp(
+            delay: Duration(milliseconds: index * 50),
+            child: _buildProductCard(product),
+          );
+        }, childCount: filteredProducts.length),
       ),
     );
   }
@@ -230,7 +224,7 @@ class ModernConfigProductsPageState extends ConsumerState<ModernConfigProductsPa
   Widget _buildProductCard(ProductData product) {
     final bool isLowStock = product.stock > 0 && product.stock < 10;
     final bool isOutOfStock = product.stock == 0;
-    
+
     return Dismissible(
       key: Key(product.id),
       background: _buildDismissBackground(
@@ -285,9 +279,9 @@ class ModernConfigProductsPageState extends ConsumerState<ModernConfigProductsPa
                             size: 40,
                           ),
                   ),
-                  
+
                   const SizedBox(width: 16),
-                  
+
                   // Información del producto
                   Expanded(
                     child: Column(
@@ -324,8 +318,8 @@ class ModernConfigProductsPageState extends ConsumerState<ModernConfigProductsPa
                                 color: isOutOfStock
                                     ? const Color(0xFFe74c3c).withOpacity(0.1)
                                     : isLowStock
-                                        ? const Color(0xFFf39c12).withOpacity(0.1)
-                                        : const Color(0xFF27ae60).withOpacity(0.1),
+                                    ? const Color(0xFFf39c12).withOpacity(0.1)
+                                    : const Color(0xFF27ae60).withOpacity(0.1),
                                 borderRadius: BorderRadius.circular(8),
                               ),
                               child: Row(
@@ -335,30 +329,30 @@ class ModernConfigProductsPageState extends ConsumerState<ModernConfigProductsPa
                                     isOutOfStock
                                         ? Icons.cancel
                                         : isLowStock
-                                            ? Icons.warning
-                                            : Icons.check_circle,
+                                        ? Icons.warning
+                                        : Icons.check_circle,
                                     size: 14,
                                     color: isOutOfStock
                                         ? const Color(0xFFe74c3c)
                                         : isLowStock
-                                            ? const Color(0xFFf39c12)
-                                            : const Color(0xFF27ae60),
+                                        ? const Color(0xFFf39c12)
+                                        : const Color(0xFF27ae60),
                                   ),
                                   const SizedBox(width: 4),
                                   Text(
                                     isOutOfStock
                                         ? 'Sin Stock'
                                         : isLowStock
-                                            ? 'Stock Bajo (${product.stock})'
-                                            : 'Stock: ${product.stock}',
+                                        ? 'Stock Bajo (${product.stock})'
+                                        : 'Stock: ${product.stock}',
                                     style: TextStyle(
                                       fontSize: 12,
                                       fontWeight: FontWeight.w600,
                                       color: isOutOfStock
                                           ? const Color(0xFFe74c3c)
                                           : isLowStock
-                                              ? const Color(0xFFf39c12)
-                                              : const Color(0xFF27ae60),
+                                          ? const Color(0xFFf39c12)
+                                          : const Color(0xFF27ae60),
                                     ),
                                   ),
                                 ],
@@ -378,7 +372,7 @@ class ModernConfigProductsPageState extends ConsumerState<ModernConfigProductsPa
                       ],
                     ),
                   ),
-                  
+
                   // Botón de más opciones
                   IconButton(
                     icon: const Icon(Icons.more_vert),
@@ -408,11 +402,7 @@ class ModernConfigProductsPageState extends ConsumerState<ModernConfigProductsPa
         alignment: alignment,
         child: Padding(
           padding: const EdgeInsets.symmetric(horizontal: 20),
-          child: Icon(
-            icon,
-            color: Colors.white,
-            size: 32,
-          ),
+          child: Icon(icon, color: Colors.white, size: 32),
         ),
       ),
     );
@@ -436,9 +426,9 @@ class ModernConfigProductsPageState extends ConsumerState<ModernConfigProductsPa
               color: Color(0xFF3498db),
             ),
           ),
-          
+
           const SizedBox(height: 24),
-          
+
           const Text(
             'No hay productos registrados',
             style: TextStyle(
@@ -447,19 +437,16 @@ class ModernConfigProductsPageState extends ConsumerState<ModernConfigProductsPa
               color: Color(0xFF2c3e50),
             ),
           ),
-          
+
           const SizedBox(height: 8),
-          
+
           const Text(
             'Comienza agregando productos a tu inventario',
-            style: TextStyle(
-              fontSize: 16,
-              color: Color(0xFF7f8c8d),
-            ),
+            style: TextStyle(fontSize: 16, color: Color(0xFF7f8c8d)),
           ),
-          
+
           const SizedBox(height: 32),
-          
+
           ModernButton(
             text: 'Crear Producto',
             icon: Icons.add,
@@ -508,10 +495,7 @@ class ModernConfigProductsPageState extends ConsumerState<ModernConfigProductsPa
                   const SizedBox(height: 4),
                   Text(
                     'Stock: ${product.stock} unidades',
-                    style: TextStyle(
-                      fontSize: 14,
-                      color: Colors.grey[600],
-                    ),
+                    style: TextStyle(fontSize: 14, color: Colors.grey[600]),
                   ),
                 ],
               ),
@@ -601,7 +585,7 @@ class ModernConfigProductsPageState extends ConsumerState<ModernConfigProductsPa
 
   void _showUpdateStockDialog(ProductData product) {
     final controller = TextEditingController(text: product.stock.toString());
-    
+
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
@@ -645,33 +629,36 @@ class ModernConfigProductsPageState extends ConsumerState<ModernConfigProductsPa
 
   Future<bool> _showDeleteConfirmation(ProductData product) async {
     return await showDialog<bool>(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Eliminar Producto'),
-        content: Text('¿Estás seguro de que deseas eliminar "${product.name}"?'),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(context).pop(false),
-            child: const Text('Cancelar'),
+          context: context,
+          builder: (context) => AlertDialog(
+            title: const Text('Eliminar Producto'),
+            content: Text(
+              '¿Estás seguro de que deseas eliminar "${product.name}"?',
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.of(context).pop(false),
+                child: const Text('Cancelar'),
+              ),
+              ModernButton(
+                text: 'Eliminar',
+                style: ModernButtonStyle.danger,
+                onPressed: () {
+                  Navigator.of(context).pop(true);
+                  // Aquí eliminar el producto
+                  // ref.read(productsProvider.notifier).deleteProduct(product.id);
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(
+                      content: Text('Producto eliminado'),
+                      backgroundColor: Color(0xFFe74c3c),
+                    ),
+                  );
+                },
+              ),
+            ],
           ),
-          ModernButton(
-            text: 'Eliminar',
-            style: ModernButtonStyle.danger,
-            onPressed: () {
-              Navigator.of(context).pop(true);
-              // Aquí eliminar el producto
-              // ref.read(productsProvider.notifier).deleteProduct(product.id);
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(
-                  content: Text('Producto eliminado'),
-                  backgroundColor: Color(0xFFe74c3c),
-                ),
-              );
-            },
-          ),
-        ],
-      ),
-    ) ?? false;
+        ) ??
+        false;
   }
 
   Future<void> _refreshProducts() async {
@@ -682,10 +669,11 @@ class ModernConfigProductsPageState extends ConsumerState<ModernConfigProductsPa
 
   List<ProductData> _filterProducts(List<ProductData> products) {
     return products.where((product) {
-      final matchesSearch = _searchQuery.isEmpty ||
+      final matchesSearch =
+          _searchQuery.isEmpty ||
           product.name.toLowerCase().contains(_searchQuery.toLowerCase());
-      final matchesCategory = _selectedCategory == 'Todos' ||
-          product.category == _selectedCategory;
+      final matchesCategory =
+          _selectedCategory == 'Todos' || product.category == _selectedCategory;
       final matchesStock = !_showOnlyInStock || product.stock > 0;
       return matchesSearch && matchesCategory && matchesStock;
     }).toList();

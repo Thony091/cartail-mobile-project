@@ -1,11 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:animate_do/animate_do.dart';
 
-import '../../shared/widgets/widgets.dart';
+import '../../../shared/widgets/widgets.dart';
 
 class ModernEditProfilePage extends StatefulWidget {
   static const name = 'ModernEditProfilePage';
-  
+
   const ModernEditProfilePage({super.key});
 
   @override
@@ -26,7 +26,6 @@ class _ModernEditProfilePageState extends State<ModernEditProfilePage> {
   void initState() {
     super.initState();
     _loadUserData();
-    
   }
 
   void _loadUserData() {
@@ -48,42 +47,45 @@ class _ModernEditProfilePageState extends State<ModernEditProfilePage> {
     super.dispose();
   }
 
-  void _selectBirthday( ) async {
+  void _selectBirthday() async {
     final DateTime? picked = await showDatePicker(
       context: context,
-      initialDate: DateTime.now().subtract(const Duration(days: 6570)), // 18 años atrás
+      initialDate: DateTime.now().subtract(
+        const Duration(days: 6570),
+      ), // 18 años atrás
       firstDate: DateTime(1950),
       lastDate: DateTime.now(),
     );
-    
+
     if (picked != null) {
       setState(() {
-        _birthdayController.text = '${picked.day.toString().padLeft(2, '0')}/'
+        _birthdayController.text =
+            '${picked.day.toString().padLeft(2, '0')}/'
             '${picked.month.toString().padLeft(2, '0')}/'
             '${picked.year}';
       });
     }
   }
 
-  void _handleRegister( ) async {
+  void _handleRegister() async {
     if (_formKey.currentState?.validate() ?? false) {
       setState(() {
         _isLoading = true;
       });
-      
+
       // Simular registro
       await Future.delayed(const Duration(seconds: 2));
-      
+
       setState(() {
         _isLoading = false;
       });
-      
-      // Mostrar éxito y navegar                              
+
+      // Mostrar éxito y navegar
       _showSuccessDialog();
     }
   }
 
-  void _showSuccessDialog( ) {
+  void _showSuccessDialog() {
     showDialog(
       context: context,
       barrierDismissible: false,
@@ -117,10 +119,7 @@ class _ModernEditProfilePageState extends State<ModernEditProfilePage> {
             const Text(
               'Tu cuenta ha sido creada exitosamente. Ahora puedes iniciar sesión.',
               textAlign: TextAlign.center,
-              style: TextStyle(
-                fontSize: 14,
-                color: Color(0xFF7f8c8d),
-              ),
+              style: TextStyle(fontSize: 14, color: Color(0xFF7f8c8d)),
             ),
           ],
         ),
@@ -173,12 +172,17 @@ class _ModernEditProfilePageState extends State<ModernEditProfilePage> {
                               height: 100,
                               decoration: BoxDecoration(
                                 gradient: LinearGradient(
-                                  colors: [const Color(0xFF3498db), const Color(0xFF2980b9)],
+                                  colors: [
+                                    const Color(0xFF3498db),
+                                    const Color(0xFF2980b9),
+                                  ],
                                 ),
                                 borderRadius: BorderRadius.circular(50),
                                 boxShadow: [
                                   BoxShadow(
-                                    color: const Color(0xFF3498db).withOpacity(0.3),
+                                    color: const Color(
+                                      0xFF3498db,
+                                    ).withOpacity(0.3),
                                     blurRadius: 20,
                                     offset: const Offset(0, 8),
                                   ),
@@ -201,7 +205,10 @@ class _ModernEditProfilePageState extends State<ModernEditProfilePage> {
                                   decoration: BoxDecoration(
                                     color: const Color(0xFFf39c12),
                                     borderRadius: BorderRadius.circular(16),
-                                    border: Border.all(color: Colors.white, width: 3),
+                                    border: Border.all(
+                                      color: Colors.white,
+                                      width: 3,
+                                    ),
                                   ),
                                   child: const Icon(
                                     Icons.camera_alt,
@@ -225,9 +232,9 @@ class _ModernEditProfilePageState extends State<ModernEditProfilePage> {
                     ),
                   ),
                 ),
-                
+
                 const SizedBox(height: 24),
-                
+
                 // Información personal
                 FadeInLeft(
                   child: ModernCard(
@@ -243,7 +250,7 @@ class _ModernEditProfilePageState extends State<ModernEditProfilePage> {
                           ),
                         ),
                         const SizedBox(height: 20),
-                        
+
                         ModernInputField(
                           // controller: _nameController,
                           label: 'Nombre Completo',
@@ -255,9 +262,9 @@ class _ModernEditProfilePageState extends State<ModernEditProfilePage> {
                             return null;
                           },
                         ),
-                        
+
                         const SizedBox(height: 20),
-                        
+
                         ModernInputField(
                           // controller: _rutController,
                           label: 'RUT',
@@ -269,9 +276,9 @@ class _ModernEditProfilePageState extends State<ModernEditProfilePage> {
                             return null;
                           },
                         ),
-                        
+
                         const SizedBox(height: 20),
-                        
+
                         ModernInputField(
                           // controller: _birthdayController,
                           label: 'Fecha de Nacimiento',
@@ -279,9 +286,9 @@ class _ModernEditProfilePageState extends State<ModernEditProfilePage> {
                           readOnly: true,
                           onTap: _selectBirthday,
                         ),
-                        
+
                         const SizedBox(height: 20),
-                        
+
                         ModernInputField(
                           // controller: _phoneController,
                           label: 'Número de Teléfono',
@@ -294,9 +301,9 @@ class _ModernEditProfilePageState extends State<ModernEditProfilePage> {
                             return null;
                           },
                         ),
-                        
+
                         const SizedBox(height: 20),
-                        
+
                         const ModernInputField(
                           // controller: _bioController,
                           label: 'Biografía',
@@ -308,9 +315,9 @@ class _ModernEditProfilePageState extends State<ModernEditProfilePage> {
                     ),
                   ),
                 ),
-                
+
                 const SizedBox(height: 32),
-                
+
                 // Botones de acción
                 FadeInUp(
                   child: Column(
@@ -343,7 +350,6 @@ class _ModernEditProfilePageState extends State<ModernEditProfilePage> {
         ),
       ),
     );
-    
   }
 
   void _changeAvatar() {
@@ -394,7 +400,7 @@ class _ModernEditProfilePageState extends State<ModernEditProfilePage> {
   //     firstDate: DateTime(1950),
   //     lastDate: DateTime.now(),
   //   );
-    
+
   //   if (picked != null) {
   //     setState(() {
   //       _birthdayController.text = '${picked.day.toString().padLeft(2, '0')}/'
@@ -409,14 +415,14 @@ class _ModernEditProfilePageState extends State<ModernEditProfilePage> {
       setState(() {
         _isLoading = true;
       });
-      
+
       // Simular guardado
       await Future.delayed(const Duration(seconds: 2));
-      
+
       setState(() {
         _isLoading = false;
       });
-      
+
       // Mostrar éxito
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
@@ -424,7 +430,7 @@ class _ModernEditProfilePageState extends State<ModernEditProfilePage> {
           backgroundColor: Color(0xFF27ae60),
         ),
       );
-      
+
       Navigator.of(context).pop();
     }
   }
@@ -433,7 +439,7 @@ class _ModernEditProfilePageState extends State<ModernEditProfilePage> {
     final currentPasswordController = TextEditingController();
     final newPasswordController = TextEditingController();
     final confirmPasswordController = TextEditingController();
-    
+
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
@@ -447,14 +453,14 @@ class _ModernEditProfilePageState extends State<ModernEditProfilePage> {
               obscureText: true,
               prefixIcon: Icon(Icons.lock_outline),
             ),
-           SizedBox(height: 16),
+            SizedBox(height: 16),
             ModernInputField(
               // controller: newPasswordController,
               label: 'Nueva Contraseña',
               obscureText: true,
               prefixIcon: Icon(Icons.lock),
             ),
-           SizedBox(height: 16),
+            SizedBox(height: 16),
             ModernInputField(
               // controller: confirmPasswordController,
               label: 'Confirmar Contraseña',

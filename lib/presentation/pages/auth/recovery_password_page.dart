@@ -8,29 +8,27 @@ import '../../shared/shared.dart';
 import '../../shared/widgets/custom_product_field.dart';
 
 class ResetPasswordPage extends StatelessWidget {
-
   static const name = 'ResetPasswordPage';
-  
+
   const ResetPasswordPage({super.key});
 
   @override
   Widget build(BuildContext context) {
-    
     return SafeArea(
       child: Scaffold(
         appBar: CustomAppBar(
           title: "Recuperar contraseña",
           styleText: const TextStyle(
-            color: Colors.white, 
-            fontSize: 20, 
+            color: Colors.white,
+            fontSize: 20,
             fontWeight: FontWeight.w500,
             shadows: [
               Shadow(
                 offset: Offset(1.0, 3.0),
                 blurRadius: 3.0,
-                color: Colors.black54
-              )
-            ]
+                color: Colors.black54,
+              ),
+            ],
           ),
           customIcon: Icons.arrow_back_rounded,
           iconSize: 25,
@@ -45,7 +43,7 @@ class ResetPasswordPage extends StatelessWidget {
             keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
             child: Column(
               children: [
-                const SizedBox( height: 75 ),
+                const SizedBox(height: 75),
                 FadeInUp(child: const _ForgotPasswordForm()),
               ],
             ),
@@ -61,15 +59,14 @@ class _ForgotPasswordForm extends ConsumerWidget {
 
   void showSnackBar(BuildContext context, String message) {
     ScaffoldMessenger.of(context).hideCurrentSnackBar();
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text(message)),
-    );
+    ScaffoldMessenger.of(
+      context,
+    ).showSnackBar(SnackBar(content: Text(message)));
   }
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-
-    final forgotPasswordForm = ref.watch( resetPasswordFormProvider );
+    final forgotPasswordForm = ref.watch(resetPasswordFormProvider);
     final size = MediaQuery.of(context).size;
 
     return Padding(
@@ -103,10 +100,12 @@ class _ForgotPasswordForm extends ConsumerWidget {
                     isTopField: true,
                     label: 'Correo',
                     keyboardType: TextInputType.emailAddress,
-                    onChanged: ref.read( resetPasswordFormProvider.notifier ).onEmailChange,
-                    errorMessage: forgotPasswordForm.isFormPosted 
-                      ? forgotPasswordForm.email.errorMessage
-                      : null,
+                    onChanged: ref
+                        .read(resetPasswordFormProvider.notifier)
+                        .onEmailChange,
+                    errorMessage: forgotPasswordForm.isFormPosted
+                        ? forgotPasswordForm.email.errorMessage
+                        : null,
                   ),
                   const SizedBox(height: 30),
                   CustomFilledButton(
@@ -124,20 +123,28 @@ class _ForgotPasswordForm extends ConsumerWidget {
                     buttonColor: Colors.blueAccent.shade400,
                     mainAxisAlignment: MainAxisAlignment.start,
                     onPressed: forgotPasswordForm.isPosting
-                      ? null
-                      : () async {
-                        final bool value = await ref.read( resetPasswordFormProvider.notifier ).onFormSubmit();
-                        if( !context.mounted ) return;
-                        if( value ) {
-                          showDialog(
-                            context: context,
-                            builder: (context) => const PopUpMensajeFinalWidget(text: 'Se ha enviado un mesaje a su correo.'),
-                          );
-                          await Future.delayed( const Duration( milliseconds: 1500 ) );
-                          if ( !context.mounted ) return;
-                          context.push('/login');
-                        }
-                      }
+                        ? null
+                        : () async {
+                            final bool value = await ref
+                                .read(resetPasswordFormProvider.notifier)
+                                .onFormSubmit();
+                            if (!context.mounted) return;
+                            if (value) {
+                              showDialog(
+                                context: context,
+                                builder: (context) =>
+                                    const PopUpMensajeFinalWidget(
+                                      text:
+                                          'Se ha enviado un mesaje a su correo.',
+                                    ),
+                              );
+                              await Future.delayed(
+                                const Duration(milliseconds: 1500),
+                              );
+                              if (!context.mounted) return;
+                              context.push('/login');
+                            }
+                          },
                   ),
                 ],
               ),

@@ -3,18 +3,15 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
-import '../../providers/auth_provider.dart';
-import '../../shared/widgets/widgets.dart';
-import 'modern_scaffold_with_drawer.dart';
+import '../../../providers/auth_provider.dart';
+import '../../../shared/widgets/widgets.dart';
+import '../modern_scaffold_with_drawer.dart';
 
 class ModernWorkDetailPage extends ConsumerStatefulWidget {
   final String workId;
   static const name = 'ModernWorkDetailPage';
-  
-  const ModernWorkDetailPage({
-    super.key,
-    required this.workId,
-  });
+
+  const ModernWorkDetailPage({super.key, required this.workId});
 
   @override
   ModernWorkDetailPageState createState() => ModernWorkDetailPageState();
@@ -25,7 +22,7 @@ class ModernWorkDetailPageState extends ConsumerState<ModernWorkDetailPage> {
   final _titleController = TextEditingController();
   final _descriptionController = TextEditingController();
   final _vehicleController = TextEditingController();
-  
+
   bool _isEditMode = false;
   bool _isLoading = false;
   bool _isSaving = false;
@@ -55,17 +52,18 @@ class ModernWorkDetailPageState extends ConsumerState<ModernWorkDetailPage> {
       });
       return;
     }
-    
+
     setState(() => _isLoading = true);
-    
+
     // Simular carga
     await Future.delayed(const Duration(milliseconds: 500));
-    
+
     _titleController.text = 'Renault Duster Detailing Premium';
-    _descriptionController.text = 'Transformación completa de Renault Duster con servicio de detailing premium. Se realizó lavado profundo, pulido de carrocería, tratamiento de cuero interior y encerado profesional.';
+    _descriptionController.text =
+        'Transformación completa de Renault Duster con servicio de detailing premium. Se realizó lavado profundo, pulido de carrocería, tratamiento de cuero interior y encerado profesional.';
     _vehicleController.text = 'Renault Duster 2019';
     _isFeatured = true;
-    
+
     setState(() => _isLoading = false);
   }
 
@@ -77,11 +75,11 @@ class ModernWorkDetailPageState extends ConsumerState<ModernWorkDetailPage> {
     final isNewWork = widget.workId == 'new';
 
     return ModernScaffoldWithDrawer(
-      title: isNewWork 
-          ? 'Nuevo Trabajo' 
-          : _isEditMode 
-              ? 'Editar Trabajo' 
-              : 'Detalles del Trabajo',
+      title: isNewWork
+          ? 'Nuevo Trabajo'
+          : _isEditMode
+          ? 'Editar Trabajo'
+          : 'Detalles del Trabajo',
       appBarActions: [
         if (!isNewWork && isAdmin && !_isEditMode)
           IconButton(
@@ -111,33 +109,33 @@ class ModernWorkDetailPageState extends ConsumerState<ModernWorkDetailPage> {
                     children: [
                       // Galería de fotos
                       FadeInDown(child: _buildPhotoGallery()),
-                      
+
                       const SizedBox(height: 24),
-                      
+
                       // Información principal
                       FadeInUp(
                         delay: const Duration(milliseconds: 100),
                         child: _buildMainInfo(),
                       ),
-                      
+
                       const SizedBox(height: 20),
-                      
+
                       // Descripción
                       FadeInUp(
                         delay: const Duration(milliseconds: 200),
                         child: _buildDescription(),
                       ),
-                      
+
                       const SizedBox(height: 20),
-                      
+
                       // Detalles adicionales
                       FadeInUp(
                         delay: const Duration(milliseconds: 300),
                         child: _buildAdditionalDetails(),
                       ),
-                      
+
                       const SizedBox(height: 32),
-                      
+
                       // Botones
                       if (_isEditMode)
                         FadeInUp(
@@ -161,14 +159,20 @@ class ModernWorkDetailPageState extends ConsumerState<ModernWorkDetailPage> {
             height: 300,
             width: double.infinity,
             decoration: BoxDecoration(
-              borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
+              borderRadius: const BorderRadius.vertical(
+                top: Radius.circular(20),
+              ),
               color: const Color(0xFF9b59b6).withOpacity(0.1),
             ),
             child: _selectedImages.isEmpty
                 ? Column(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      const Icon(Icons.photo_camera, size: 80, color: Color(0xFF9b59b6)),
+                      const Icon(
+                        Icons.photo_camera,
+                        size: 80,
+                        color: Color(0xFF9b59b6),
+                      ),
                       const SizedBox(height: 16),
                       if (_isEditMode)
                         TextButton.icon(
@@ -206,7 +210,7 @@ class ModernWorkDetailPageState extends ConsumerState<ModernWorkDetailPage> {
                     ],
                   ),
           ),
-          
+
           // Galería de miniaturas
           if (_selectedImages.length > 1)
             Container(
@@ -222,13 +226,18 @@ class ModernWorkDetailPageState extends ConsumerState<ModernWorkDetailPage> {
                     decoration: BoxDecoration(
                       borderRadius: BorderRadius.circular(12),
                       border: Border.all(
-                        color: index == 0 ? const Color(0xFF9b59b6) : Colors.grey[300]!,
+                        color: index == 0
+                            ? const Color(0xFF9b59b6)
+                            : Colors.grey[300]!,
                         width: 2,
                       ),
                     ),
                     child: ClipRRect(
                       borderRadius: BorderRadius.circular(10),
-                      child: Image.network(_selectedImages[index], fit: BoxFit.cover),
+                      child: Image.network(
+                        _selectedImages[index],
+                        fit: BoxFit.cover,
+                      ),
                     ),
                   );
                 },
@@ -251,7 +260,8 @@ class ModernWorkDetailPageState extends ConsumerState<ModernWorkDetailPage> {
                 label: 'Título del Trabajo',
                 hint: 'Ej: Renault Duster Detailing',
                 controller: _titleController,
-                validator: (value) => value?.isEmpty ?? true ? 'Ingresa un título' : null,
+                validator: (value) =>
+                    value?.isEmpty ?? true ? 'Ingresa un título' : null,
               ),
               const SizedBox(height: 16),
               ModernInputField(
@@ -272,18 +282,25 @@ class ModernWorkDetailPageState extends ConsumerState<ModernWorkDetailPage> {
               const SizedBox(height: 12),
               Row(
                 children: [
-                  const Icon(Icons.directions_car, size: 20, color: Color(0xFF7f8c8d)),
+                  const Icon(
+                    Icons.directions_car,
+                    size: 20,
+                    color: Color(0xFF7f8c8d),
+                  ),
                   const SizedBox(width: 8),
                   Text(
                     _vehicleController.text,
-                    style: const TextStyle(fontSize: 16, color: Color(0xFF7f8c8d)),
+                    style: const TextStyle(
+                      fontSize: 16,
+                      color: Color(0xFF7f8c8d),
+                    ),
                   ),
                 ],
               ),
             ],
-            
+
             const SizedBox(height: 16),
-            
+
             // Toggle destacado (solo en modo edición)
             if (_isEditMode)
               CheckboxListTile(
@@ -296,7 +313,10 @@ class ModernWorkDetailPageState extends ConsumerState<ModernWorkDetailPage> {
               )
             else if (_isFeatured)
               Container(
-                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 12,
+                  vertical: 6,
+                ),
                 decoration: BoxDecoration(
                   color: const Color(0xFFf39c12).withOpacity(0.1),
                   borderRadius: BorderRadius.circular(8),
@@ -332,7 +352,11 @@ class ModernWorkDetailPageState extends ConsumerState<ModernWorkDetailPage> {
           children: [
             Row(
               children: [
-                const Icon(Icons.description, color: Color(0xFF9b59b6), size: 20),
+                const Icon(
+                  Icons.description,
+                  color: Color(0xFF9b59b6),
+                  size: 20,
+                ),
                 const SizedBox(width: 8),
                 const Text(
                   'Descripción del Trabajo',
@@ -345,14 +369,15 @@ class ModernWorkDetailPageState extends ConsumerState<ModernWorkDetailPage> {
               ],
             ),
             const SizedBox(height: 16),
-            
+
             if (_isEditMode)
               ModernInputField(
                 label: 'Descripción',
                 hint: 'Describe los trabajos realizados...',
                 controller: _descriptionController,
                 maxLines: 6,
-                validator: (value) => value?.isEmpty ?? true ? 'Ingresa una descripción' : null,
+                validator: (value) =>
+                    value?.isEmpty ?? true ? 'Ingresa una descripción' : null,
               )
             else
               Text(
@@ -378,7 +403,11 @@ class ModernWorkDetailPageState extends ConsumerState<ModernWorkDetailPage> {
           children: [
             Row(
               children: [
-                const Icon(Icons.info_outline, color: Color(0xFF9b59b6), size: 20),
+                const Icon(
+                  Icons.info_outline,
+                  color: Color(0xFF9b59b6),
+                  size: 20,
+                ),
                 const SizedBox(width: 8),
                 const Text(
                   'Información Adicional',
@@ -391,12 +420,15 @@ class ModernWorkDetailPageState extends ConsumerState<ModernWorkDetailPage> {
               ],
             ),
             const SizedBox(height: 16),
-            
+
             // Fecha
             if (_isEditMode)
               ListTile(
                 contentPadding: EdgeInsets.zero,
-                leading: const Icon(Icons.calendar_today, color: Color(0xFF9b59b6)),
+                leading: const Icon(
+                  Icons.calendar_today,
+                  color: Color(0xFF9b59b6),
+                ),
                 title: const Text('Fecha de Realización'),
                 subtitle: Text(_formatDate(_completedDate)),
                 onTap: () async {
@@ -424,7 +456,12 @@ class ModernWorkDetailPageState extends ConsumerState<ModernWorkDetailPage> {
     );
   }
 
-  Widget _buildDetailRow(String label, String value, IconData icon, Color color) {
+  Widget _buildDetailRow(
+    String label,
+    String value,
+    IconData icon,
+    Color color,
+  ) {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
@@ -438,7 +475,10 @@ class ModernWorkDetailPageState extends ConsumerState<ModernWorkDetailPage> {
           Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text(label, style: TextStyle(fontSize: 13, color: Colors.grey[600])),
+              Text(
+                label,
+                style: TextStyle(fontSize: 13, color: Colors.grey[600]),
+              ),
               const SizedBox(height: 4),
               Text(
                 value,
@@ -459,7 +499,9 @@ class ModernWorkDetailPageState extends ConsumerState<ModernWorkDetailPage> {
     return Column(
       children: [
         ModernButton(
-          text: _isSaving ? 'Guardando...' : (isNewWork ? 'Crear Trabajo' : 'Guardar Cambios'),
+          text: _isSaving
+              ? 'Guardando...'
+              : (isNewWork ? 'Crear Trabajo' : 'Guardar Cambios'),
           icon: _isSaving ? null : Icons.save,
           onPressed: _isSaving ? null : _saveWork,
           isLoading: _isSaving,
@@ -494,11 +536,13 @@ class ModernWorkDetailPageState extends ConsumerState<ModernWorkDetailPage> {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text(widget.workId == 'new' ? 'Trabajo creado' : 'Cambios guardados'),
+            content: Text(
+              widget.workId == 'new' ? 'Trabajo creado' : 'Cambios guardados',
+            ),
             backgroundColor: const Color(0xFF27ae60),
           ),
         );
-        
+
         if (widget.workId == 'new') {
           context.pop();
         } else {
@@ -543,15 +587,19 @@ class ModernWorkDetailPageState extends ConsumerState<ModernWorkDetailPage> {
 
   String _formatDate(DateTime date) {
     final months = [
-      'Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio',
-      'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'
+      'Enero',
+      'Febrero',
+      'Marzo',
+      'Abril',
+      'Mayo',
+      'Junio',
+      'Julio',
+      'Agosto',
+      'Septiembre',
+      'Octubre',
+      'Noviembre',
+      'Diciembre',
     ];
     return '${date.day} de ${months[date.month - 1]} ${date.year}';
   }
 }
-
-
-
-
-
-

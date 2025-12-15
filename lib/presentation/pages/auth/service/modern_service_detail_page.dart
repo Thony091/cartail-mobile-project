@@ -1,39 +1,36 @@
-
 import 'package:animate_do/animate_do.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
-import '../../providers/auth_provider.dart';
-import '../../shared/shared.dart';
-import 'modern_scaffold_with_drawer.dart';
+import '../../../providers/auth_provider.dart';
+import '../../../shared/shared.dart';
+import '../modern_scaffold_with_drawer.dart';
 
 class ModernServiceDetailPage extends ConsumerStatefulWidget {
   final String serviceId;
   static const name = 'ModernServiceDetailPage';
-  
-  const ModernServiceDetailPage({
-    super.key,
-    required this.serviceId,
-  });
+
+  const ModernServiceDetailPage({super.key, required this.serviceId});
 
   @override
   ModernServiceDetailPageState createState() => ModernServiceDetailPageState();
 }
 
-class ModernServiceDetailPageState extends ConsumerState<ModernServiceDetailPage> {
+class ModernServiceDetailPageState
+    extends ConsumerState<ModernServiceDetailPage> {
   final _formKey = GlobalKey<FormState>();
   final _nameController = TextEditingController();
   final _descriptionController = TextEditingController();
   final _priceController = TextEditingController();
   final _durationController = TextEditingController();
-  
+
   bool _isEditMode = false;
   bool _isLoading = false;
   bool _isSaving = false;
   String _selectedCategory = 'Detailing';
   List<String> _selectedImages = [];
-  
+
   final List<String> _categories = [
     'Detailing',
     'Mecánica',
@@ -66,22 +63,23 @@ class ModernServiceDetailPageState extends ConsumerState<ModernServiceDetailPage
       });
       return;
     }
-    
+
     setState(() => _isLoading = true);
-    
+
     // Cargar servicio
     // final service = await ref.read(serviceProvider(widget.serviceId).future);
-    
+
     // Simular carga
     await Future.delayed(const Duration(milliseconds: 500));
-    
+
     // Llenar formulario con datos simulados
     _nameController.text = 'Detailing Premium';
-    _descriptionController.text = 'Servicio completo de detailing para tu vehículo. Incluye lavado exterior e interior, encerado, pulido de carrocería, limpieza de motor y tratamiento de llantas.';
+    _descriptionController.text =
+        'Servicio completo de detailing para tu vehículo. Incluye lavado exterior e interior, encerado, pulido de carrocería, limpieza de motor y tratamiento de llantas.';
     _priceController.text = '120000';
     _durationController.text = '180';
     _selectedCategory = 'Detailing';
-    
+
     setState(() => _isLoading = false);
   }
 
@@ -93,11 +91,11 @@ class ModernServiceDetailPageState extends ConsumerState<ModernServiceDetailPage
     final isNewService = widget.serviceId == 'new';
 
     return ModernScaffoldWithDrawer(
-      title: isNewService 
-          ? 'Crear Servicio' 
-          : _isEditMode 
-              ? 'Editar Servicio' 
-              : 'Detalles del Servicio',
+      title: isNewService
+          ? 'Crear Servicio'
+          : _isEditMode
+          ? 'Editar Servicio'
+          : 'Detalles del Servicio',
       appBarActions: [
         if (!isNewService && isAdmin && !_isEditMode)
           IconButton(
@@ -131,44 +129,42 @@ class ModernServiceDetailPageState extends ConsumerState<ModernServiceDetailPage
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       // Galería de imágenes
-                      FadeInDown(
-                        child: _buildImageGallery(),
-                      ),
-                      
+                      FadeInDown(child: _buildImageGallery()),
+
                       const SizedBox(height: 24),
-                      
+
                       // Información básica
                       FadeInUp(
                         delay: const Duration(milliseconds: 100),
                         child: _buildBasicInfo(),
                       ),
-                      
+
                       const SizedBox(height: 20),
-                      
+
                       // Descripción
                       FadeInUp(
                         delay: const Duration(milliseconds: 200),
                         child: _buildDescription(),
                       ),
-                      
+
                       const SizedBox(height: 20),
-                      
+
                       // Detalles del servicio
                       FadeInUp(
                         delay: const Duration(milliseconds: 300),
                         child: _buildServiceDetails(),
                       ),
-                      
+
                       const SizedBox(height: 20),
-                      
+
                       // Categoría
                       FadeInUp(
                         delay: const Duration(milliseconds: 400),
                         child: _buildCategorySelector(),
                       ),
-                      
+
                       const SizedBox(height: 32),
-                      
+
                       // Botones de acción
                       if (_isEditMode)
                         FadeInUp(
@@ -197,7 +193,9 @@ class ModernServiceDetailPageState extends ConsumerState<ModernServiceDetailPage
             height: 250,
             width: double.infinity,
             decoration: BoxDecoration(
-              borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
+              borderRadius: const BorderRadius.vertical(
+                top: Radius.circular(20),
+              ),
               color: const Color(0xFF3498db).withOpacity(0.1),
             ),
             child: _selectedImages.isEmpty
@@ -242,7 +240,7 @@ class ModernServiceDetailPageState extends ConsumerState<ModernServiceDetailPage
                     ],
                   ),
           ),
-          
+
           // Miniaturas
           if (_selectedImages.length > 1)
             Container(
@@ -258,7 +256,7 @@ class ModernServiceDetailPageState extends ConsumerState<ModernServiceDetailPage
                     decoration: BoxDecoration(
                       borderRadius: BorderRadius.circular(12),
                       border: Border.all(
-                        color: index == 0 
+                        color: index == 0
                             ? const Color(0xFF3498db)
                             : Colors.grey[300]!,
                         width: 2,
@@ -429,7 +427,7 @@ class ModernServiceDetailPageState extends ConsumerState<ModernServiceDetailPage
               ],
             ),
             const SizedBox(height: 20),
-            
+
             // Precio
             if (_isEditMode)
               ModernInputField(
@@ -455,9 +453,9 @@ class ModernServiceDetailPageState extends ConsumerState<ModernServiceDetailPage
                 Icons.attach_money,
                 const Color(0xFF27ae60),
               ),
-            
+
             const SizedBox(height: 16),
-            
+
             // Duración
             if (_isEditMode)
               ModernInputField(
@@ -489,7 +487,12 @@ class ModernServiceDetailPageState extends ConsumerState<ModernServiceDetailPage
     );
   }
 
-  Widget _buildDetailRow(String label, String value, IconData icon, Color color) {
+  Widget _buildDetailRow(
+    String label,
+    String value,
+    IconData icon,
+    Color color,
+  ) {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
@@ -514,10 +517,7 @@ class ModernServiceDetailPageState extends ConsumerState<ModernServiceDetailPage
               children: [
                 Text(
                   label,
-                  style: TextStyle(
-                    fontSize: 13,
-                    color: Colors.grey[600],
-                  ),
+                  style: TextStyle(fontSize: 13, color: Colors.grey[600]),
                 ),
                 const SizedBox(height: 4),
                 Text(
@@ -545,11 +545,7 @@ class ModernServiceDetailPageState extends ConsumerState<ModernServiceDetailPage
           children: [
             Row(
               children: [
-                const Icon(
-                  Icons.category,
-                  color: Color(0xFF3498db),
-                  size: 20,
-                ),
+                const Icon(Icons.category, color: Color(0xFF3498db), size: 20),
                 const SizedBox(width: 8),
                 const Text(
                   'Categoría',
@@ -562,7 +558,7 @@ class ModernServiceDetailPageState extends ConsumerState<ModernServiceDetailPage
               ],
             ),
             const SizedBox(height: 16),
-            
+
             if (_isEditMode)
               Wrap(
                 spacing: 8,
@@ -578,18 +574,27 @@ class ModernServiceDetailPageState extends ConsumerState<ModernServiceDetailPage
                     backgroundColor: Colors.white,
                     selectedColor: const Color(0xFF3498db).withOpacity(0.2),
                     labelStyle: TextStyle(
-                      color: isSelected ? const Color(0xFF3498db) : const Color(0xFF7f8c8d),
-                      fontWeight: isSelected ? FontWeight.w700 : FontWeight.w500,
+                      color: isSelected
+                          ? const Color(0xFF3498db)
+                          : const Color(0xFF7f8c8d),
+                      fontWeight: isSelected
+                          ? FontWeight.w700
+                          : FontWeight.w500,
                     ),
                     side: BorderSide(
-                      color: isSelected ? const Color(0xFF3498db) : Colors.grey[300]!,
+                      color: isSelected
+                          ? const Color(0xFF3498db)
+                          : Colors.grey[300]!,
                     ),
                   );
                 }).toList(),
               )
             else
               Container(
-                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 16,
+                  vertical: 12,
+                ),
                 decoration: BoxDecoration(
                   color: const Color(0xFF3498db).withOpacity(0.1),
                   borderRadius: BorderRadius.circular(12),
@@ -616,7 +621,9 @@ class ModernServiceDetailPageState extends ConsumerState<ModernServiceDetailPage
     return Column(
       children: [
         ModernButton(
-          text: _isSaving ? 'Guardando...' : (isNewService ? 'Crear Servicio' : 'Guardar Cambios'),
+          text: _isSaving
+              ? 'Guardando...'
+              : (isNewService ? 'Crear Servicio' : 'Guardar Cambios'),
           icon: _isSaving ? null : Icons.save,
           onPressed: _isSaving ? null : _saveService,
           isLoading: _isSaving,
@@ -690,7 +697,7 @@ class ModernServiceDetailPageState extends ConsumerState<ModernServiceDetailPage
       //   'category': _selectedCategory,
       //   'images': _selectedImages,
       // };
-      
+
       // if (widget.serviceId == 'new') {
       //   await ref.read(servicesProvider.notifier).createService(serviceData);
       // } else {
@@ -703,11 +710,15 @@ class ModernServiceDetailPageState extends ConsumerState<ModernServiceDetailPage
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text(widget.serviceId == 'new' ? 'Servicio creado' : 'Cambios guardados'),
+            content: Text(
+              widget.serviceId == 'new'
+                  ? 'Servicio creado'
+                  : 'Cambios guardados',
+            ),
             backgroundColor: const Color(0xFF27ae60),
           ),
         );
-        
+
         if (widget.serviceId == 'new') {
           context.pop();
         } else {
@@ -735,7 +746,9 @@ class ModernServiceDetailPageState extends ConsumerState<ModernServiceDetailPage
       context: context,
       builder: (context) => AlertDialog(
         title: const Text('Eliminar Servicio'),
-        content: const Text('¿Estás seguro de que deseas eliminar este servicio? Esta acción no se puede deshacer.'),
+        content: const Text(
+          '¿Estás seguro de que deseas eliminar este servicio? Esta acción no se puede deshacer.',
+        ),
         actions: [
           TextButton(
             onPressed: () => Navigator.of(context).pop(false),
@@ -753,21 +766,15 @@ class ModernServiceDetailPageState extends ConsumerState<ModernServiceDetailPage
     if (confirmed == true && mounted) {
       // Eliminar servicio
       // await ref.read(servicesProvider.notifier).deleteService(widget.serviceId);
-      
+
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
           content: Text('Servicio eliminado'),
           backgroundColor: Color(0xFFe74c3c),
         ),
       );
-      
+
       context.pop();
     }
   }
 }
-
-
-
-
-
-

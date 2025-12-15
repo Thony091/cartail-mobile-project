@@ -2,12 +2,12 @@ import 'package:animate_do/animate_do.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
-import '../../shared/widgets/widgets.dart';
-import 'modern_scaffold_with_drawer.dart';
+import '../../../shared/widgets/widgets.dart';
+import '../modern_scaffold_with_drawer.dart';
 
 class ModernMessagesPage extends StatefulWidget {
   static const name = 'ModernMessagesPage';
-  
+
   const ModernMessagesPage({super.key});
 
   @override
@@ -31,7 +31,8 @@ class _ModernMessagesPageState extends State<ModernMessagesPage> {
         id: '1',
         name: 'Carlos Mendoza',
         email: 'carlos@email.com',
-        message: 'Hola, quisiera consultar por el servicio de detailing para mi auto. ¿Cuánto tiempo demora?',
+        message:
+            'Hola, quisiera consultar por el servicio de detailing para mi auto. ¿Cuánto tiempo demora?',
         date: DateTime.now().subtract(const Duration(hours: 2)),
         isRead: false,
       ),
@@ -39,7 +40,8 @@ class _ModernMessagesPageState extends State<ModernMessagesPage> {
         id: '2',
         name: 'María González',
         email: 'maria@email.com',
-        message: 'Excelente servicio el que recibí la semana pasada. Mi auto quedó impecable. ¡Totalmente recomendado!',
+        message:
+            'Excelente servicio el que recibí la semana pasada. Mi auto quedó impecable. ¡Totalmente recomendado!',
         date: DateTime.now().subtract(const Duration(days: 1)),
         isRead: true,
       ),
@@ -47,7 +49,8 @@ class _ModernMessagesPageState extends State<ModernMessagesPage> {
         id: '3',
         name: 'Pedro Silva',
         email: 'pedro@email.com',
-        message: 'Necesito cotizar un servicio de pintura completa para mi camioneta. ¿Pueden darme más información?',
+        message:
+            'Necesito cotizar un servicio de pintura completa para mi camioneta. ¿Pueden darme más información?',
         date: DateTime.now().subtract(const Duration(days: 2)),
         isRead: false,
       ),
@@ -59,8 +62,8 @@ class _ModernMessagesPageState extends State<ModernMessagesPage> {
     final filteredMessages = _messages.where((message) {
       if (_searchQuery.isEmpty) return true;
       return message.name.toLowerCase().contains(_searchQuery.toLowerCase()) ||
-             message.email.toLowerCase().contains(_searchQuery.toLowerCase()) ||
-             message.message.toLowerCase().contains(_searchQuery.toLowerCase());
+          message.email.toLowerCase().contains(_searchQuery.toLowerCase()) ||
+          message.message.toLowerCase().contains(_searchQuery.toLowerCase());
     }).toList();
 
     return ModernScaffoldWithDrawer(
@@ -111,7 +114,7 @@ class _ModernMessagesPageState extends State<ModernMessagesPage> {
                 ),
               ),
             ),
-            
+
             // Lista de mensajes
             Expanded(
               child: filteredMessages.isEmpty
@@ -140,7 +143,12 @@ class _ModernMessagesPageState extends State<ModernMessagesPage> {
     );
   }
 
-  Widget _buildStatCard(String value, String label, IconData icon, Color color) {
+  Widget _buildStatCard(
+    String value,
+    String label,
+    IconData icon,
+    Color color,
+  ) {
     return ModernCard(
       padding: const EdgeInsets.all(16),
       child: Row(
@@ -167,10 +175,7 @@ class _ModernMessagesPageState extends State<ModernMessagesPage> {
               ),
               Text(
                 label,
-                style: const TextStyle(
-                  fontSize: 12,
-                  color: Color(0xFF7f8c8d),
-                ),
+                style: const TextStyle(fontSize: 12, color: Color(0xFF7f8c8d)),
               ),
             ],
           ),
@@ -194,11 +199,7 @@ class _ModernMessagesPageState extends State<ModernMessagesPage> {
             alignment: Alignment.centerLeft,
             child: Padding(
               padding: EdgeInsets.only(left: 20),
-              child: Icon(
-                Icons.mark_email_read, 
-                color: Colors.white, 
-                size: 28
-              ),
+              child: Icon(Icons.mark_email_read, color: Colors.white, size: 28),
             ),
           ),
         ),
@@ -211,11 +212,7 @@ class _ModernMessagesPageState extends State<ModernMessagesPage> {
             alignment: Alignment.centerRight,
             child: Padding(
               padding: EdgeInsets.only(right: 20),
-              child: Icon(
-                Icons.delete, 
-                color: Colors.white, 
-                size: 28
-              ),
+              child: Icon(Icons.delete, color: Colors.white, size: 28),
             ),
           ),
         ),
@@ -249,7 +246,9 @@ class _ModernMessagesPageState extends State<ModernMessagesPage> {
                               message.name,
                               style: TextStyle(
                                 fontSize: 16,
-                                fontWeight: message.isRead ? FontWeight.w500 : FontWeight.w700,
+                                fontWeight: message.isRead
+                                    ? FontWeight.w500
+                                    : FontWeight.w700,
                                 color: const Color(0xFF2c3e50),
                               ),
                             ),
@@ -334,10 +333,7 @@ class _ModernMessagesPageState extends State<ModernMessagesPage> {
           const SizedBox(height: 8),
           const Text(
             'Cuando recibas mensajes aparecerán aquí',
-            style: TextStyle(
-              fontSize: 16,
-              color: Color(0xFF7f8c8d),
-            ),
+            style: TextStyle(fontSize: 16, color: Color(0xFF7f8c8d)),
           ),
         ],
       ),
@@ -400,7 +396,7 @@ class _ModernMessagesPageState extends State<ModernMessagesPage> {
                 borderRadius: BorderRadius.circular(2),
               ),
             ),
-            
+
             // Header
             Padding(
               padding: const EdgeInsets.all(20),
@@ -438,9 +434,9 @@ class _ModernMessagesPageState extends State<ModernMessagesPage> {
                 ],
               ),
             ),
-            
+
             const Divider(height: 1),
-            
+
             // Contenido del mensaje
             Expanded(
               child: Padding(
@@ -457,7 +453,7 @@ class _ModernMessagesPageState extends State<ModernMessagesPage> {
                 ),
               ),
             ),
-            
+
             // Acciones
             Container(
               padding: const EdgeInsets.all(20),
@@ -494,7 +490,7 @@ class _ModernMessagesPageState extends State<ModernMessagesPage> {
         ),
       ),
     );
-    
+
     // Marcar como leído al abrir
     if (!message.isRead) {
       setState(() {
@@ -505,7 +501,7 @@ class _ModernMessagesPageState extends State<ModernMessagesPage> {
 
   void _showReplyDialog(MessageData message) {
     final replyController = TextEditingController();
-    
+
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
@@ -546,29 +542,32 @@ class _ModernMessagesPageState extends State<ModernMessagesPage> {
 
   Future<bool> _showDeleteConfirmation(MessageData message) async {
     return await showDialog<bool>(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Eliminar Mensaje'),
-        content: Text('¿Estás seguro de que deseas eliminar el mensaje de ${message.name}?'),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(context).pop(false),
-            child: const Text('Cancelar'),
+          context: context,
+          builder: (context) => AlertDialog(
+            title: const Text('Eliminar Mensaje'),
+            content: Text(
+              '¿Estás seguro de que deseas eliminar el mensaje de ${message.name}?',
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.of(context).pop(false),
+                child: const Text('Cancelar'),
+              ),
+              ModernButton(
+                text: 'Eliminar',
+                style: ModernButtonStyle.danger,
+                onPressed: () => Navigator.of(context).pop(true),
+              ),
+            ],
           ),
-          ModernButton(
-            text: 'Eliminar',
-            style: ModernButtonStyle.danger,
-            onPressed: () => Navigator.of(context).pop(true),
-          ),
-        ],
-      ),
-    ) ?? false;
+        ) ??
+        false;
   }
 
   String _formatDate(DateTime date) {
     final now = DateTime.now();
     final difference = now.difference(date);
-    
+
     if (difference.inDays == 0) {
       return 'Hoy ${date.hour.toString().padLeft(2, '0')}:${date.minute.toString().padLeft(2, '0')}';
     } else if (difference.inDays == 1) {

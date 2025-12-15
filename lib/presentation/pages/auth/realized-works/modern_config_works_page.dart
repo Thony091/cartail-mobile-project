@@ -3,15 +3,15 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
-import '../../shared/widgets/modern_button.dart';
-import '../../shared/widgets/modern_card.dart';
-import '../../shared/widgets/modern_floating_action_button.dart';
-import '../../shared/widgets/modern_input_field.dart';
-import 'modern_scaffold_with_drawer.dart';
+import '../../../shared/widgets/modern_button.dart';
+import '../../../shared/widgets/modern_card.dart';
+import '../../../shared/widgets/modern_floating_action_button.dart';
+import '../../../shared/widgets/modern_input_field.dart';
+import '../modern_scaffold_with_drawer.dart';
 
 class ModernConfigWorksPage extends ConsumerStatefulWidget {
   static const name = 'ModernConfigWorksPage';
-  
+
   const ModernConfigWorksPage({super.key});
 
   @override
@@ -21,10 +21,8 @@ class ModernConfigWorksPage extends ConsumerStatefulWidget {
 class ModernConfigWorksPageState extends ConsumerState<ModernConfigWorksPage> {
   String _searchQuery = '';
   String _sortBy = 'Recientes';
-  
-  final List<String> _sortOptions = [
-    'Recientes', 'Antiguos', 'A-Z', 'Z-A'
-  ];
+
+  final List<String> _sortOptions = ['Recientes', 'Antiguos', 'A-Z', 'Z-A'];
 
   @override
   void initState() {
@@ -36,7 +34,7 @@ class ModernConfigWorksPageState extends ConsumerState<ModernConfigWorksPage> {
   @override
   Widget build(BuildContext context) {
     // final worksState = ref.watch(worksProvider);
-    
+
     // Datos simulados para el ejemplo - reemplazar con worksState.works
     final List<WorkData> works = _getSimulatedWorks();
 
@@ -68,15 +66,11 @@ class ModernConfigWorksPageState extends ConsumerState<ModernConfigWorksPage> {
           child: CustomScrollView(
             slivers: [
               // Header con estadísticas
-              SliverToBoxAdapter(
-                child: _buildHeaderSection(works.length),
-              ),
-              
+              SliverToBoxAdapter(child: _buildHeaderSection(works.length)),
+
               // Grid de trabajos
               if (works.isEmpty)
-                SliverFillRemaining(
-                  child: _buildEmptyState(),
-                )
+                SliverFillRemaining(child: _buildEmptyState())
               else
                 _buildWorksGrid(works),
             ],
@@ -108,13 +102,10 @@ class ModernConfigWorksPageState extends ConsumerState<ModernConfigWorksPage> {
           const SizedBox(height: 8),
           Text(
             'Gestiona el portafolio de trabajos realizados',
-            style: TextStyle(
-              fontSize: 16,
-              color: Colors.grey[600],
-            ),
+            style: TextStyle(fontSize: 16, color: Colors.grey[600]),
           ),
           const SizedBox(height: 20),
-          
+
           // Estadísticas
           Row(
             children: [
@@ -142,7 +133,12 @@ class ModernConfigWorksPageState extends ConsumerState<ModernConfigWorksPage> {
     );
   }
 
-  Widget _buildStatCard(String label, String value, IconData icon, Color color) {
+  Widget _buildStatCard(
+    String label,
+    String value,
+    IconData icon,
+    Color color,
+  ) {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
@@ -170,13 +166,7 @@ class ModernConfigWorksPageState extends ConsumerState<ModernConfigWorksPage> {
             ),
           ),
           const SizedBox(height: 4),
-          Text(
-            label,
-            style: TextStyle(
-              fontSize: 14,
-              color: Colors.grey[600],
-            ),
-          ),
+          Text(label, style: TextStyle(fontSize: 14, color: Colors.grey[600])),
         ],
       ),
     );
@@ -184,7 +174,7 @@ class ModernConfigWorksPageState extends ConsumerState<ModernConfigWorksPage> {
 
   Widget _buildWorksGrid(List<WorkData> works) {
     final filteredWorks = _filterAndSortWorks(works);
-    
+
     return SliverPadding(
       padding: const EdgeInsets.symmetric(horizontal: 20),
       sliver: SliverGrid(
@@ -194,16 +184,13 @@ class ModernConfigWorksPageState extends ConsumerState<ModernConfigWorksPage> {
           crossAxisSpacing: 16,
           mainAxisSpacing: 16,
         ),
-        delegate: SliverChildBuilderDelegate(
-          (context, index) {
-            final work = filteredWorks[index];
-            return FadeInUp(
-              delay: Duration(milliseconds: index * 50),
-              child: _buildWorkCard(work),
-            );
-          },
-          childCount: filteredWorks.length,
-        ),
+        delegate: SliverChildBuilderDelegate((context, index) {
+          final work = filteredWorks[index];
+          return FadeInUp(
+            delay: Duration(milliseconds: index * 50),
+            child: _buildWorkCard(work),
+          );
+        }, childCount: filteredWorks.length),
       ),
     );
   }
@@ -243,7 +230,7 @@ class ModernConfigWorksPageState extends ConsumerState<ModernConfigWorksPage> {
                         )
                       : null,
                 ),
-                
+
                 // Badge de destacado
                 if (work.isFeatured)
                   Positioned(
@@ -261,11 +248,7 @@ class ModernConfigWorksPageState extends ConsumerState<ModernConfigWorksPage> {
                       child: const Row(
                         mainAxisSize: MainAxisSize.min,
                         children: [
-                          Icon(
-                            Icons.star,
-                            size: 14,
-                            color: Colors.white,
-                          ),
+                          Icon(Icons.star, size: 14, color: Colors.white),
                           SizedBox(width: 4),
                           Text(
                             'Destacado',
@@ -281,7 +264,7 @@ class ModernConfigWorksPageState extends ConsumerState<ModernConfigWorksPage> {
                   ),
               ],
             ),
-            
+
             // Información del trabajo
             Padding(
               padding: const EdgeInsets.all(12),
@@ -309,10 +292,7 @@ class ModernConfigWorksPageState extends ConsumerState<ModernConfigWorksPage> {
                       const SizedBox(width: 4),
                       Text(
                         _formatDate(work.date),
-                        style: TextStyle(
-                          fontSize: 12,
-                          color: Colors.grey[600],
-                        ),
+                        style: TextStyle(fontSize: 12, color: Colors.grey[600]),
                       ),
                     ],
                   ),
@@ -343,9 +323,9 @@ class ModernConfigWorksPageState extends ConsumerState<ModernConfigWorksPage> {
               color: Color(0xFF9b59b6),
             ),
           ),
-          
+
           const SizedBox(height: 24),
-          
+
           const Text(
             'No hay trabajos registrados',
             style: TextStyle(
@@ -354,19 +334,16 @@ class ModernConfigWorksPageState extends ConsumerState<ModernConfigWorksPage> {
               color: Color(0xFF2c3e50),
             ),
           ),
-          
+
           const SizedBox(height: 8),
-          
+
           const Text(
             'Comienza agregando trabajos al portafolio',
-            style: TextStyle(
-              fontSize: 16,
-              color: Color(0xFF7f8c8d),
-            ),
+            style: TextStyle(fontSize: 16, color: Color(0xFF7f8c8d)),
           ),
-          
+
           const SizedBox(height: 32),
-          
+
           ModernButton(
             text: 'Crear Trabajo',
             icon: Icons.add,
@@ -415,10 +392,7 @@ class ModernConfigWorksPageState extends ConsumerState<ModernConfigWorksPage> {
                   const SizedBox(height: 4),
                   Text(
                     _formatDate(work.date),
-                    style: TextStyle(
-                      fontSize: 14,
-                      color: Colors.grey[600],
-                    ),
+                    style: TextStyle(fontSize: 14, color: Colors.grey[600]),
                   ),
                 ],
               ),
@@ -437,7 +411,9 @@ class ModernConfigWorksPageState extends ConsumerState<ModernConfigWorksPage> {
                 work.isFeatured ? Icons.star : Icons.star_outline,
                 color: const Color(0xFFf39c12),
               ),
-              title: Text(work.isFeatured ? 'Quitar de destacados' : 'Destacar'),
+              title: Text(
+                work.isFeatured ? 'Quitar de destacados' : 'Destacar',
+              ),
               onTap: () {
                 Navigator.pop(context);
                 _toggleFeatured(work);
@@ -516,33 +492,36 @@ class ModernConfigWorksPageState extends ConsumerState<ModernConfigWorksPage> {
 
   Future<bool> _showDeleteConfirmation(WorkData work) async {
     return await showDialog<bool>(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Eliminar Trabajo'),
-        content: Text('¿Estás seguro de que deseas eliminar "${work.title}"?'),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(context).pop(false),
-            child: const Text('Cancelar'),
+          context: context,
+          builder: (context) => AlertDialog(
+            title: const Text('Eliminar Trabajo'),
+            content: Text(
+              '¿Estás seguro de que deseas eliminar "${work.title}"?',
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.of(context).pop(false),
+                child: const Text('Cancelar'),
+              ),
+              ModernButton(
+                text: 'Eliminar',
+                style: ModernButtonStyle.danger,
+                onPressed: () {
+                  Navigator.of(context).pop(true);
+                  // Aquí eliminar el trabajo
+                  // ref.read(worksProvider.notifier).deleteWork(work.id);
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(
+                      content: Text('Trabajo eliminado'),
+                      backgroundColor: Color(0xFFe74c3c),
+                    ),
+                  );
+                },
+              ),
+            ],
           ),
-          ModernButton(
-            text: 'Eliminar',
-            style: ModernButtonStyle.danger,
-            onPressed: () {
-              Navigator.of(context).pop(true);
-              // Aquí eliminar el trabajo
-              // ref.read(worksProvider.notifier).deleteWork(work.id);
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(
-                  content: Text('Trabajo eliminado'),
-                  backgroundColor: Color(0xFFe74c3c),
-                ),
-              );
-            },
-          ),
-        ],
-      ),
-    ) ?? false;
+        ) ??
+        false;
   }
 
   Future<void> _refreshWorks() async {
@@ -553,7 +532,8 @@ class ModernConfigWorksPageState extends ConsumerState<ModernConfigWorksPage> {
 
   List<WorkData> _filterAndSortWorks(List<WorkData> works) {
     var filtered = works.where((work) {
-      final matchesSearch = _searchQuery.isEmpty ||
+      final matchesSearch =
+          _searchQuery.isEmpty ||
           work.title.toLowerCase().contains(_searchQuery.toLowerCase());
       return matchesSearch;
     }).toList();
@@ -579,8 +559,18 @@ class ModernConfigWorksPageState extends ConsumerState<ModernConfigWorksPage> {
 
   String _formatDate(DateTime date) {
     final months = [
-      'Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun',
-      'Jul', 'Ago', 'Sep', 'Oct', 'Nov', 'Dic'
+      'Ene',
+      'Feb',
+      'Mar',
+      'Abr',
+      'May',
+      'Jun',
+      'Jul',
+      'Ago',
+      'Sep',
+      'Oct',
+      'Nov',
+      'Dic',
     ];
     return '${date.day} ${months[date.month - 1]} ${date.year}';
   }

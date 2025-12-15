@@ -4,11 +4,11 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:portafolio_project/presentation/pages/auth/modern_scaffold_with_drawer.dart';
 
-import '../../presentation_container.dart';
+import '../../../presentation_container.dart';
 
 class ModernCartPage extends ConsumerStatefulWidget {
   static const name = 'ModernCartPage';
-  
+
   const ModernCartPage({super.key});
 
   @override
@@ -24,7 +24,7 @@ class ModernCartPageState extends ConsumerState<ModernCartPage> {
 
     return ModernScaffoldWithDrawer(
       title: 'Mi Carrito',
-      body: cartItems.isEmpty 
+      body: cartItems.isEmpty
           ? _buildEmptyCart()
           : Column(
               children: [
@@ -42,7 +42,7 @@ class ModernCartPageState extends ConsumerState<ModernCartPage> {
                     },
                   ),
                 ),
-                
+
                 // Footer con total y checkout
                 _buildCartFooter(total),
               ],
@@ -68,9 +68,9 @@ class ModernCartPageState extends ConsumerState<ModernCartPage> {
               color: Color(0xFF3498db),
             ),
           ),
-          
+
           const SizedBox(height: 24),
-          
+
           const Text(
             'Tu carrito está vacío',
             style: TextStyle(
@@ -79,19 +79,16 @@ class ModernCartPageState extends ConsumerState<ModernCartPage> {
               color: Color(0xFF2c3e50),
             ),
           ),
-          
+
           const SizedBox(height: 8),
-          
+
           const Text(
             'Agrega algunos productos',
-            style: TextStyle(
-              fontSize: 16,
-              color: Color(0xFF7f8c8d),
-            ),
+            style: TextStyle(fontSize: 16, color: Color(0xFF7f8c8d)),
           ),
-          
+
           const SizedBox(height: 32),
-          
+
           ModernButton(
             text: 'Explorar Servicios',
             icon: Icons.explore,
@@ -119,11 +116,7 @@ class ModernCartPageState extends ConsumerState<ModernCartPage> {
             alignment: Alignment.centerRight,
             child: Padding(
               padding: EdgeInsets.only(right: 20),
-              child: Icon(
-                Icons.delete,
-                color: Colors.white,
-                size: 28,
-              ),
+              child: Icon(Icons.delete, color: Colors.white, size: 28),
             ),
           ),
         ),
@@ -149,9 +142,9 @@ class ModernCartPageState extends ConsumerState<ModernCartPage> {
                   ),
                 ),
               ),
-              
+
               const SizedBox(width: 16),
-              
+
               // Información del item
               Expanded(
                 child: Column(
@@ -165,9 +158,9 @@ class ModernCartPageState extends ConsumerState<ModernCartPage> {
                         color: Color(0xFF2c3e50),
                       ),
                     ),
-                    
+
                     const SizedBox(height: 4),
-                    
+
                     Text(
                       item.description,
                       style: const TextStyle(
@@ -177,9 +170,9 @@ class ModernCartPageState extends ConsumerState<ModernCartPage> {
                       maxLines: 2,
                       overflow: TextOverflow.ellipsis,
                     ),
-                    
+
                     const SizedBox(height: 8),
-                    
+
                     Text(
                       item.price.toStringAsFixed(0),
                       style: const TextStyle(
@@ -191,7 +184,7 @@ class ModernCartPageState extends ConsumerState<ModernCartPage> {
                   ],
                 ),
               ),
-              
+
               // Controles de cantidad
               Column(
                 children: [
@@ -219,7 +212,7 @@ class ModernCartPageState extends ConsumerState<ModernCartPage> {
                           ),
                         ),
                       ),
-                      
+
                       Padding(
                         padding: const EdgeInsets.symmetric(horizontal: 16),
                         child: Text(
@@ -231,7 +224,7 @@ class ModernCartPageState extends ConsumerState<ModernCartPage> {
                           ),
                         ),
                       ),
-                      
+
                       GestureDetector(
                         onTap: () {
                           setState(() {
@@ -276,12 +269,12 @@ class ModernCartPageState extends ConsumerState<ModernCartPage> {
           ),
         ],
       ),
-      child:  SafeArea(
+      child: SafeArea(
         child: Column(
           children: [
             // Resumen de costos
             ModernCard(
-              padding:  const EdgeInsets.all(16),
+              padding: const EdgeInsets.all(16),
               child: Column(
                 children: [
                   Row(
@@ -296,7 +289,7 @@ class ModernCartPageState extends ConsumerState<ModernCartPage> {
                       ),
                       Text(
                         total.toStringAsFixed(0),
-                        style:  const TextStyle(
+                        style: const TextStyle(
                           fontSize: 16,
                           fontWeight: FontWeight.w600,
                           color: Color(0xFF2c3e50),
@@ -304,13 +297,13 @@ class ModernCartPageState extends ConsumerState<ModernCartPage> {
                       ),
                     ],
                   ),
-                  
+
                   const SizedBox(height: 8),
-                  
+
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                       const Text(
+                      const Text(
                         'IVA (19%):',
                         style: TextStyle(
                           fontSize: 16,
@@ -319,7 +312,7 @@ class ModernCartPageState extends ConsumerState<ModernCartPage> {
                       ),
                       Text(
                         (total * 0.19).toStringAsFixed(0),
-                        style:  const TextStyle(
+                        style: const TextStyle(
                           fontSize: 16,
                           fontWeight: FontWeight.w600,
                           color: Color(0xFF2c3e50),
@@ -327,13 +320,13 @@ class ModernCartPageState extends ConsumerState<ModernCartPage> {
                       ),
                     ],
                   ),
-                  
+
                   const Divider(height: 20),
-                  
+
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                       const Text(
+                      const Text(
                         'Total:',
                         style: TextStyle(
                           fontSize: 20,
@@ -343,7 +336,7 @@ class ModernCartPageState extends ConsumerState<ModernCartPage> {
                       ),
                       Text(
                         (total * 1.19).toStringAsFixed(0),
-                        style:  const TextStyle(
+                        style: const TextStyle(
                           fontSize: 20,
                           fontWeight: FontWeight.w700,
                           color: Color(0xFF27ae60),
@@ -354,9 +347,9 @@ class ModernCartPageState extends ConsumerState<ModernCartPage> {
                 ],
               ),
             ),
-            
+
             const SizedBox(height: 10),
-            
+
             // Botón de checkout
             SizedBox(
               width: double.infinity,
@@ -366,15 +359,14 @@ class ModernCartPageState extends ConsumerState<ModernCartPage> {
                 style: ModernButtonStyle.success,
                 onPressed: () => context.push('/checkout'),
                 // onPresse
-              )
+              ),
             ),
-          ]
-        )
+          ],
+        ),
       ),
     );
   }
 }
-
 
 class CartItem {
   final String id;

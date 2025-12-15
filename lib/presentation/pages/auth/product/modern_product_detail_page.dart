@@ -3,38 +3,36 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
-import '../../providers/auth_provider.dart';
-import '../../shared/widgets/widgets.dart';
-import 'modern_scaffold_with_drawer.dart';
+import '../../../providers/auth_provider.dart';
+import '../../../shared/widgets/widgets.dart';
+import '../modern_scaffold_with_drawer.dart';
 
 class ModernProductDetailPage extends ConsumerStatefulWidget {
   final String productId;
   static const name = 'ModernProductDetailPage';
-  
-  const ModernProductDetailPage({
-    super.key,
-    required this.productId,
-  });
+
+  const ModernProductDetailPage({super.key, required this.productId});
 
   @override
   ModernProductDetailPageState createState() => ModernProductDetailPageState();
 }
 
-class ModernProductDetailPageState extends ConsumerState<ModernProductDetailPage> {
+class ModernProductDetailPageState
+    extends ConsumerState<ModernProductDetailPage> {
   final _formKey = GlobalKey<FormState>();
   final _nameController = TextEditingController();
   final _descriptionController = TextEditingController();
   final _priceController = TextEditingController();
   final _stockController = TextEditingController();
   final _skuController = TextEditingController();
-  
+
   bool _isEditMode = false;
   bool _isLoading = false;
   bool _isSaving = false;
   String _selectedCategory = 'Productos de Limpieza';
   List<String> _selectedImages = [];
   int _quantity = 1;
-  
+
   final List<String> _categories = [
     'Productos de Limpieza',
     'Accesorios',
@@ -68,18 +66,19 @@ class ModernProductDetailPageState extends ConsumerState<ModernProductDetailPage
       });
       return;
     }
-    
+
     setState(() => _isLoading = true);
-    
+
     // Simular carga
     await Future.delayed(const Duration(milliseconds: 500));
-    
+
     _nameController.text = 'Cera Premium para Auto';
-    _descriptionController.text = 'Cera profesional de alta calidad para protección y brillo duradero. Fórmula avanzada con carnauba brasileña que proporciona protección UV y repelencia al agua.';
+    _descriptionController.text =
+        'Cera profesional de alta calidad para protección y brillo duradero. Fórmula avanzada con carnauba brasileña que proporciona protección UV y repelencia al agua.';
     _priceController.text = '25000';
     _stockController.text = '15';
     _skuController.text = 'WAX-PREM-001';
-    
+
     setState(() => _isLoading = false);
   }
 
@@ -94,11 +93,11 @@ class ModernProductDetailPageState extends ConsumerState<ModernProductDetailPage
     final isOutOfStock = stock == 0;
 
     return ModernScaffoldWithDrawer(
-      title: isNewProduct 
-          ? 'Nuevo Producto' 
-          : _isEditMode 
-              ? 'Editar Producto' 
-              : 'Detalles del Producto',
+      title: isNewProduct
+          ? 'Nuevo Producto'
+          : _isEditMode
+          ? 'Editar Producto'
+          : 'Detalles del Producto',
       appBarActions: [
         if (!isNewProduct && isAdmin && !_isEditMode)
           IconButton(
@@ -128,41 +127,41 @@ class ModernProductDetailPageState extends ConsumerState<ModernProductDetailPage
                     children: [
                       // Imagen del producto
                       FadeInDown(child: _buildProductImage()),
-                      
+
                       const SizedBox(height: 24),
-                      
+
                       // Info básica
                       FadeInUp(
                         delay: const Duration(milliseconds: 100),
                         child: _buildBasicInfo(isOutOfStock, isLowStock),
                       ),
-                      
+
                       const SizedBox(height: 20),
-                      
+
                       // Descripción
                       FadeInUp(
                         delay: const Duration(milliseconds: 200),
                         child: _buildDescription(),
                       ),
-                      
+
                       const SizedBox(height: 20),
-                      
+
                       // Detalles
                       FadeInUp(
                         delay: const Duration(milliseconds: 300),
                         child: _buildProductDetails(),
                       ),
-                      
+
                       const SizedBox(height: 20),
-                      
+
                       // Categoría
                       FadeInUp(
                         delay: const Duration(milliseconds: 400),
                         child: _buildCategorySelector(),
                       ),
-                      
+
                       const SizedBox(height: 32),
-                      
+
                       // Botones
                       if (_isEditMode)
                         FadeInUp(
@@ -195,7 +194,11 @@ class ModernProductDetailPageState extends ConsumerState<ModernProductDetailPage
             ? Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  const Icon(Icons.inventory_2, size: 80, color: Color(0xFF3498db)),
+                  const Icon(
+                    Icons.inventory_2,
+                    size: 80,
+                    color: Color(0xFF3498db),
+                  ),
                   const SizedBox(height: 16),
                   if (_isEditMode)
                     TextButton.icon(
@@ -247,7 +250,8 @@ class ModernProductDetailPageState extends ConsumerState<ModernProductDetailPage
                 label: 'Nombre del Producto',
                 hint: 'Ej: Cera Premium para Auto',
                 controller: _nameController,
-                validator: (value) => value?.isEmpty ?? true ? 'Ingresa un nombre' : null,
+                validator: (value) =>
+                    value?.isEmpty ?? true ? 'Ingresa un nombre' : null,
               ),
               const SizedBox(height: 16),
               ModernInputField(
@@ -271,41 +275,52 @@ class ModernProductDetailPageState extends ConsumerState<ModernProductDetailPage
                 style: TextStyle(fontSize: 14, color: Colors.grey[600]),
               ),
               const SizedBox(height: 12),
-              
+
               // Badge de disponibilidad
               Container(
-                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 12,
+                  vertical: 6,
+                ),
                 decoration: BoxDecoration(
                   color: isOutOfStock
                       ? const Color(0xFFe74c3c).withOpacity(0.1)
                       : isLowStock
-                          ? const Color(0xFFf39c12).withOpacity(0.1)
-                          : const Color(0xFF27ae60).withOpacity(0.1),
+                      ? const Color(0xFFf39c12).withOpacity(0.1)
+                      : const Color(0xFF27ae60).withOpacity(0.1),
                   borderRadius: BorderRadius.circular(8),
                 ),
                 child: Row(
                   mainAxisSize: MainAxisSize.min,
                   children: [
                     Icon(
-                      isOutOfStock ? Icons.cancel : isLowStock ? Icons.warning : Icons.check_circle,
+                      isOutOfStock
+                          ? Icons.cancel
+                          : isLowStock
+                          ? Icons.warning
+                          : Icons.check_circle,
                       size: 16,
                       color: isOutOfStock
                           ? const Color(0xFFe74c3c)
                           : isLowStock
-                              ? const Color(0xFFf39c12)
-                              : const Color(0xFF27ae60),
+                          ? const Color(0xFFf39c12)
+                          : const Color(0xFF27ae60),
                     ),
                     const SizedBox(width: 6),
                     Text(
-                      isOutOfStock ? 'Agotado' : isLowStock ? 'Pocas Unidades' : 'Disponible',
+                      isOutOfStock
+                          ? 'Agotado'
+                          : isLowStock
+                          ? 'Pocas Unidades'
+                          : 'Disponible',
                       style: TextStyle(
                         fontSize: 13,
                         fontWeight: FontWeight.w600,
                         color: isOutOfStock
                             ? const Color(0xFFe74c3c)
                             : isLowStock
-                                ? const Color(0xFFf39c12)
-                                : const Color(0xFF27ae60),
+                            ? const Color(0xFFf39c12)
+                            : const Color(0xFF27ae60),
                       ),
                     ),
                   ],
@@ -327,7 +342,11 @@ class ModernProductDetailPageState extends ConsumerState<ModernProductDetailPage
           children: [
             Row(
               children: [
-                const Icon(Icons.description, color: Color(0xFF3498db), size: 20),
+                const Icon(
+                  Icons.description,
+                  color: Color(0xFF3498db),
+                  size: 20,
+                ),
                 const SizedBox(width: 8),
                 const Text(
                   'Descripción',
@@ -340,19 +359,24 @@ class ModernProductDetailPageState extends ConsumerState<ModernProductDetailPage
               ],
             ),
             const SizedBox(height: 16),
-            
+
             if (_isEditMode)
               ModernInputField(
                 label: 'Descripción del Producto',
                 hint: 'Describe las características...',
                 controller: _descriptionController,
                 maxLines: 6,
-                validator: (value) => value?.isEmpty ?? true ? 'Ingresa una descripción' : null,
+                validator: (value) =>
+                    value?.isEmpty ?? true ? 'Ingresa una descripción' : null,
               )
             else
               Text(
                 _descriptionController.text,
-                style: const TextStyle(fontSize: 15, color: Color(0xFF2c3e50), height: 1.6),
+                style: const TextStyle(
+                  fontSize: 15,
+                  color: Color(0xFF2c3e50),
+                  height: 1.6,
+                ),
               ),
           ],
         ),
@@ -369,7 +393,11 @@ class ModernProductDetailPageState extends ConsumerState<ModernProductDetailPage
           children: [
             Row(
               children: [
-                const Icon(Icons.info_outline, color: Color(0xFF3498db), size: 20),
+                const Icon(
+                  Icons.info_outline,
+                  color: Color(0xFF3498db),
+                  size: 20,
+                ),
                 const SizedBox(width: 8),
                 const Text(
                   'Detalles',
@@ -382,7 +410,7 @@ class ModernProductDetailPageState extends ConsumerState<ModernProductDetailPage
               ],
             ),
             const SizedBox(height: 16),
-            
+
             // Precio
             if (_isEditMode)
               ModernInputField(
@@ -398,10 +426,15 @@ class ModernProductDetailPageState extends ConsumerState<ModernProductDetailPage
                 },
               )
             else
-              _buildDetailRow('Precio', '\$${_priceController.text}', Icons.attach_money, const Color(0xFF27ae60)),
-            
+              _buildDetailRow(
+                'Precio',
+                '\$${_priceController.text}',
+                Icons.attach_money,
+                const Color(0xFF27ae60),
+              ),
+
             const SizedBox(height: 16),
-            
+
             // Stock
             if (_isEditMode)
               ModernInputField(
@@ -417,14 +450,24 @@ class ModernProductDetailPageState extends ConsumerState<ModernProductDetailPage
                 },
               )
             else
-              _buildDetailRow('Stock', '${_stockController.text} unidades', Icons.inventory, const Color(0xFF3498db)),
+              _buildDetailRow(
+                'Stock',
+                '${_stockController.text} unidades',
+                Icons.inventory,
+                const Color(0xFF3498db),
+              ),
           ],
         ),
       ),
     );
   }
 
-  Widget _buildDetailRow(String label, String value, IconData icon, Color color) {
+  Widget _buildDetailRow(
+    String label,
+    String value,
+    IconData icon,
+    Color color,
+  ) {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
@@ -447,7 +490,10 @@ class ModernProductDetailPageState extends ConsumerState<ModernProductDetailPage
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(label, style: TextStyle(fontSize: 13, color: Colors.grey[600])),
+                Text(
+                  label,
+                  style: TextStyle(fontSize: 13, color: Colors.grey[600]),
+                ),
                 const SizedBox(height: 4),
                 Text(
                   value,
@@ -487,7 +533,7 @@ class ModernProductDetailPageState extends ConsumerState<ModernProductDetailPage
               ],
             ),
             const SizedBox(height: 16),
-            
+
             if (_isEditMode)
               Wrap(
                 spacing: 8,
@@ -497,7 +543,8 @@ class ModernProductDetailPageState extends ConsumerState<ModernProductDetailPage
                   return FilterChip(
                     label: Text(category),
                     selected: isSelected,
-                    onSelected: (selected) => setState(() => _selectedCategory = category),
+                    onSelected: (selected) =>
+                        setState(() => _selectedCategory = category),
                     backgroundColor: Colors.white,
                     selectedColor: const Color(0xFF3498db).withOpacity(0.2),
                   );
@@ -505,7 +552,10 @@ class ModernProductDetailPageState extends ConsumerState<ModernProductDetailPage
               )
             else
               Container(
-                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 16,
+                  vertical: 12,
+                ),
                 decoration: BoxDecoration(
                   color: const Color(0xFF3498db).withOpacity(0.1),
                   borderRadius: BorderRadius.circular(12),
@@ -529,7 +579,9 @@ class ModernProductDetailPageState extends ConsumerState<ModernProductDetailPage
     return Column(
       children: [
         ModernButton(
-          text: _isSaving ? 'Guardando...' : (isNewProduct ? 'Crear Producto' : 'Guardar Cambios'),
+          text: _isSaving
+              ? 'Guardando...'
+              : (isNewProduct ? 'Crear Producto' : 'Guardar Cambios'),
           icon: _isSaving ? null : Icons.save,
           onPressed: _isSaving ? null : _saveProduct,
           isLoading: _isSaving,
@@ -569,10 +621,15 @@ class ModernProductDetailPageState extends ConsumerState<ModernProductDetailPage
             children: [
               IconButton(
                 icon: const Icon(Icons.remove_circle_outline),
-                onPressed: _quantity > 1 ? () => setState(() => _quantity--) : null,
+                onPressed: _quantity > 1
+                    ? () => setState(() => _quantity--)
+                    : null,
               ),
               Container(
-                padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 24,
+                  vertical: 12,
+                ),
                 decoration: BoxDecoration(
                   color: const Color(0xFF3498db).withOpacity(0.1),
                   borderRadius: BorderRadius.circular(12),
@@ -593,16 +650,18 @@ class ModernProductDetailPageState extends ConsumerState<ModernProductDetailPage
             ],
           ),
         ),
-        
+
         const SizedBox(height: 16),
-        
+
         ModernButton(
           text: 'Agregar al Carrito',
           icon: Icons.shopping_cart,
           onPressed: () {
             ScaffoldMessenger.of(context).showSnackBar(
               SnackBar(
-                content: Text('$_quantity x ${_nameController.text} agregado al carrito'),
+                content: Text(
+                  '$_quantity x ${_nameController.text} agregado al carrito',
+                ),
                 backgroundColor: const Color(0xFF27ae60),
               ),
             );
@@ -629,11 +688,15 @@ class ModernProductDetailPageState extends ConsumerState<ModernProductDetailPage
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text(widget.productId == 'new' ? 'Producto creado' : 'Cambios guardados'),
+            content: Text(
+              widget.productId == 'new'
+                  ? 'Producto creado'
+                  : 'Cambios guardados',
+            ),
             backgroundColor: const Color(0xFF27ae60),
           ),
         );
-        
+
         if (widget.productId == 'new') {
           context.pop();
         } else {
@@ -667,7 +730,10 @@ class ModernProductDetailPageState extends ConsumerState<ModernProductDetailPage
 
     if (confirmed == true && mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Producto eliminado'), backgroundColor: Color(0xFFe74c3c)),
+        const SnackBar(
+          content: Text('Producto eliminado'),
+          backgroundColor: Color(0xFFe74c3c),
+        ),
       );
       context.pop();
     }

@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 
-import '../../shared/widgets/widgets.dart';
+import '../../../shared/widgets/widgets.dart';
 
 class ModernServiceCard extends StatelessWidget {
   final IconData icon;
@@ -53,11 +53,7 @@ class ModernServiceCard extends StatelessWidget {
                 ),
                 borderRadius: BorderRadius.circular(12),
               ),
-              child: Icon(
-                icon,
-                color: Colors.white,
-                size: 48,
-              ),
+              child: Icon(icon, color: Colors.white, size: 48),
             ),
           const SizedBox(height: 16),
           Text(

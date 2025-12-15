@@ -1,30 +1,35 @@
-
 import 'package:animate_do/animate_do.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:portafolio_project/presentation/shared/widgets/modern_floating_action_button.dart';
 
-import '../../shared/widgets/modern_button.dart';
-import '../../shared/widgets/modern_card.dart';
-import '../../shared/widgets/modern_input_field.dart';
-import 'modern_scaffold_with_drawer.dart';
+import '../../../shared/widgets/modern_button.dart';
+import '../../../shared/widgets/modern_card.dart';
+import '../../../shared/widgets/modern_input_field.dart';
+import '../modern_scaffold_with_drawer.dart';
 
 class ModernConfigServicesPage extends ConsumerStatefulWidget {
   static const name = 'ModernConfigServicesPage';
-  
+
   const ModernConfigServicesPage({super.key});
 
   @override
-  ModernConfigServicesPageState createState() => ModernConfigServicesPageState();
+  ModernConfigServicesPageState createState() =>
+      ModernConfigServicesPageState();
 }
 
-class ModernConfigServicesPageState extends ConsumerState<ModernConfigServicesPage> {
+class ModernConfigServicesPageState
+    extends ConsumerState<ModernConfigServicesPage> {
   String _searchQuery = '';
   String _selectedCategory = 'Todos';
-  
+
   final List<String> _categories = [
-    'Todos', 'Detailing', 'Mecánica', 'Pintura', 'Neumáticos'
+    'Todos',
+    'Detailing',
+    'Mecánica',
+    'Pintura',
+    'Neumáticos',
   ];
 
   @override
@@ -37,7 +42,7 @@ class ModernConfigServicesPageState extends ConsumerState<ModernConfigServicesPa
   @override
   Widget build(BuildContext context) {
     // final servicesState = ref.watch(servicesProvider);
-    
+
     // Datos simulados para el ejemplo - reemplazar con servicesState.services
     final List<ServiceData> services = _getSimulatedServices();
 
@@ -69,15 +74,11 @@ class ModernConfigServicesPageState extends ConsumerState<ModernConfigServicesPa
           child: CustomScrollView(
             slivers: [
               // Header con estadísticas
-              SliverToBoxAdapter(
-                child: _buildHeaderSection(services.length),
-              ),
-              
+              SliverToBoxAdapter(child: _buildHeaderSection(services.length)),
+
               // Lista de servicios
               if (services.isEmpty)
-                SliverFillRemaining(
-                  child: _buildEmptyState(),
-                )
+                SliverFillRemaining(child: _buildEmptyState())
               else
                 _buildAdminServicesList(services),
             ],
@@ -109,13 +110,10 @@ class ModernConfigServicesPageState extends ConsumerState<ModernConfigServicesPa
           const SizedBox(height: 8),
           Text(
             'Gestiona tus servicios desde aquí',
-            style: TextStyle(
-              fontSize: 16,
-              color: Colors.grey[600],
-            ),
+            style: TextStyle(fontSize: 16, color: Colors.grey[600]),
           ),
           const SizedBox(height: 20),
-          
+
           // Estadísticas
           Row(
             children: [
@@ -143,7 +141,12 @@ class ModernConfigServicesPageState extends ConsumerState<ModernConfigServicesPa
     );
   }
 
-  Widget _buildStatCard(String label, String value, IconData icon, Color color) {
+  Widget _buildStatCard(
+    String label,
+    String value,
+    IconData icon,
+    Color color,
+  ) {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
@@ -171,13 +174,7 @@ class ModernConfigServicesPageState extends ConsumerState<ModernConfigServicesPa
             ),
           ),
           const SizedBox(height: 4),
-          Text(
-            label,
-            style: TextStyle(
-              fontSize: 14,
-              color: Colors.grey[600],
-            ),
-          ),
+          Text(label, style: TextStyle(fontSize: 14, color: Colors.grey[600])),
         ],
       ),
     );
@@ -185,20 +182,17 @@ class ModernConfigServicesPageState extends ConsumerState<ModernConfigServicesPa
 
   Widget _buildAdminServicesList(List<ServiceData> services) {
     final filteredServices = _filterServices(services);
-    
+
     return SliverPadding(
       padding: const EdgeInsets.symmetric(horizontal: 20),
       sliver: SliverList(
-        delegate: SliverChildBuilderDelegate(
-          (context, index) {
-            final service = filteredServices[index];
-            return FadeInUp(
-              delay: Duration(milliseconds: index * 50),
-              child: _buildServiceAdminCard(service),
-            );
-          },
-          childCount: filteredServices.length,
-        ),
+        delegate: SliverChildBuilderDelegate((context, index) {
+          final service = filteredServices[index];
+          return FadeInUp(
+            delay: Duration(milliseconds: index * 50),
+            child: _buildServiceAdminCard(service),
+          );
+        }, childCount: filteredServices.length),
       ),
     );
   }
@@ -250,9 +244,9 @@ class ModernConfigServicesPageState extends ConsumerState<ModernConfigServicesPa
                       size: 40,
                     ),
                   ),
-                  
+
                   const SizedBox(width: 16),
-                  
+
                   // Información del servicio
                   Expanded(
                     child: Column(
@@ -322,7 +316,7 @@ class ModernConfigServicesPageState extends ConsumerState<ModernConfigServicesPa
                       ],
                     ),
                   ),
-                  
+
                   // Botón de más opciones
                   IconButton(
                     icon: const Icon(Icons.more_vert),
@@ -352,11 +346,7 @@ class ModernConfigServicesPageState extends ConsumerState<ModernConfigServicesPa
         alignment: alignment,
         child: Padding(
           padding: const EdgeInsets.symmetric(horizontal: 20),
-          child: Icon(
-            icon,
-            color: Colors.white,
-            size: 32,
-          ),
+          child: Icon(icon, color: Colors.white, size: 32),
         ),
       ),
     );
@@ -380,9 +370,9 @@ class ModernConfigServicesPageState extends ConsumerState<ModernConfigServicesPa
               color: Color(0xFF3498db),
             ),
           ),
-          
+
           const SizedBox(height: 24),
-          
+
           const Text(
             'No hay servicios registrados',
             style: TextStyle(
@@ -391,19 +381,16 @@ class ModernConfigServicesPageState extends ConsumerState<ModernConfigServicesPa
               color: Color(0xFF2c3e50),
             ),
           ),
-          
+
           const SizedBox(height: 8),
-          
+
           const Text(
             'Comienza creando tu primer servicio',
-            style: TextStyle(
-              fontSize: 16,
-              color: Color(0xFF7f8c8d),
-            ),
+            style: TextStyle(fontSize: 16, color: Color(0xFF7f8c8d)),
           ),
-          
+
           const SizedBox(height: 32),
-          
+
           ModernButton(
             text: 'Crear Servicio',
             icon: Icons.add,
@@ -512,33 +499,36 @@ class ModernConfigServicesPageState extends ConsumerState<ModernConfigServicesPa
 
   Future<bool> _showDeleteConfirmation(ServiceData service) async {
     return await showDialog<bool>(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Eliminar Servicio'),
-        content: Text('¿Estás seguro de que deseas eliminar "${service.name}"?'),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(context).pop(false),
-            child: const Text('Cancelar'),
+          context: context,
+          builder: (context) => AlertDialog(
+            title: const Text('Eliminar Servicio'),
+            content: Text(
+              '¿Estás seguro de que deseas eliminar "${service.name}"?',
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.of(context).pop(false),
+                child: const Text('Cancelar'),
+              ),
+              ModernButton(
+                text: 'Eliminar',
+                style: ModernButtonStyle.danger,
+                onPressed: () {
+                  Navigator.of(context).pop(true);
+                  // Aquí eliminar el servicio
+                  // ref.read(servicesProvider.notifier).deleteService(service.id);
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(
+                      content: Text('Servicio eliminado'),
+                      backgroundColor: Color(0xFFe74c3c),
+                    ),
+                  );
+                },
+              ),
+            ],
           ),
-          ModernButton(
-            text: 'Eliminar',
-            style: ModernButtonStyle.danger,
-            onPressed: () {
-              Navigator.of(context).pop(true);
-              // Aquí eliminar el servicio
-              // ref.read(servicesProvider.notifier).deleteService(service.id);
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(
-                  content: Text('Servicio eliminado'),
-                  backgroundColor: Color(0xFFe74c3c),
-                ),
-              );
-            },
-          ),
-        ],
-      ),
-    ) ?? false;
+        ) ??
+        false;
   }
 
   Future<void> _refreshServices() async {
@@ -549,10 +539,11 @@ class ModernConfigServicesPageState extends ConsumerState<ModernConfigServicesPa
 
   List<ServiceData> _filterServices(List<ServiceData> services) {
     return services.where((service) {
-      final matchesSearch = _searchQuery.isEmpty ||
+      final matchesSearch =
+          _searchQuery.isEmpty ||
           service.name.toLowerCase().contains(_searchQuery.toLowerCase());
-      final matchesCategory = _selectedCategory == 'Todos' ||
-          service.category == _selectedCategory;
+      final matchesCategory =
+          _selectedCategory == 'Todos' || service.category == _selectedCategory;
       return matchesSearch && matchesCategory;
     }).toList();
   }

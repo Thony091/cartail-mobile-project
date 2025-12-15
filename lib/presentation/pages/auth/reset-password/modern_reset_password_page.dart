@@ -1,15 +1,16 @@
 import 'package:animate_do/animate_do.dart';
 import 'package:flutter/material.dart';
 
-import '../../shared/widgets/widgets.dart';
+import '../../../shared/widgets/widgets.dart';
 
 class ModernResetPasswordPage extends StatefulWidget {
   static const name = 'ModernResetPasswordPage';
-  
+
   const ModernResetPasswordPage({super.key});
 
   @override
-  State<ModernResetPasswordPage> createState() => _ModernResetPasswordPageState();
+  State<ModernResetPasswordPage> createState() =>
+      _ModernResetPasswordPageState();
 }
 
 class _ModernResetPasswordPageState extends State<ModernResetPasswordPage> {
@@ -35,10 +36,7 @@ class _ModernResetPasswordPageState extends State<ModernResetPasswordPage> {
           gradient: LinearGradient(
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
-            colors: [
-              const Color(0xFF667eea),
-              const Color(0xFF764ba2),
-            ],
+            colors: [const Color(0xFF667eea), const Color(0xFF764ba2)],
           ),
         ),
         child: SafeArea(
@@ -47,7 +45,7 @@ class _ModernResetPasswordPageState extends State<ModernResetPasswordPage> {
             child: Column(
               children: [
                 const SizedBox(height: 40),
-                
+
                 // Icono y título
                 FadeInDown(
                   child: Column(
@@ -90,18 +88,15 @@ class _ModernResetPasswordPageState extends State<ModernResetPasswordPage> {
                       const SizedBox(height: 8),
                       const Text(
                         'No te preocupes, te ayudamos a recuperarla',
-                        style: TextStyle(
-                          fontSize: 16,
-                          color: Colors.white70,
-                        ),
+                        style: TextStyle(fontSize: 16, color: Colors.white70),
                         textAlign: TextAlign.center,
                       ),
                     ],
                   ),
                 ),
-                
+
                 const SizedBox(height: 50),
-                
+
                 // Formulario
                 FadeInUp(
                   child: ModernCard(
@@ -121,12 +116,10 @@ class _ModernResetPasswordPageState extends State<ModernResetPasswordPage> {
                           const SizedBox(height: 8),
                           const Text(
                             'Ingresa tu correo electrónico y te enviaremos instrucciones para restablecer tu contraseña.',
-                            style: TextStyle(
-                              color: Color(0xFF7f8c8d),
-                            ),
+                            style: TextStyle(color: Color(0xFF7f8c8d)),
                           ),
                           const SizedBox(height: 32),
-                          
+
                           ModernInputField(
                             // controller: _emailController,
                             label: 'Correo Electrónico',
@@ -143,21 +136,23 @@ class _ModernResetPasswordPageState extends State<ModernResetPasswordPage> {
                               return null;
                             },
                           ),
-                          
+
                           const SizedBox(height: 32),
-                          
+
                           SizedBox(
                             width: double.infinity,
                             child: ModernButton(
                               text: 'Enviar Instrucciones',
                               icon: Icons.send,
                               isLoading: _isLoading,
-                              onPressed: _isLoading ? null : _handleResetPassword,
+                              onPressed: _isLoading
+                                  ? null
+                                  : _handleResetPassword,
                             ),
                           ),
-                          
+
                           const SizedBox(height: 24),
-                          
+
                           Center(
                             child: GestureDetector(
                               onTap: () => Navigator.of(context).pop(),
@@ -188,14 +183,14 @@ class _ModernResetPasswordPageState extends State<ModernResetPasswordPage> {
       setState(() {
         _isLoading = true;
       });
-      
+
       // Simular envío de email
       await Future.delayed(const Duration(seconds: 2));
-      
+
       setState(() {
         _isLoading = false;
       });
-      
+
       // Mostrar éxito
       _showSuccessDialog();
     }
@@ -235,10 +230,7 @@ class _ModernResetPasswordPageState extends State<ModernResetPasswordPage> {
             Text(
               'Hemos enviado las instrucciones para restablecer tu contraseña a ${_emailController.text}',
               textAlign: TextAlign.center,
-              style: const TextStyle(
-                fontSize: 14,
-                color: Color(0xFF7f8c8d),
-              ),
+              style: const TextStyle(fontSize: 14, color: Color(0xFF7f8c8d)),
             ),
           ],
         ),

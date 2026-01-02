@@ -1,10 +1,10 @@
-import 'package:animate_do/animate_do.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import 'package:portafolio_project/presentation/pages/auth/realized-works/modern_config_works_widgets.dart';
+
 import '../../../shared/widgets/modern_button.dart';
-import '../../../shared/widgets/modern_card.dart';
 import '../../../shared/widgets/modern_floating_action_button.dart';
 import '../../../shared/widgets/modern_input_field.dart';
 import '../modern_scaffold_with_drawer.dart';
@@ -66,13 +66,20 @@ class ModernConfigWorksPageState extends ConsumerState<ModernConfigWorksPage> {
           child: CustomScrollView(
             slivers: [
               // Header con estadísticas
-              SliverToBoxAdapter(child: _buildHeaderSection(works.length)),
+              SliverToBoxAdapter(child: WorksHeader(totalWorks: works.length)),
 
               // Grid de trabajos
               if (works.isEmpty)
-                SliverFillRemaining(child: _buildEmptyState())
+                SliverFillRemaining(
+                  child: EmptyWorksView(
+                    onCreateWork: () => context.push('/work-edit/new'),
+                  ),
+                )
               else
-                _buildWorksGrid(works),
+                WorksGrid(
+                  works: _filterAndSortWorks(works),
+                  onWorkTap: _showWorkOptions,
+                ),
             ],
           ),
         ),
@@ -81,275 +88,6 @@ class ModernConfigWorksPageState extends ConsumerState<ModernConfigWorksPage> {
         tooltip: 'Crear Trabajo',
         icon: Icons.add,
         onPressed: () => context.push('/work-edit/new'),
-      ),
-    );
-  }
-
-  Widget _buildHeaderSection(int totalWorks) {
-    return Container(
-      padding: const EdgeInsets.all(20),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          const Text(
-            'Nuestros Trabajos',
-            style: TextStyle(
-              fontSize: 24,
-              fontWeight: FontWeight.w700,
-              color: Color(0xFF2c3e50),
-            ),
-          ),
-          const SizedBox(height: 8),
-          Text(
-            'Gestiona el portafolio de trabajos realizados',
-            style: TextStyle(fontSize: 16, color: Colors.grey[600]),
-          ),
-          const SizedBox(height: 20),
-
-          // Estadísticas
-          Row(
-            children: [
-              Expanded(
-                child: _buildStatCard(
-                  'Total',
-                  totalWorks.toString(),
-                  Icons.photo_library,
-                  const Color(0xFF9b59b6),
-                ),
-              ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: _buildStatCard(
-                  'Este Mes',
-                  '5',
-                  Icons.add_photo_alternate,
-                  const Color(0xFF3498db),
-                ),
-              ),
-            ],
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildStatCard(
-    String label,
-    String value,
-    IconData icon,
-    Color color,
-  ) {
-    return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(16),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.05),
-            blurRadius: 10,
-            offset: const Offset(0, 4),
-          ),
-        ],
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Icon(icon, color: color, size: 32),
-          const SizedBox(height: 12),
-          Text(
-            value,
-            style: const TextStyle(
-              fontSize: 24,
-              fontWeight: FontWeight.w700,
-              color: Color(0xFF2c3e50),
-            ),
-          ),
-          const SizedBox(height: 4),
-          Text(label, style: TextStyle(fontSize: 14, color: Colors.grey[600])),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildWorksGrid(List<WorkData> works) {
-    final filteredWorks = _filterAndSortWorks(works);
-
-    return SliverPadding(
-      padding: const EdgeInsets.symmetric(horizontal: 20),
-      sliver: SliverGrid(
-        gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-          crossAxisCount: 2,
-          childAspectRatio: 0.75,
-          crossAxisSpacing: 16,
-          mainAxisSpacing: 16,
-        ),
-        delegate: SliverChildBuilderDelegate((context, index) {
-          final work = filteredWorks[index];
-          return FadeInUp(
-            delay: Duration(milliseconds: index * 50),
-            child: _buildWorkCard(work),
-          );
-        }, childCount: filteredWorks.length),
-      ),
-    );
-  }
-
-  Widget _buildWorkCard(WorkData work) {
-    return ModernCard(
-      child: InkWell(
-        onTap: () => _showWorkOptions(work),
-        borderRadius: BorderRadius.circular(20),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // Imagen del trabajo
-            Stack(
-              children: [
-                Container(
-                  height: 150,
-                  decoration: BoxDecoration(
-                    borderRadius: const BorderRadius.vertical(
-                      top: Radius.circular(20),
-                    ),
-                    color: const Color(0xFF3498db).withOpacity(0.1),
-                    image: work.imageUrl != null
-                        ? DecorationImage(
-                            image: NetworkImage(work.imageUrl!),
-                            fit: BoxFit.cover,
-                          )
-                        : null,
-                  ),
-                  child: work.imageUrl == null
-                      ? const Center(
-                          child: Icon(
-                            Icons.photo_camera,
-                            size: 50,
-                            color: Color(0xFF3498db),
-                          ),
-                        )
-                      : null,
-                ),
-
-                // Badge de destacado
-                if (work.isFeatured)
-                  Positioned(
-                    top: 8,
-                    right: 8,
-                    child: Container(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 8,
-                        vertical: 4,
-                      ),
-                      decoration: BoxDecoration(
-                        color: const Color(0xFFf39c12),
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                      child: const Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Icon(Icons.star, size: 14, color: Colors.white),
-                          SizedBox(width: 4),
-                          Text(
-                            'Destacado',
-                            style: TextStyle(
-                              fontSize: 11,
-                              fontWeight: FontWeight.w600,
-                              color: Colors.white,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ),
-              ],
-            ),
-
-            // Información del trabajo
-            Padding(
-              padding: const EdgeInsets.all(12),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    work.title,
-                    style: const TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.w700,
-                      color: Color(0xFF2c3e50),
-                    ),
-                    maxLines: 2,
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                  const SizedBox(height: 8),
-                  Row(
-                    children: [
-                      Icon(
-                        Icons.calendar_today,
-                        size: 14,
-                        color: Colors.grey[600],
-                      ),
-                      const SizedBox(width: 4),
-                      Text(
-                        _formatDate(work.date),
-                        style: TextStyle(fontSize: 12, color: Colors.grey[600]),
-                      ),
-                    ],
-                  ),
-                ],
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildEmptyState() {
-    return Center(
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Container(
-            width: 120,
-            height: 120,
-            decoration: BoxDecoration(
-              color: const Color(0xFF9b59b6).withOpacity(0.1),
-              borderRadius: BorderRadius.circular(60),
-            ),
-            child: const Icon(
-              Icons.photo_library_outlined,
-              size: 60,
-              color: Color(0xFF9b59b6),
-            ),
-          ),
-
-          const SizedBox(height: 24),
-
-          const Text(
-            'No hay trabajos registrados',
-            style: TextStyle(
-              fontSize: 20,
-              fontWeight: FontWeight.w700,
-              color: Color(0xFF2c3e50),
-            ),
-          ),
-
-          const SizedBox(height: 8),
-
-          const Text(
-            'Comienza agregando trabajos al portafolio',
-            style: TextStyle(fontSize: 16, color: Color(0xFF7f8c8d)),
-          ),
-
-          const SizedBox(height: 32),
-
-          ModernButton(
-            text: 'Crear Trabajo',
-            icon: Icons.add,
-            onPressed: () => context.push('/work-edit/new'),
-          ),
-        ],
       ),
     );
   }
@@ -557,70 +295,39 @@ class ModernConfigWorksPageState extends ConsumerState<ModernConfigWorksPage> {
     return filtered;
   }
 
-  String _formatDate(DateTime date) {
-    final months = [
-      'Ene',
-      'Feb',
-      'Mar',
-      'Abr',
-      'May',
-      'Jun',
-      'Jul',
-      'Ago',
-      'Sep',
-      'Oct',
-      'Nov',
-      'Dic',
-    ];
-    return '${date.day} ${months[date.month - 1]} ${date.year}';
-  }
-
   List<WorkData> _getSimulatedWorks() {
     return [
       WorkData(
         id: '1',
         title: 'Renault Duster Detailing Premium',
-        imageUrl: null,
-        date: DateTime.now().subtract(const Duration(days: 5)),
+        description: 'Lavado profundo, pulido y encerado...',
+        vehicle: 'Renault Duster 2019',
+        date: DateTime.now().subtract(const Duration(days: 2)),
+        imageUrl: 'https://placeholder.com/car1.jpg',
         isFeatured: true,
       ),
       WorkData(
         id: '2',
-        title: 'Mini Cooper Works Transformación',
-        imageUrl: null,
-        date: DateTime.now().subtract(const Duration(days: 10)),
-        isFeatured: true,
-      ),
-      WorkData(
-        id: '3',
-        title: 'Pintura Completa Camioneta',
-        imageUrl: null,
-        date: DateTime.now().subtract(const Duration(days: 15)),
+        title: 'Chevrolet Onix Limpieza Interior',
+        description: 'Limpieza de tapicería y desinfección...',
+        vehicle: 'Chevrolet Onix 2021',
+        date: DateTime.now().subtract(const Duration(days: 5)),
+        imageUrl: 'https://placeholder.com/car2.jpg',
         isFeatured: false,
       ),
       WorkData(
-        id: '4',
-        title: 'Restauración Interior',
-        imageUrl: null,
-        date: DateTime.now().subtract(const Duration(days: 20)),
+        id: '3',
+        title: 'Toyota Hilux Restauración de Faros',
+        description: 'Pulido y laqueado de ópticas delanteras...',
+        vehicle: 'Toyota Hilux 2018',
+        date: DateTime.now().subtract(const Duration(days: 8)),
+        imageUrl: 'https://placeholder.com/car3.jpg',
         isFeatured: false,
       ),
     ];
   }
-}
 
-class WorkData {
-  final String id;
-  final String title;
-  final String? imageUrl;
-  final DateTime date;
-  final bool isFeatured;
-
-  WorkData({
-    required this.id,
-    required this.title,
-    this.imageUrl,
-    required this.date,
-    this.isFeatured = false,
-  });
+  String _formatDate(DateTime date) {
+    return '${date.day}/${date.month}/${date.year}';
+  }
 }

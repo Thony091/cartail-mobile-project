@@ -3,8 +3,10 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import 'package:portafolio_project/presentation/pages/auth/service/modern_service_detail_widgets.dart';
+
+import 'package:portafolio_project/presentation/shared/widgets/modern_button.dart';
 import '../../../providers/auth_provider.dart';
-import '../../../shared/shared.dart';
 import '../modern_scaffold_with_drawer.dart';
 
 class ModernServiceDetailPage extends ConsumerStatefulWidget {
@@ -129,14 +131,23 @@ class ModernServiceDetailPageState
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       // Galería de imágenes
-                      FadeInDown(child: _buildImageGallery()),
+                      FadeInDown(
+                        child: ServiceImageGallery(
+                          selectedImages: _selectedImages,
+                          isEditMode: _isEditMode,
+                          onPickImages: _pickImages,
+                        ),
+                      ),
 
                       const SizedBox(height: 24),
 
                       // Información básica
                       FadeInUp(
                         delay: const Duration(milliseconds: 100),
-                        child: _buildBasicInfo(),
+                        child: ServiceBasicInfo(
+                          isEditMode: _isEditMode,
+                          nameController: _nameController,
+                        ),
                       ),
 
                       const SizedBox(height: 20),
@@ -144,7 +155,10 @@ class ModernServiceDetailPageState
                       // Descripción
                       FadeInUp(
                         delay: const Duration(milliseconds: 200),
-                        child: _buildDescription(),
+                        child: ServiceDescription(
+                          isEditMode: _isEditMode,
+                          descriptionController: _descriptionController,
+                        ),
                       ),
 
                       const SizedBox(height: 20),
@@ -152,7 +166,11 @@ class ModernServiceDetailPageState
                       // Detalles del servicio
                       FadeInUp(
                         delay: const Duration(milliseconds: 300),
-                        child: _buildServiceDetails(),
+                        child: ServiceDetailsSection(
+                          isEditMode: _isEditMode,
+                          priceController: _priceController,
+                          durationController: _durationController,
+                        ),
                       ),
 
                       const SizedBox(height: 20),
@@ -160,7 +178,13 @@ class ModernServiceDetailPageState
                       // Categoría
                       FadeInUp(
                         delay: const Duration(milliseconds: 400),
-                        child: _buildCategorySelector(),
+                        child: CategorySelector(
+                          isEditMode: _isEditMode,
+                          selectedCategory: _selectedCategory,
+                          categories: _categories,
+                          onCategorySelected: (category) =>
+                              setState(() => _selectedCategory = category),
+                        ),
                       ),
 
                       const SizedBox(height: 32),
@@ -169,504 +193,37 @@ class ModernServiceDetailPageState
                       if (_isEditMode)
                         FadeInUp(
                           delay: const Duration(milliseconds: 500),
-                          child: _buildActionButtons(isNewService),
+                          child: ServiceActionButtons(
+                            isNewService: isNewService,
+                            isSaving: _isSaving,
+                            onSave: _saveService,
+                            onDelete: _deleteService,
+                          ),
                         )
                       else if (!isAdmin)
                         FadeInUp(
                           delay: const Duration(milliseconds: 500),
-                          child: _buildUserActions(),
-                        ),
-                    ],
-                  ),
-                ),
-              ),
-            ),
-    );
-  }
-
-  Widget _buildImageGallery() {
-    return ModernCard(
-      child: Column(
-        children: [
-          // Imagen principal
-          Container(
-            height: 250,
-            width: double.infinity,
-            decoration: BoxDecoration(
-              borderRadius: const BorderRadius.vertical(
-                top: Radius.circular(20),
-              ),
-              color: const Color(0xFF3498db).withOpacity(0.1),
-            ),
-            child: _selectedImages.isEmpty
-                ? Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      const Icon(
-                        Icons.image_outlined,
-                        size: 80,
-                        color: Color(0xFF3498db),
-                      ),
-                      const SizedBox(height: 16),
-                      if (_isEditMode)
-                        TextButton.icon(
-                          icon: const Icon(Icons.add_photo_alternate),
-                          label: const Text('Agregar Imágenes'),
-                          onPressed: _pickImages,
-                        ),
-                    ],
-                  )
-                : Stack(
-                    children: [
-                      Image.network(
-                        _selectedImages.first,
-                        fit: BoxFit.cover,
-                        width: double.infinity,
-                        height: double.infinity,
-                      ),
-                      if (_isEditMode)
-                        Positioned(
-                          top: 12,
-                          right: 12,
-                          child: IconButton(
-                            icon: const Icon(Icons.edit),
-                            style: IconButton.styleFrom(
-                              backgroundColor: Colors.white,
-                              foregroundColor: const Color(0xFF3498db),
-                            ),
-                            onPressed: _pickImages,
+                          child: ServiceUserActions(
+                            onReserve: () {
+                              context.push(
+                                '/reservations?service=${widget.serviceId}',
+                              );
+                            },
+                            onAddToCart: () {
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                const SnackBar(
+                                  content: Text('Servicio agregado al carrito'),
+                                  backgroundColor: Color(0xFF27ae60),
+                                ),
+                              );
+                            },
                           ),
                         ),
                     ],
                   ),
-          ),
-
-          // Miniaturas
-          if (_selectedImages.length > 1)
-            Container(
-              height: 80,
-              padding: const EdgeInsets.all(12),
-              child: ListView.builder(
-                scrollDirection: Axis.horizontal,
-                itemCount: _selectedImages.length,
-                itemBuilder: (context, index) {
-                  return Container(
-                    margin: const EdgeInsets.only(right: 8),
-                    width: 80,
-                    decoration: BoxDecoration(
-                      borderRadius: BorderRadius.circular(12),
-                      border: Border.all(
-                        color: index == 0
-                            ? const Color(0xFF3498db)
-                            : Colors.grey[300]!,
-                        width: 2,
-                      ),
-                    ),
-                    child: ClipRRect(
-                      borderRadius: BorderRadius.circular(10),
-                      child: Image.network(
-                        _selectedImages[index],
-                        fit: BoxFit.cover,
-                      ),
-                    ),
-                  );
-                },
+                ),
               ),
             ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildBasicInfo() {
-    return ModernCard(
-      child: Padding(
-        padding: const EdgeInsets.all(20),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            if (_isEditMode)
-              ModernInputField(
-                label: 'Nombre del Servicio',
-                hint: 'Ej: Detailing Premium',
-                controller: _nameController,
-                validator: (value) {
-                  if (value == null || value.isEmpty) {
-                    return 'Por favor ingresa un nombre';
-                  }
-                  return null;
-                },
-              )
-            else
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    _nameController.text,
-                    style: const TextStyle(
-                      fontSize: 24,
-                      fontWeight: FontWeight.w700,
-                      color: Color(0xFF2c3e50),
-                    ),
-                  ),
-                  const SizedBox(height: 12),
-                  Container(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 12,
-                      vertical: 6,
-                    ),
-                    decoration: BoxDecoration(
-                      color: const Color(0xFF27ae60).withOpacity(0.1),
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                    child: const Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Icon(
-                          Icons.check_circle,
-                          size: 16,
-                          color: Color(0xFF27ae60),
-                        ),
-                        SizedBox(width: 6),
-                        Text(
-                          'Disponible',
-                          style: TextStyle(
-                            fontSize: 13,
-                            fontWeight: FontWeight.w600,
-                            color: Color(0xFF27ae60),
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                ],
-              ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildDescription() {
-    return ModernCard(
-      child: Padding(
-        padding: const EdgeInsets.all(20),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              children: [
-                const Icon(
-                  Icons.description,
-                  color: Color(0xFF3498db),
-                  size: 20,
-                ),
-                const SizedBox(width: 8),
-                const Text(
-                  'Descripción',
-                  style: TextStyle(
-                    fontSize: 18,
-                    fontWeight: FontWeight.w700,
-                    color: Color(0xFF2c3e50),
-                  ),
-                ),
-              ],
-            ),
-            const SizedBox(height: 16),
-            if (_isEditMode)
-              ModernInputField(
-                label: 'Descripción del Servicio',
-                hint: 'Describe los detalles del servicio...',
-                controller: _descriptionController,
-                maxLines: 6,
-                validator: (value) {
-                  if (value == null || value.isEmpty) {
-                    return 'Por favor ingresa una descripción';
-                  }
-                  return null;
-                },
-              )
-            else
-              Text(
-                _descriptionController.text,
-                style: const TextStyle(
-                  fontSize: 15,
-                  color: Color(0xFF2c3e50),
-                  height: 1.6,
-                ),
-              ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildServiceDetails() {
-    return ModernCard(
-      child: Padding(
-        padding: const EdgeInsets.all(20),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              children: [
-                const Icon(
-                  Icons.info_outline,
-                  color: Color(0xFF3498db),
-                  size: 20,
-                ),
-                const SizedBox(width: 8),
-                const Text(
-                  'Detalles del Servicio',
-                  style: TextStyle(
-                    fontSize: 18,
-                    fontWeight: FontWeight.w700,
-                    color: Color(0xFF2c3e50),
-                  ),
-                ),
-              ],
-            ),
-            const SizedBox(height: 20),
-
-            // Precio
-            if (_isEditMode)
-              ModernInputField(
-                label: 'Precio (CLP)',
-                hint: 'Ej: 120000',
-                controller: _priceController,
-                keyboardType: TextInputType.number,
-                prefixIcon: const Icon(Icons.attach_money),
-                validator: (value) {
-                  if (value == null || value.isEmpty) {
-                    return 'Por favor ingresa un precio';
-                  }
-                  if (int.tryParse(value) == null) {
-                    return 'Ingresa un precio válido';
-                  }
-                  return null;
-                },
-              )
-            else
-              _buildDetailRow(
-                'Precio',
-                '\$${_priceController.text}',
-                Icons.attach_money,
-                const Color(0xFF27ae60),
-              ),
-
-            const SizedBox(height: 16),
-
-            // Duración
-            if (_isEditMode)
-              ModernInputField(
-                label: 'Duración (minutos)',
-                hint: 'Ej: 180',
-                controller: _durationController,
-                keyboardType: TextInputType.number,
-                prefixIcon: const Icon(Icons.schedule),
-                validator: (value) {
-                  if (value == null || value.isEmpty) {
-                    return 'Por favor ingresa la duración';
-                  }
-                  if (int.tryParse(value) == null) {
-                    return 'Ingresa una duración válida';
-                  }
-                  return null;
-                },
-              )
-            else
-              _buildDetailRow(
-                'Duración',
-                '${_durationController.text} min',
-                Icons.schedule,
-                const Color(0xFF3498db),
-              ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildDetailRow(
-    String label,
-    String value,
-    IconData icon,
-    Color color,
-  ) {
-    return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: color.withOpacity(0.1),
-        borderRadius: BorderRadius.circular(12),
-      ),
-      child: Row(
-        children: [
-          Container(
-            width: 40,
-            height: 40,
-            decoration: BoxDecoration(
-              color: color.withOpacity(0.2),
-              borderRadius: BorderRadius.circular(10),
-            ),
-            child: Icon(icon, color: color, size: 20),
-          ),
-          const SizedBox(width: 16),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  label,
-                  style: TextStyle(fontSize: 13, color: Colors.grey[600]),
-                ),
-                const SizedBox(height: 4),
-                Text(
-                  value,
-                  style: const TextStyle(
-                    fontSize: 18,
-                    fontWeight: FontWeight.w700,
-                    color: Color(0xFF2c3e50),
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildCategorySelector() {
-    return ModernCard(
-      child: Padding(
-        padding: const EdgeInsets.all(20),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              children: [
-                const Icon(Icons.category, color: Color(0xFF3498db), size: 20),
-                const SizedBox(width: 8),
-                const Text(
-                  'Categoría',
-                  style: TextStyle(
-                    fontSize: 18,
-                    fontWeight: FontWeight.w700,
-                    color: Color(0xFF2c3e50),
-                  ),
-                ),
-              ],
-            ),
-            const SizedBox(height: 16),
-
-            if (_isEditMode)
-              Wrap(
-                spacing: 8,
-                runSpacing: 8,
-                children: _categories.map((category) {
-                  final isSelected = _selectedCategory == category;
-                  return FilterChip(
-                    label: Text(category),
-                    selected: isSelected,
-                    onSelected: (selected) {
-                      setState(() => _selectedCategory = category);
-                    },
-                    backgroundColor: Colors.white,
-                    selectedColor: const Color(0xFF3498db).withOpacity(0.2),
-                    labelStyle: TextStyle(
-                      color: isSelected
-                          ? const Color(0xFF3498db)
-                          : const Color(0xFF7f8c8d),
-                      fontWeight: isSelected
-                          ? FontWeight.w700
-                          : FontWeight.w500,
-                    ),
-                    side: BorderSide(
-                      color: isSelected
-                          ? const Color(0xFF3498db)
-                          : Colors.grey[300]!,
-                    ),
-                  );
-                }).toList(),
-              )
-            else
-              Container(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 16,
-                  vertical: 12,
-                ),
-                decoration: BoxDecoration(
-                  color: const Color(0xFF3498db).withOpacity(0.1),
-                  borderRadius: BorderRadius.circular(12),
-                  border: Border.all(
-                    color: const Color(0xFF3498db).withOpacity(0.3),
-                  ),
-                ),
-                child: Text(
-                  _selectedCategory,
-                  style: const TextStyle(
-                    fontSize: 16,
-                    fontWeight: FontWeight.w600,
-                    color: Color(0xFF3498db),
-                  ),
-                ),
-              ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildActionButtons(bool isNewService) {
-    return Column(
-      children: [
-        ModernButton(
-          text: _isSaving
-              ? 'Guardando...'
-              : (isNewService ? 'Crear Servicio' : 'Guardar Cambios'),
-          icon: _isSaving ? null : Icons.save,
-          onPressed: _isSaving ? null : _saveService,
-          isLoading: _isSaving,
-        ),
-        if (!isNewService) ...[
-          const SizedBox(height: 12),
-          ModernButton(
-            text: 'Eliminar Servicio',
-            style: ModernButtonStyle.danger,
-            icon: Icons.delete,
-            onPressed: _deleteService,
-          ),
-        ],
-      ],
-    );
-  }
-
-  Widget _buildUserActions() {
-    return Column(
-      children: [
-        ModernButton(
-          text: 'Reservar Servicio',
-          icon: Icons.event_available,
-          onPressed: () {
-            // Navegar a reserva
-            context.push('/reservations?service=${widget.serviceId}');
-          },
-        ),
-        const SizedBox(height: 12),
-        ModernButton(
-          text: 'Agregar al Carrito',
-          style: ModernButtonStyle.secondary,
-          icon: Icons.shopping_cart,
-          onPressed: () {
-            ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(
-                content: Text('Servicio agregado al carrito'),
-                backgroundColor: Color(0xFF27ae60),
-              ),
-            );
-          },
-        ),
-      ],
     );
   }
 

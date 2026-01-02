@@ -36,13 +36,9 @@ class _ModernButtonState extends State<ModernButton>
       duration: const Duration(milliseconds: 150),
       vsync: this,
     );
-    _scaleAnimation = Tween<double>(
-      begin: 1.0,
-      end: 0.95,
-    ).animate(CurvedAnimation(
-      parent: _animationController,
-      curve: Curves.easeInOut,
-    ));
+    _scaleAnimation = Tween<double>(begin: 1.0, end: 0.95).animate(
+      CurvedAnimation(parent: _animationController, curve: Curves.easeInOut),
+    );
   }
 
   @override
@@ -54,7 +50,7 @@ class _ModernButtonState extends State<ModernButton>
   @override
   Widget build(BuildContext context) {
     final colors = _getButtonColors();
-    
+
     return AnimatedBuilder(
       animation: _scaleAnimation,
       builder: (context, child) {
@@ -105,11 +101,7 @@ class _ModernButtonState extends State<ModernButton>
                           )
                         else ...[
                           if (widget.icon != null) ...[
-                            Icon(
-                              widget.icon,
-                              color: Colors.white,
-                              size: 20,
-                            ),
+                            Icon(widget.icon, color: Colors.white, size: 20),
                             const SizedBox(width: 8),
                           ],
                           Text(

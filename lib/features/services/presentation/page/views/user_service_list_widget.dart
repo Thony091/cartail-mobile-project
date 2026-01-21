@@ -1,9 +1,10 @@
 import 'package:animate_do/animate_do.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_staggered_grid_view/flutter_staggered_grid_view.dart';
+import 'package:portafolio_project/features/services/domain/entities/services.dart';
 import 'package:portafolio_project/features/services/presentation/page/modern_service_card.dart';
 import 'package:portafolio_project/features/services/presentation/page/service_detail_modal.dart';
-import '../../domain/entities/services.dart';
+
 import '../modern_service_widgets.dart';
 
 class UserServiceListWidget extends StatelessWidget {

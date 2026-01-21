@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:portafolio_project/features/services/domain/entities/services.dart';
 import '../../modern_service_widgets.dart';
 
 import 'package:portafolio_project/features/services/presentation/page/views/components/dismiss_background_widget.dart';
 import 'package:portafolio_project/features/shared/presentation/shared/widgets/modern_card.dart';
-import '../../../domain/entities/services.dart';
 
 class AdminServiceCardWidget extends StatelessWidget {
   final Services service;

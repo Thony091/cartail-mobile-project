@@ -15,49 +15,67 @@ class ModernCartPage extends ConsumerStatefulWidget {
 }
 
 class ModernCartPageState extends ConsumerState<ModernCartPage> {
+  late List<CartServiceItem> _cartServices;
+
+  @override
+  void initState() {
+    super.initState();
+    _cartServices = _getSimulatedServices();
+  }
+
   @override
   Widget build(BuildContext context) {
-    // final cartState = ref.watch(cartProvider);
-    List<CartItem> cartItems = _getSimulatedCartItems();
-    final double total = _calculateTotal(cartItems);
+    final totals = _calculateTotals(_cartServices);
 
     return ModernScaffoldWithDrawer(
       title: 'Mi Carrito',
-      body: cartItems.isEmpty
+      body: _cartServices.isEmpty
           ? EmptyCartView(
               onExplore: () {
-                // Navegar a servicios
+                context.push('/services');
               },
             )
           : Column(
               children: [
-                // Lista de items
+                // Header informativo
+                _buildHeader(),
+
+                // Lista de servicios
                 Expanded(
                   child: ListView.builder(
                     padding: const EdgeInsets.all(20),
-                    itemCount: cartItems.length,
+                    itemCount: _cartServices.length,
                     itemBuilder: (context, index) {
-                      CartItem item = cartItems[index];
+                      final service = _cartServices[index];
                       return FadeInUp(
                         delay: Duration(milliseconds: index * 100),
-                        child: CartItemCard(
-                          item: item,
-                          onIncrement: () {
-                            setState(() {
-                              item.quantity++;
-                            });
-                          },
-                          onDecrement: () {
-                            if (item.quantity > 1) {
-                              setState(() {
-                                item.quantity--;
-                              });
-                            }
-                          },
+                        child: CartServiceCard(
+                          item: service,
                           onDismiss: () {
                             setState(() {
-                              // Remover item del carrito
+                              _cartServices.removeAt(index);
                             });
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              SnackBar(
+                                content: Text(
+                                  '${service.name} eliminado del carrito',
+                                ),
+                                backgroundColor: const Color(0xFFe74c3c),
+                                behavior: SnackBarBehavior.floating,
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(10),
+                                ),
+                                action: SnackBarAction(
+                                  label: 'Deshacer',
+                                  textColor: Colors.white,
+                                  onPressed: () {
+                                    setState(() {
+                                      _cartServices.insert(index, service);
+                                    });
+                                  },
+                                ),
+                              ),
+                            );
                           },
                         ),
                       );
@@ -65,60 +83,120 @@ class ModernCartPageState extends ConsumerState<ModernCartPage> {
                   ),
                 ),
 
-                // Footer con total y checkout
+                // Footer con totales y checkout
                 CartFooter(
-                  total: total,
+                  totalMin: totals['min']!,
+                  totalMax: totals['max']!,
+                  serviceCount: _cartServices.length,
                   onCheckout: () => context.push('/checkout'),
                 ),
               ],
             ),
     );
   }
+
+  Widget _buildHeader() {
+    return Container(
+      margin: const EdgeInsets.fromLTRB(20, 20, 20, 0),
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          colors: [
+            const Color(0xFF3498db).withValues(alpha: 0.1),
+            const Color(0xFF27ae60).withValues(alpha: 0.1),
+          ],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        ),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(
+          color: const Color(0xFF3498db).withValues(alpha: 0.2),
+        ),
+      ),
+      child: Row(
+        children: [
+          Container(
+            width: 48,
+            height: 48,
+            decoration: BoxDecoration(
+              color: const Color(0xFF3498db).withValues(alpha: 0.2),
+              borderRadius: BorderRadius.circular(24),
+            ),
+            child: const Icon(
+              Icons.car_repair,
+              color: Color(0xFF3498db),
+              size: 24,
+            ),
+          ),
+          const SizedBox(width: 16),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Text(
+                  'Servicios seleccionados',
+                  style: TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.w700,
+                    color: Color(0xFF2c3e50),
+                  ),
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  'Tienes ${_cartServices.length} ${_cartServices.length == 1 ? 'servicio' : 'servicios'} en tu carrito',
+                  style: const TextStyle(
+                    fontSize: 14,
+                    color: Color(0xFF7f8c8d),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
 }
 
-List<CartItem> _getSimulatedCartItems() {
+/// Datos simulados de servicios en el carrito
+List<CartServiceItem> _getSimulatedServices() {
   return [
-    CartItem(
+    CartServiceItem(
       id: '1',
-      name: 'Cable de Red',
-      description: 'Cable de Red de 100m de largo',
-      price: 10000,
-      quantity: 1,
+      name: 'Detailing Premium',
+      description: 'Limpieza profunda interior y exterior con proteccion ceramica',
+      category: 'Detailing',
+      minPrice: 80000,
+      maxPrice: 120000,
     ),
-    CartItem(
+    CartServiceItem(
       id: '2',
-      name: 'Cable de Blue',
-      description: 'Cable de Blue de 100m de largo',
-      price: 10000,
-      quantity: 2,
+      name: 'Cambio de Aceite',
+      description: 'Cambio de aceite y filtros con revision general',
+      category: 'Mecánica',
+      minPrice: 25000,
+      maxPrice: 45000,
     ),
-    CartItem(
+    CartServiceItem(
       id: '3',
-      name: 'Cable de Green',
-      description: 'Cable de Green de 100m de largo',
-      price: 10000,
-      quantity: 2,
-    ),
-    CartItem(
-      id: '4',
-      name: 'Cable de Yellow',
-      description: 'Cable de Yellow de 100m de largo',
-      price: 10000,
-      quantity: 4,
-    ),
-    CartItem(
-      id: '5',
-      name: 'Cable de Purple',
-      description: 'Cable de Purple de 100m de largo',
-      price: 10000,
-      quantity: 3,
+      name: 'Alineacion y Balanceo',
+      description: 'Alineacion computarizada y balanceo de las 4 ruedas',
+      category: 'Neumáticos',
+      minPrice: 35000,
+      maxPrice: 55000,
     ),
   ];
 }
 
-double _calculateTotal(List<CartItem> cartItems) {
-  return cartItems.fold<double>(
-    0,
-    (total, item) => total + item.price * item.quantity,
-  );
+/// Calcula los totales minimo y maximo
+Map<String, int> _calculateTotals(List<CartServiceItem> services) {
+  int totalMin = 0;
+  int totalMax = 0;
+
+  for (final service in services) {
+    totalMin += service.minPrice;
+    totalMax += service.maxPrice;
+  }
+
+  return {'min': totalMin, 'max': totalMax};
 }

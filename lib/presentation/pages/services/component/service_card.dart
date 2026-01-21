@@ -1,9 +1,8 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/widgets.dart';
 import 'package:marquee/marquee.dart';
 
 import '../../../../config/config.dart';
-import '../../../../domain/domain.dart';
+import '../../../../features/services/domain/entities/services.dart';
 
 
 class ServiceCard extends StatelessWidget {

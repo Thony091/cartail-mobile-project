@@ -2,7 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
-import '../../../../domain/domain.dart' show Message;
+// import '../../../../domain/domain.dart' show Message;
+import '../../../../features/message/domain/entities/message.dart';
 import '../../../presentation_container.dart';
 
 class MessageCard extends ConsumerWidget {

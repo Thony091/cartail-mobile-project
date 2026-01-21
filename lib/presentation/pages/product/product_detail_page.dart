@@ -1,10 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../features/product/domain/entities/product.dart';
 import '/../../config/config.dart';
-import '/../../domain/domain.dart';
+
 import '../../presentation_container.dart';
-import '../../shared/widgets/custom_product_field.dart';
+import '../../../features/shared/presentation/shared/widgets/custom_product_field.dart';
 
 class ProductDetailPage extends ConsumerWidget {
 

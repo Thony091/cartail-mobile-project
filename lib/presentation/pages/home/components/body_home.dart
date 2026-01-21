@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:portafolio_project/presentation/pages/home/components/home_admin_body.dart';
 import 'package:portafolio_project/presentation/pages/home/components/home_user_body.dart';
-import 'package:portafolio_project/presentation/providers/providers.dart';
+import 'package:portafolio_project/features/shared/presentation/providers/providers.dart';
 
 class HomeBody extends ConsumerWidget {
   const HomeBody({super.key});

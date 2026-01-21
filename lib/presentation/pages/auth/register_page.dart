@@ -4,7 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../../config/config.dart';
 import '../../presentation_container.dart';
-import '../../shared/widgets/custom_product_field.dart';
+import '../../../features/shared/presentation/shared/widgets/custom_product_field.dart';
 
 class RegisterPage extends StatelessWidget {
 

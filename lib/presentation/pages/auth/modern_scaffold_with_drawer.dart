@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:portafolio_project/presentation/shared/widgets/widgets.dart';
+import 'package:portafolio_project/features/shared/presentation/shared/widgets/widgets.dart';
 
 class ModernScaffoldWithDrawer extends StatelessWidget {
   final String title;

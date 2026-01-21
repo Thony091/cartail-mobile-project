@@ -3,9 +3,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../config/config.dart';
-import '../../../domain/domain.dart';
+import '../../../features/realized_work/domain/entities/works.dart';
 import '../../presentation_container.dart';
-import '../../shared/widgets/custom_product_field.dart';
+import '../../../features/shared/presentation/shared/widgets/custom_product_field.dart';
 
 class WorkCreatePage extends ConsumerWidget{
 

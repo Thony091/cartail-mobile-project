@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:marquee/marquee.dart';
 
-import '../../../../domain/domain.dart';
+import '../../../../features/realized_work/domain/entities/works.dart';
 
 class WorkUserCard extends StatelessWidget {
 

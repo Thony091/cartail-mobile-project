@@ -5,8 +5,8 @@ import 'package:go_router/go_router.dart';
 import 'package:mailto/mailto.dart';
 import 'package:url_launcher/url_launcher.dart';
 
-import '../../shared/widgets/modern_button.dart';
-import '../../shared/widgets/modern_card.dart';
+import '../../../features/shared/presentation/shared/widgets/modern_button.dart';
+import '../../../features/shared/presentation/shared/widgets/modern_card.dart';
 import '../auth/modern_scaffold_with_drawer.dart';
 
 

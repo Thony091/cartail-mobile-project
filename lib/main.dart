@@ -4,20 +4,30 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'config/config.dart';
+import 'config/services/storage/encryption_service.dart';
+import 'config/services/storage/isar_service.dart';
 
 void main() async {
-  
+
   WidgetsFlutterBinding.ensureInitialized();
 
   await Enviroment.initEnvironment();
-  
+
   await Future.delayed(
-    const Duration(milliseconds:1000), 
+    const Duration(milliseconds:1000),
     () => HttpOverrides.global = MyHttpOverrides()
   );
-  
+
   /// Initialize Firebase
   await FirebaseService.init();
+
+  /// Initialize Encryption Service (for sensitive data)
+  final encryptionService = EncryptionService();
+  await encryptionService.init();
+
+  /// Initialize Isar Database (for local storage)
+  final isarService = IsarService();
+  await isarService.init();
 
   runApp(
     const ProviderScope(child: MainApp())

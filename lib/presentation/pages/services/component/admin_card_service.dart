@@ -5,9 +5,9 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../../config/config.dart';
-import '../../../../domain/domain.dart';
-import '../../../providers/providers.dart';
-import '../../../shared/shared.dart';
+import '../../../../features/services/domain/entities/services.dart';
+import '../../../../features/shared/presentation/providers/providers.dart';
+import '../../../../features/shared/presentation/shared/shared.dart';
 
 class AdminCardService extends ConsumerStatefulWidget {
 

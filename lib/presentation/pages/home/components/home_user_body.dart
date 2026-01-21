@@ -5,10 +5,10 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
-import 'package:portafolio_project/presentation/providers/providers.dart';
-import 'package:portafolio_project/presentation/shared/widgets/custom_product_field.dart';
-import 'package:portafolio_project/presentation/shared/widgets/custom_text.dart';
-import 'package:portafolio_project/presentation/shared/widgets/pop_up_message_final_widget.dart';
+import 'package:portafolio_project/features/shared/presentation/providers/providers.dart';
+import 'package:portafolio_project/features/shared/presentation/shared/widgets/custom_product_field.dart';
+import 'package:portafolio_project/features/shared/presentation/shared/widgets/custom_text.dart';
+import 'package:portafolio_project/features/shared/presentation/shared/widgets/pop_up_message_final_widget.dart';
 
 class HomeUserBody extends StatelessWidget {
   const HomeUserBody({

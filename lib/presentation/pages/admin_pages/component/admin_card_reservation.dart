@@ -2,9 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
-import '../../../../domain/domain.dart';
+import '../../../../features/reservation/domain/entities/reservation.dart';
 import '../../../presentation_container.dart';
-import '../../../shared/shared.dart';
+import '../../../../features/shared/presentation/shared/shared.dart';
 
 class ReservationsCardService extends ConsumerWidget {
 

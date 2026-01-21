@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../features/shared/presentation/shared/widgets/modern_button.dart';
 
 class ModernAppTheme {
   // Singleton
@@ -403,15 +404,6 @@ class ModernAppTheme {
       return grayGradient;
     }
   }
-}
-
-/// Enum para los estilos de botones
-enum ModernButtonStyle {
-  primary,
-  secondary,
-  success,
-  warning,
-  danger,
 }
 
 /// Clase auxiliar para colores de botones

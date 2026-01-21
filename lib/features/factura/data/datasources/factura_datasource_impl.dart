@@ -1,0 +1,123 @@
+import 'package:dio/dio.dart';
+
+import '../../../../config/config.dart';
+import '../../domain/entities/factura.dart';
+import '../errors/factura_errors.dart';
+import '../mappers/factura_mapper.dart';
+import 'factura_datasource.dart';
+
+class FacturaDatasourceImpl extends FacturaDatasource {
+  late final Dio dio;
+  final String accessToken;
+
+  FacturaDatasourceImpl({required this.accessToken})
+    : dio = Dio(
+        BaseOptions(
+          baseUrl: Enviroment.baseUrl,
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': 'Bearer $accessToken',
+          },
+        ),
+      );
+
+  @override
+  Future<Factura> createUpdateFactura(Map<String, dynamic> facturaLike) async {
+    try {
+      final String? facturaId = facturaLike['id'];
+      final String method = (facturaId == null) ? 'POST' : 'PUT';
+      final String url = (facturaId == null)
+          ? '/factura'
+          : '/factura/$facturaId';
+
+      // Remove id if it exists in the map because it's in the URL for updates
+      // or not needed for creation (backend generates it) if generic
+      if (facturaLike.containsKey('id')) {
+        facturaLike.remove('id');
+      }
+
+      final response = await dio.request(
+        url,
+        data: facturaLike,
+        options: Options(method: method),
+      );
+
+      Factura factura = Factura(
+        id: '',
+        date: DateTime.now(),
+        total: 0.0,
+        description: '',
+      );
+
+      if (response.statusCode == 200 || response.statusCode == 201) {
+        var data = response.data;
+        if (data is Map<String, dynamic> && data.containsKey('data')) {
+          factura = FacturaMapper.jsonToEntity(data['data']);
+        }
+      }
+      return factura;
+    } catch (e) {
+      throw Exception(e);
+    }
+  }
+
+  @override
+  Future<void> deleteFactura(String id) async {
+    try {
+      await dio.delete('/factura/$id');
+    } catch (e) {
+      throw Exception(e);
+    }
+  }
+
+  @override
+  Future<Factura> getFacturaById(String id) async {
+    try {
+      final response = await dio.get('/factura/$id');
+      Factura factura = Factura(
+        id: '',
+        date: DateTime.now(),
+        total: 0.0,
+        description: '',
+      );
+
+      if (response.statusCode == 200) {
+        var data = response.data;
+        if (data is Map<String, dynamic> && data.containsKey('data')) {
+          factura = FacturaMapper.jsonToEntity(data['data']);
+        }
+      }
+      return factura;
+    } on DioException catch (e) {
+      if (e.response?.statusCode == 404)
+        throw FacturaFetchError('Factura no encontrada');
+      throw e;
+    } catch (e) {
+      throw e;
+    }
+  }
+
+  @override
+  Future<List<Factura>> getFacturas() async {
+    try {
+      final response = await dio.get('/factura');
+      final List<Factura> facturas = [];
+      if (response.statusCode == 200) {
+        var data = response.data;
+
+        if (data is Map<String, dynamic> && data.containsKey('data')) {
+          var facturasData = data['data'];
+          if (facturasData is List) {
+            for (final factura in facturasData) {
+              facturas.add(FacturaMapper.jsonToEntity(factura));
+            }
+          }
+        }
+      }
+      return facturas;
+    } catch (e) {
+      print('Error $e');
+      return [];
+    }
+  }
+}

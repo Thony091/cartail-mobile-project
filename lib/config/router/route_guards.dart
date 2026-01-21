@@ -1,4 +1,4 @@
-import '../../../domain/domain.dart';
+import '../../features/user/domain/entities/user_role.dart';
 
 /// Clase que define las rutas y permisos de acceso basados en roles.
 class RouteGuards {
@@ -9,10 +9,10 @@ class RouteGuards {
     '/register',
     '/reset-password',
     '/services',
-    '/products',
     '/our-works',
     '/help',
     '/about-us',
+    '/reservations',
   ];
 
   /// Rutas que requieren autenticación (user, operator, admin)
@@ -22,20 +22,23 @@ class RouteGuards {
     '/shoping-cart',
     '/checkout',
     '/payment-methods',
-    '/reservations',
     '/my-history',
+    '/my-services',
   ];
 
   /// Rutas solo para operarios y administradores
   static const List<String> operatorRoutes = [
     '/my-assigned-tickets',
     '/ticket/',
+    '/operator/home',
+    '/operator/work-orders',
+    '/operator/order/',
+    '/operator/reception/',
   ];
 
   /// Rutas solo para administradores
   static const List<String> adminRoutes = [
     '/admin-config-services',
-    '/admin-config-products',
     '/admin-config-works',
     '/admin-config-reservations',
     '/admin-all-tickets',
@@ -49,10 +52,8 @@ class RouteGuards {
       return true;
     }
 
-    // Permitir acceso a rutas de detalles (service/:id, product/:id)
-    if (route.startsWith('/service/') ||
-        route.startsWith('/product/') ||
-        route.startsWith('/work/')) {
+    // Permitir acceso a rutas de detalles (service/:id, work/:id)
+    if (route.startsWith('/service/') || route.startsWith('/work/')) {
       return true;
     }
 

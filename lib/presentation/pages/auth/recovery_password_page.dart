@@ -3,9 +3,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
-import '../../providers/providers.dart';
-import '../../shared/shared.dart';
-import '../../shared/widgets/custom_product_field.dart';
+import '../../../features/shared/presentation/providers/providers.dart';
+import '../../../features/shared/presentation/shared/shared.dart';
+import '../../../features/shared/presentation/shared/widgets/custom_product_field.dart';
 
 class ResetPasswordPage extends StatelessWidget {
   static const name = 'ResetPasswordPage';

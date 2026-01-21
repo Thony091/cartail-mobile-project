@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:portafolio_project/presentation/pages/home/components/body_home.dart';
-import 'package:portafolio_project/presentation/shared/widgets/modern_app_bar.dart';
-import 'package:portafolio_project/presentation/shared/widgets/modern_side_menu.dart';
+import 'package:portafolio_project/features/shared/presentation/shared/widgets/modern_app_bar.dart';
+import 'package:portafolio_project/features/shared/presentation/shared/widgets/modern_side_menu.dart';
 
 import '../../../config/theme/theme.dart';
 import '../../presentation_container.dart';

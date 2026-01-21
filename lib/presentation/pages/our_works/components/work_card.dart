@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import 'package:portafolio_project/presentation/providers/providers.dart';
+import 'package:portafolio_project/features/shared/presentation/providers/providers.dart';
 
-import '../../../../domain/domain.dart';
-import '../../../shared/shared.dart';
+import '../../../../features/realized_work/domain/entities/works.dart';
+import '../../../../features/shared/presentation/shared/shared.dart';
 
 class WorkCard extends ConsumerWidget {
 

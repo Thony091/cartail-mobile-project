@@ -2,30 +2,38 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:portafolio_project/presentation/pages/auth/cart-shop/modern_cart_page.dart';
 import 'package:portafolio_project/presentation/pages/auth/modern_check_auth_status_screen.dart';
-import 'package:portafolio_project/presentation/pages/auth/reservations/modern_config_reservations_page.dart';
-import 'package:portafolio_project/presentation/pages/auth/service/modern_config_services_page.dart';
-import 'package:portafolio_project/presentation/pages/auth/profile/modern_edit_profile.dart';
-import 'package:portafolio_project/presentation/pages/auth/login/components/modern_login_page.dart';
-import 'package:portafolio_project/presentation/pages/auth/profile/modern_profile_page.dart';
+import 'package:portafolio_project/features/reservation/presentation/page/modern_config_reservations_page.dart';
+import 'package:portafolio_project/features/services/presentation/page/modern_config_services_page.dart';
+import 'package:portafolio_project/features/user/presentation/profile/modern_edit_profile.dart';
+import 'package:portafolio_project/features/auth/presentation/login/modern_login_page.dart';
+import 'package:portafolio_project/features/user/presentation/profile/modern_profile_page.dart';
 
-import '../../presentation/pages/auth/about/modern_about_page.dart';
-import '../../presentation/pages/auth/product/modern_config_products_page.dart';
-import '../../presentation/pages/auth/realized-works/modern_config_works_page.dart';
-import '../../presentation/pages/auth/help/modern_help_page.dart';
-import '../../presentation/pages/auth/home/modern_home_page.dart';
-import '../../presentation/pages/auth/message/modern_messages_page.dart';
-import '../../presentation/pages/auth/realized-works/modern_out_works.dart';
-import '../../presentation/pages/auth/product/modern_product_detail_page.dart';
-import '../../presentation/pages/auth/register/modern_register_page.dart';
-import '../../presentation/pages/auth/reservations/modern_reservations_page.dart';
-import '../../presentation/pages/auth/reset-password/modern_reset_password_page.dart';
-import '../../presentation/pages/auth/service/modern_service_detail_page.dart';
-import '../../presentation/pages/auth/service/modern_service_page.dart';
-import '../../presentation/pages/auth/realized-works/modern_work_detail_page.dart';
-import '../../presentation/pages/auth/tickets/admin_all_tickets_page.dart';
-import '../../presentation/pages/auth/tickets/operator_assigned_tickets_page.dart';
-import '../../presentation/pages/auth/history/user_history_page.dart';
-import '../../presentation/pages/unfinished/modern_checkout_page.dart';
+import '../../features/about/modern_about_page.dart';
+// import '../../features/product/presentation/product/modern_config_products_page.dart';
+import '../../features/realized_work/presentation/pages/modern_config_works_page.dart';
+import '../../features/help/modern_help_page.dart';
+import '../../features/home/modern_home_page.dart';
+import '../../features/message/presentation/pages/modern_messages_page.dart';
+import '../../features/realized_work/presentation/pages/modern_out_works.dart';
+// import '../../features/product/presentation/product/modern_product_detail_page.dart';
+import '../../features/auth/presentation/register/modern_register_page.dart';
+import '../../features/reservation/presentation/page/modern_reservations_page.dart';
+import '../../features/auth/presentation/reset-password/modern_reset_password_page.dart';
+import '../../features/services/presentation/page/modern_service_detail_page.dart';
+import '../../features/services/presentation/page/modern_service_page.dart';
+import '../../features/realized_work/presentation/pages/modern_work_detail_page.dart';
+import '../../features/ticket/presentation/pages/admin_all_tickets_page.dart';
+import '../../features/ticket/presentation/pages/operator_assigned_tickets_page.dart';
+import '../../features/history/user_history_page.dart';
+import '../../features/operator/presentation/pages/operator_work_orders_page.dart';
+import '../../features/operator/presentation/pages/work_order_detail_page.dart';
+import '../../features/operator/presentation/pages/vehicle_reception_page.dart';
+import '../../features/operator/presentation/pages/operator_home_page.dart';
+import '../../features/payment/presentation/pages/modern_checkout_page.dart';
+import '../../features/payment/presentation/pages/add_credit_card_page.dart';
+import '../../features/service_tracking/presentation/pages/my_services_page.dart';
+import '../../features/service_tracking/presentation/pages/service_detail_page.dart'
+    as tracking;
 import '../../presentation/presentation_container.dart';
 import 'route_guards.dart';
 import 'router.dart';
@@ -77,20 +85,20 @@ final goRouterProvider = Provider((ref) {
       //   builder: (context, state) => const ModernPaymentMethodsPage(),
       // ),
 
-      //* Products
-      GoRoute(
-        path: '/products',
-        name: ModernProductsPage.name,
-        builder: (context, state) => const ModernProductsPage(),
-      ),
+      // //* Products - DISABLED: No product module
+      // GoRoute(
+      //   path: '/products',
+      //   name: ModernProductsPage.name,
+      //   builder: (context, state) => const ModernProductsPage(),
+      // ),
 
-      //* Product Detail
-      GoRoute(
-        path: '/product/:id',
-        name: ModernProductDetailPage.name,
-        builder: (context, state) =>
-            ModernProductDetailPage(productId: state.params['id'] ?? 'no-id'),
-      ),
+      // //* Product Detail - DISABLED: No product module
+      // GoRoute(
+      //   path: '/product/:id',
+      //   name: ModernProductDetailPage.name,
+      //   builder: (context, state) =>
+      //       ModernProductDetailPage(productId: state.params['id'] ?? 'no-id'),
+      // ),
 
       //* Reservations
       GoRoute(
@@ -182,12 +190,12 @@ final goRouterProvider = Provider((ref) {
         name: ModernConfigServicesPage.name,
         builder: (context, state) => const ModernConfigServicesPage(),
       ),
-      //* ConfigProductsPage
-      GoRoute(
-        path: '/admin-config-products',
-        name: ModernConfigProductsPage.name,
-        builder: (context, state) => const ModernConfigProductsPage(),
-      ),
+      // //* ConfigProductsPage - DISABLED: No product module
+      // GoRoute(
+      //   path: '/admin-config-products',
+      //   name: ModernConfigProductsPage.name,
+      //   builder: (context, state) => const ModernConfigProductsPage(),
+      // ),
 
       //* ConfigWorksPage
       GoRoute(
@@ -232,12 +240,33 @@ final goRouterProvider = Provider((ref) {
         name: ModernPaymentMethodsPage.name,
         builder: (context, state) => const ModernPaymentMethodsPage(),
       ),
+      //* Add Credit Card
+      GoRoute(
+        path: '/payment/add-card',
+        name: AddCreditCardPage.name,
+        builder: (context, state) => const AddCreditCardPage(),
+      ),
 
       //* History Page (for all authenticated users)
       GoRoute(
         path: '/my-history',
         name: UserHistoryPage.name,
         builder: (context, state) => const UserHistoryPage(),
+      ),
+
+      //* User - My Services (Service Tracking)
+      GoRoute(
+        path: '/my-services',
+        name: MyServicesPage.name,
+        builder: (context, state) => const MyServicesPage(),
+      ),
+
+      //* User - Service Detail (Service Tracking)
+      GoRoute(
+        path: '/my-services/:id',
+        name: tracking.ServiceTrackingDetailPage.name,
+        builder: (context, state) => tracking.ServiceTrackingDetailPage(
+            serviceId: state.params['id'] ?? 'no-id'),
       ),
 
       //* Operator - Assigned Tickets
@@ -252,6 +281,36 @@ final goRouterProvider = Provider((ref) {
         path: '/admin-all-tickets',
         name: AdminAllTicketsPage.name,
         builder: (context, state) => const AdminAllTicketsPage(),
+      ),
+
+      //* Operator - Home
+      GoRoute(
+        path: '/operator/home',
+        name: OperatorHomePage.name,
+        builder: (context, state) => const OperatorHomePage(),
+      ),
+
+      //* Operator - Work Orders (Ordenes de Trabajo)
+      GoRoute(
+        path: '/operator/work-orders',
+        name: OperatorWorkOrdersPage.name,
+        builder: (context, state) => const OperatorWorkOrdersPage(),
+      ),
+
+      //* Operator - Work Order Detail
+      GoRoute(
+        path: '/operator/order/:id',
+        name: WorkOrderDetailPage.name,
+        builder: (context, state) =>
+            WorkOrderDetailPage(orderId: state.params['id'] ?? 'no-id'),
+      ),
+
+      //* Operator - Vehicle Reception Checklist
+      GoRoute(
+        path: '/operator/reception/:id',
+        name: VehicleReceptionPage.name,
+        builder: (context, state) =>
+            VehicleReceptionPage(orderId: state.params['id'] ?? 'no-id'),
       ),
     ],
 

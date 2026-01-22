@@ -3,28 +3,7 @@ import 'package:flutter/material.dart';
 import '../../../shared/presentation/shared/widgets/modern_button.dart';
 import '../../../shared/presentation/shared/widgets/modern_card.dart';
 import '../../../shared/presentation/shared/widgets/modern_input_field.dart';
-
-class ReservationData {
-  final String id;
-  final String clientName;
-  final String clientEmail;
-  final String clientRut;
-  final String serviceName;
-  final DateTime date;
-  final String time;
-  final String status;
-
-  ReservationData({
-    required this.id,
-    required this.clientName,
-    required this.clientEmail,
-    required this.clientRut,
-    required this.serviceName,
-    required this.date,
-    required this.time,
-    required this.status,
-  });
-}
+import '../../domain/entities/reservation.dart';
 
 class ReservationStatCard extends StatelessWidget {
   final String value;
@@ -75,7 +54,7 @@ class ReservationStatCard extends StatelessWidget {
 }
 
 class ReservationCard extends StatelessWidget {
-  final ReservationData reservation;
+  final Reservation reservation;
   final Future<bool> Function(bool confirm) onConfirmDismiss;
   final VoidCallback onViewDetails;
   final VoidCallback onEdit;
@@ -90,7 +69,7 @@ class ReservationCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final statusColor = _getStatusColor(reservation.status);
+    const accentColor = Color(0xFF3498db);
 
     return Dismissible(
       key: Key(reservation.id),
@@ -121,13 +100,13 @@ class ReservationCard extends StatelessWidget {
                     height: 50,
                     decoration: BoxDecoration(
                       gradient: LinearGradient(
-                        colors: [statusColor, statusColor.withOpacity(0.7)],
+                        colors: [accentColor, accentColor.withOpacity(0.7)],
                       ),
                       borderRadius: BorderRadius.circular(25),
                     ),
                     child: Center(
                       child: Text(
-                        reservation.clientName[0].toUpperCase(),
+                        reservation.name[0].toUpperCase(),
                         style: const TextStyle(
                           fontSize: 20,
                           fontWeight: FontWeight.w700,
@@ -145,7 +124,7 @@ class ReservationCard extends StatelessWidget {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
-                          reservation.clientName,
+                          reservation.name,
                           style: const TextStyle(
                             fontSize: 16,
                             fontWeight: FontWeight.w600,
@@ -163,26 +142,6 @@ class ReservationCard extends StatelessWidget {
                       ],
                     ),
                   ),
-
-                  // Estado
-                  Container(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 12,
-                      vertical: 6,
-                    ),
-                    decoration: BoxDecoration(
-                      color: statusColor.withOpacity(0.1),
-                      borderRadius: BorderRadius.circular(20),
-                    ),
-                    child: Text(
-                      reservation.status,
-                      style: TextStyle(
-                        fontSize: 12,
-                        fontWeight: FontWeight.w600,
-                        color: statusColor,
-                      ),
-                    ),
-                  ),
                 ],
               ),
 
@@ -194,13 +153,13 @@ class ReservationCard extends StatelessWidget {
                   Expanded(
                     child: _buildDetailItem(
                       Icons.calendar_today,
-                      '${reservation.date.day}/${reservation.date.month}/${reservation.date.year}',
+                      reservation.reservationDate,
                     ),
                   ),
                   Expanded(
                     child: _buildDetailItem(
                       Icons.access_time,
-                      reservation.time,
+                      reservation.reservationTime,
                     ),
                   ),
                 ],
@@ -213,7 +172,7 @@ class ReservationCard extends StatelessWidget {
                   Expanded(
                     child: _buildDetailItem(
                       Icons.email_outlined,
-                      reservation.clientEmail,
+                      reservation.email,
                     ),
                   ),
                 ],
@@ -289,20 +248,6 @@ class ReservationCard extends StatelessWidget {
     );
   }
 
-  Color _getStatusColor(String status) {
-    switch (status) {
-      case 'Pendiente':
-        return const Color(0xFFf39c12);
-      case 'Confirmada':
-        return const Color(0xFF3498db);
-      case 'Completada':
-        return const Color(0xFF27ae60);
-      case 'Cancelada':
-        return const Color(0xFFe74c3c);
-      default:
-        return const Color(0xFF7f8c8d);
-    }
-  }
 }
 
 class ReservationsEmptyState extends StatelessWidget {
@@ -411,7 +356,7 @@ class FilterReservationDialog extends StatelessWidget {
 }
 
 class ReservationDetailDialog extends StatelessWidget {
-  final ReservationData reservation;
+  final Reservation reservation;
 
   const ReservationDetailDialog({super.key, required this.reservation});
 
@@ -430,15 +375,15 @@ class ReservationDetailDialog extends StatelessWidget {
               decoration: BoxDecoration(
                 gradient: LinearGradient(
                   colors: [
-                    _getStatusColor(reservation.status),
-                    _getStatusColor(reservation.status).withOpacity(0.7),
+                    const Color(0xFF3498db),
+                    const Color(0xFF3498db).withOpacity(0.7),
                   ],
                 ),
                 borderRadius: BorderRadius.circular(40),
               ),
               child: Center(
                 child: Text(
-                  reservation.clientName[0].toUpperCase(),
+                  reservation.name[0].toUpperCase(),
                   style: const TextStyle(
                     fontSize: 32,
                     fontWeight: FontWeight.w700,
@@ -458,16 +403,12 @@ class ReservationDetailDialog extends StatelessWidget {
             ),
           ),
           const SizedBox(height: 16),
-          _buildDetailRow('Cliente:', reservation.clientName),
-          _buildDetailRow('Email:', reservation.clientEmail),
-          _buildDetailRow('RUT:', reservation.clientRut),
+          _buildDetailRow('Cliente:', reservation.name),
+          _buildDetailRow('Email:', reservation.email),
+          _buildDetailRow('RUT:', reservation.rut),
           _buildDetailRow('Servicio:', reservation.serviceName),
-          _buildDetailRow(
-            'Fecha:',
-            '${reservation.date.day}/${reservation.date.month}/${reservation.date.year}',
-          ),
-          _buildDetailRow('Hora:', reservation.time),
-          _buildDetailRow('Estado:', reservation.status),
+          _buildDetailRow('Fecha:', reservation.reservationDate),
+          _buildDetailRow('Hora:', reservation.reservationTime),
           const SizedBox(height: 24),
           SizedBox(
             width: double.infinity,
@@ -510,18 +451,4 @@ class ReservationDetailDialog extends StatelessWidget {
     );
   }
 
-  Color _getStatusColor(String status) {
-    switch (status) {
-      case 'Pendiente':
-        return const Color(0xFFf39c12);
-      case 'Confirmada':
-        return const Color(0xFF3498db);
-      case 'Completada':
-        return const Color(0xFF27ae60);
-      case 'Cancelada':
-        return const Color(0xFFe74c3c);
-      default:
-        return const Color(0xFF7f8c8d);
-    }
-  }
 }

@@ -98,6 +98,16 @@ class ModernSideMenuState extends ConsumerState<ModernSideMenu>
                             if (authState.authStatus ==
                                     AuthStatus.authenticated &&
                                 authState.userData?.isAdmin == true) ...[
+                              
+
+                              MenuItemData(
+                                icon: Icons.category_outlined,
+                                activeIcon: Icons.category,
+                                title: "Gest. de categorías",
+                                onTap: () =>
+                                    context.push('/admin-config-categories'),
+                                // onTap: () => _navigateTo(context, '/services'),
+                              ),
                               MenuItemData(
                                 icon: Icons.build_outlined,
                                 activeIcon: Icons.build,

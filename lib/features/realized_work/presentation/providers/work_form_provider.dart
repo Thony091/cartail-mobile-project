@@ -1,8 +1,8 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:formz/formz.dart';
 
-import '../../../../realized_work/domain/entities/works.dart';
-import '../../../../../presentation/presentation_container.dart';
+import '../../domain/entities/works.dart';
+import '../../../../presentation/presentation_container.dart';
 
 final workFormProvider = StateNotifierProvider.autoDispose.family<WorkFormNotifier, WorkFormState, Works>(
   (ref, works) {

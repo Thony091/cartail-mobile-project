@@ -2,39 +2,7 @@ import 'package:flutter/material.dart';
 import '../../../shared/presentation/shared/widgets/modern_button.dart';
 import '../../../shared/presentation/shared/widgets/modern_card.dart';
 import '../../../shared/presentation/shared/widgets/modern_input_field.dart';
-
-class MessageData {
-  final String id;
-  final String name;
-  final String email;
-  final String message;
-  final DateTime date;
-  bool isRead;
-
-  MessageData({
-    required this.id,
-    required this.name,
-    required this.email,
-    required this.message,
-    required this.date,
-    required this.isRead,
-  });
-}
-
-String formatMessageDate(DateTime date) {
-  final now = DateTime.now();
-  final difference = now.difference(date);
-
-  if (difference.inDays == 0) {
-    return 'Hoy ${date.hour.toString().padLeft(2, '0')}:${date.minute.toString().padLeft(2, '0')}';
-  } else if (difference.inDays == 1) {
-    return 'Ayer';
-  } else if (difference.inDays < 7) {
-    return '${difference.inDays} días';
-  } else {
-    return '${date.day}/${date.month}/${date.year}';
-  }
-}
+import '../../domain/entities/message.dart';
 
 class MessageStatCard extends StatelessWidget {
   final String value;
@@ -89,7 +57,7 @@ class MessageStatCard extends StatelessWidget {
 }
 
 class MessageCard extends StatelessWidget {
-  final MessageData message;
+  final Message message;
   final VoidCallback onTap;
   final Future<bool> Function(DismissDirection) onConfirmDismiss;
 
@@ -151,23 +119,10 @@ class MessageCard extends StatelessWidget {
                               message.name,
                               style: TextStyle(
                                 fontSize: 16,
-                                fontWeight: message.isRead
-                                    ? FontWeight.w500
-                                    : FontWeight.w700,
+                                fontWeight: FontWeight.w700,
                                 color: const Color(0xFF2c3e50),
                               ),
                             ),
-                            if (!message.isRead) ...[
-                              const SizedBox(width: 8),
-                              Container(
-                                width: 8,
-                                height: 8,
-                                decoration: const BoxDecoration(
-                                  color: Color(0xFFe74c3c),
-                                  shape: BoxShape.circle,
-                                ),
-                              ),
-                            ],
                           ],
                         ),
                         const SizedBox(height: 4),
@@ -179,13 +134,6 @@ class MessageCard extends StatelessWidget {
                           ),
                         ),
                       ],
-                    ),
-                  ),
-                  Text(
-                    formatMessageDate(message.date),
-                    style: const TextStyle(
-                      fontSize: 12,
-                      color: Color(0xFF7f8c8d),
                     ),
                   ),
                 ],
@@ -283,17 +231,15 @@ class SearchMessageDialog extends StatelessWidget {
 }
 
 class MessageDetailsSheet extends StatefulWidget {
-  final MessageData message;
+  final Message message;
   final VoidCallback onReply;
   final VoidCallback onDelete;
-  final VoidCallback onMarkAsRead;
 
   const MessageDetailsSheet({
     super.key,
     required this.message,
     required this.onReply,
     required this.onDelete,
-    required this.onMarkAsRead,
   });
 
   @override
@@ -301,16 +247,6 @@ class MessageDetailsSheet extends StatefulWidget {
 }
 
 class _MessageDetailsSheetState extends State<MessageDetailsSheet> {
-  @override
-  void initState() {
-    super.initState();
-    if (!widget.message.isRead) {
-      WidgetsBinding.instance.addPostFrameCallback((_) {
-        widget.onMarkAsRead();
-      });
-    }
-  }
-
   @override
   Widget build(BuildContext context) {
     return Container(
@@ -357,13 +293,6 @@ class _MessageDetailsSheetState extends State<MessageDetailsSheet> {
                         ),
                       ),
                     ],
-                  ),
-                ),
-                Text(
-                  formatMessageDate(widget.message.date),
-                  style: const TextStyle(
-                    fontSize: 12,
-                    color: Color(0xFF7f8c8d),
                   ),
                 ),
               ],
@@ -424,7 +353,7 @@ class _MessageDetailsSheetState extends State<MessageDetailsSheet> {
 }
 
 class ReplyMessageDialog extends StatelessWidget {
-  final MessageData message;
+  final Message message;
   final VoidCallback onSend;
 
   const ReplyMessageDialog({
@@ -466,7 +395,7 @@ class ReplyMessageDialog extends StatelessWidget {
 }
 
 class DeleteMessageDialog extends StatelessWidget {
-  final MessageData message;
+  final Message message;
 
   const DeleteMessageDialog({super.key, required this.message});
 

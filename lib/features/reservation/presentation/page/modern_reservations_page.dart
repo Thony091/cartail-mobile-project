@@ -5,6 +5,9 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../presentation/pages/auth/modern_scaffold_with_drawer.dart';
 import '../../../shared/presentation/shared/widgets/modern_button.dart';
 import 'modern_reservations_widgets.dart';
+import '../providers/reservation_provider.dart';
+import '../../../services/presentation/providers/services_provider.dart';
+import '../../../services/domain/entities/services.dart';
 
 class ModernReservationsPage extends ConsumerStatefulWidget {
   static const name = 'ModernReservationsPage';
@@ -22,16 +25,12 @@ class ModernReservationsPageState
 
   bool _isLoading = false;
 
-  final List<ServiceOption> _services = [
-    ServiceOption('1', 'Detailing Completo', const Color(0xFF3498db)),
-    ServiceOption('2', 'Lavado Express', const Color(0xFF27ae60)),
-    ServiceOption('3', 'Pulido y Encerado', const Color(0xFFf39c12)),
-    ServiceOption('4', 'Limpieza de Motor', const Color(0xFFe74c3c)),
-    ServiceOption('5', 'Limpieza de Tapiz', const Color(0xFF9b59b6)),
-  ];
-
   @override
   Widget build(BuildContext context) {
+    final servicesState = ref.watch(servicesProvider);
+    final services = servicesState.services;
+    final serviceOptions = _buildServiceOptions(services);
+
     return ModernScaffoldWithDrawer(
       title: 'Agenda tu Hora',
       body: Container(
@@ -57,7 +56,7 @@ class ModernReservationsPageState
               // Formulario de reserva
               ReservationForm(
                 key: _formStateKey,
-                services: _services,
+                services: serviceOptions,
                 formKey: _formKey,
                 isLoading: _isLoading,
                 onSubmit: _handleReservation,
@@ -94,8 +93,26 @@ class ModernReservationsPageState
         _isLoading = true;
       });
 
-      // Simular llamada a API
-      await Future.delayed(const Duration(seconds: 2));
+      final serviceName = formState.selectedServiceName;
+      if (serviceName == null) {
+        _showSnackBar('Por favor selecciona un servicio');
+        setState(() {
+          _isLoading = false;
+        });
+        return;
+      }
+
+      final reservationDate = _formatDate(formState.selectedDate!);
+      final reservationTime = formState.selectedTime!.format(context);
+
+      await ref.read(reservationProvider.notifier).createReservation(
+            formState.name,
+            formState.rut,
+            formState.email,
+            reservationDate,
+            reservationTime,
+            serviceName,
+          );
 
       setState(() {
         _isLoading = false;
@@ -105,6 +122,32 @@ class ModernReservationsPageState
         _showSuccessDialog();
       }
     }
+  }
+
+  List<ServiceOption> _buildServiceOptions(List<Services> services) {
+    const colors = [
+      Color(0xFF3498db),
+      Color(0xFF27ae60),
+      Color(0xFFf39c12),
+      Color(0xFFe74c3c),
+      Color(0xFF9b59b6),
+    ];
+
+    return List.generate(services.length, (index) {
+      final service = services[index];
+      return ServiceOption(
+        service.id,
+        service.name,
+        colors[index % colors.length],
+      );
+    });
+  }
+
+  String _formatDate(DateTime date) {
+    final year = date.year.toString().padLeft(4, '0');
+    final month = date.month.toString().padLeft(2, '0');
+    final day = date.day.toString().padLeft(2, '0');
+    return '$year-$month-$day';
   }
 
   void _showSnackBar(String message) {

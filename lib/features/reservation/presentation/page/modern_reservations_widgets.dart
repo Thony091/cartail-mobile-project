@@ -88,6 +88,25 @@ class ReservationFormState extends State<ReservationForm> {
   String? selectedService;
   DateTime? selectedDate;
   TimeOfDay? selectedTime;
+  late final TextEditingController _nameController;
+  late final TextEditingController _rutController;
+  late final TextEditingController _emailController;
+
+  @override
+  void initState() {
+    super.initState();
+    _nameController = TextEditingController();
+    _rutController = TextEditingController();
+    _emailController = TextEditingController();
+  }
+
+  @override
+  void dispose() {
+    _nameController.dispose();
+    _rutController.dispose();
+    _emailController.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -112,6 +131,7 @@ class ReservationFormState extends State<ReservationForm> {
               ModernInputField(
                 label: 'Nombre Completo',
                 hint: 'Ingresa tu nombre',
+                controller: _nameController,
                 prefixIcon: const Icon(Icons.person_outline),
                 validator: (value) {
                   if (value?.isEmpty ?? true) {
@@ -127,6 +147,7 @@ class ReservationFormState extends State<ReservationForm> {
               ModernInputField(
                 label: 'RUT',
                 hint: '12345678-9',
+                controller: _rutController,
                 prefixIcon: const Icon(Icons.badge_outlined),
                 validator: (value) {
                   if (value?.isEmpty ?? true) {
@@ -143,6 +164,7 @@ class ReservationFormState extends State<ReservationForm> {
                 label: 'Correo Electrónico',
                 hint: 'ejemplo@correo.com',
                 keyboardType: TextInputType.emailAddress,
+                controller: _emailController,
                 prefixIcon: const Icon(Icons.email_outlined),
                 validator: (value) {
                   if (value?.isEmpty ?? true) {
@@ -379,12 +401,31 @@ class ReservationFormState extends State<ReservationForm> {
     return selectedDate != null && selectedTime != null;
   }
 
+  String get name => _nameController.text.trim();
+  String get rut => _rutController.text.trim();
+  String get email => _emailController.text.trim();
+
+  String? get selectedServiceName {
+    if (selectedService == null) {
+      return null;
+    }
+    for (final service in widget.services) {
+      if (service.id == selectedService) {
+        return service.name;
+      }
+    }
+    return null;
+  }
+
   void reset() {
     setState(() {
       selectedService = null;
       selectedDate = null;
       selectedTime = null;
     });
+    _nameController.clear();
+    _rutController.clear();
+    _emailController.clear();
   }
 }
 

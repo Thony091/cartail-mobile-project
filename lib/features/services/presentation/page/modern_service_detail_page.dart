@@ -4,12 +4,9 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import 'package:portafolio_project/features/services/presentation/page/modern_service_detail_widgets.dart';
-
-import 'package:portafolio_project/features/shared/presentation/shared/widgets/modern_button.dart';
 import '../../../auth/presentation/providers/auth_provider.dart';
 import '../../../../presentation/pages/auth/modern_scaffold_with_drawer.dart';
 import '../providers/service_provider.dart';
-import '../providers/services_provider.dart';
 
 class ModernServiceDetailPage extends ConsumerStatefulWidget {
   final String serviceId;
@@ -24,189 +21,370 @@ class ModernServiceDetailPage extends ConsumerStatefulWidget {
 class ModernServiceDetailPageState
     extends ConsumerState<ModernServiceDetailPage> {
   final _formKey = GlobalKey<FormState>();
-  final _nameController = TextEditingController();
-  final _descriptionController = TextEditingController();
-  final _priceController = TextEditingController();
-  final _durationController = TextEditingController();
-
-  bool _isEditMode = false;
-  bool _isLoading = false;
-  bool _isSaving = false;
-  String _selectedCategory = 'Detailing';
-  List<String> _selectedImages = [];
-
-  final List<String> _categories = [
-    'Detailing',
-    'Mecánica',
-    'Pintura',
-    'Neumáticos',
-    'Eléctrica',
-    'Carrocería',
-  ];
-
-  @override
-  void initState() {
-    super.initState();
-    _loadService();
-  }
-
-  @override
-  void dispose() {
-    _nameController.dispose();
-    _descriptionController.dispose();
-    _priceController.dispose();
-    _durationController.dispose();
-    super.dispose();
-  }
-
-  void _loadService() async {
-    if (widget.serviceId == 'new') {
-      setState(() {
-        _isEditMode = true;
-        _isLoading = false;
-      });
-      return;
-    }
-
-    setState(() => _isLoading = true);
-
-    ref.listen<ServiceState>(
-      serviceProvider(widget.serviceId),
-      (previous, next) {
-        final service = next.service;
-        if (service == null) {
-          if (mounted) {
-            setState(() => _isLoading = next.isLoading);
-          }
-          return;
-        }
-
-        _nameController.text = service.name;
-        _descriptionController.text = service.description;
-        _priceController.text = service.minPrice.toString();
-        _durationController.text = '';
-        _selectedImages = List<String>.from(service.images);
-
-        if (mounted) {
-          setState(() => _isLoading = next.isLoading);
-        }
-      },
-    );
-  }
 
   @override
   Widget build(BuildContext context) {
     final authState = ref.watch(authProvider);
-    final isAdmin = authState.userData?.isAdmin ?? false;
-    // final isAdmin = true; // Simular admin para testing
-    final isNewService = widget.serviceId == 'new';
+    final serviceState = ref.watch(serviceProvider(widget.serviceId));
 
+    // Cuando el servicio se cargue, usar el serviceFormProvider
+    final service = serviceState.service;
+
+    if (serviceState.isLoading) {
+      return const ModernScaffoldWithDrawer(
+        title: 'Cargando...',
+        body: Center(child: CircularProgressIndicator()),
+      );
+    }
+
+    if (service == null) {
+      return const ModernScaffoldWithDrawer(
+        title: 'Error',
+        body: Center(child: Text('No se pudo cargar el servicio')),
+      );
+    }
+
+    final serviceNotifier = ref.read(serviceProvider(widget.serviceId).notifier);
+
+    final isAdmin = authState.userData?.isAdmin ?? false;
+    final isNewService = widget.serviceId == 'new';
+    final isEditMode = serviceState.isEditMode;
     return ModernScaffoldWithDrawer(
       title: isNewService
           ? 'Crear Servicio'
-          : _isEditMode
+          : isEditMode
           ? 'Editar Servicio'
           : 'Detalles del Servicio',
       appBarActions: [
-        if (!isNewService && isAdmin && !_isEditMode)
+        if (!isNewService && isAdmin && !isEditMode)
           IconButton(
             icon: const Icon(Icons.edit, color: Colors.white),
-            onPressed: () => setState(() => _isEditMode = true),
+            onPressed: () => serviceNotifier.setEditMode(true),
           ),
-        if (_isEditMode && !isNewService)
+        if (isEditMode && !isNewService)
           IconButton(
             icon: const Icon(Icons.close, color: Colors.white),
-            onPressed: () => setState(() => _isEditMode = false),
+            onPressed: () => serviceNotifier.setEditMode(false),
           ),
       ],
-      body: _isLoading
+      body: serviceState.isLoading
           ? const Center(child: CircularProgressIndicator())
           : Container(
               decoration: BoxDecoration(
                 gradient: LinearGradient(
-                  begin: Alignment.topCenter,
-                  end: Alignment.bottomCenter,
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
                   colors: [
-                    const Color(0xFF667eea).withOpacity(0.1),
-                    const Color(0xFFf8fafc),
+                    Colors.white,
+                    const Color(0xFF667eea).withValues(alpha: 0.03),
+                    const Color(0xFFf093fb).withValues(alpha: 0.03),
                   ],
                 ),
               ),
               child: SingleChildScrollView(
-                padding: const EdgeInsets.all(20),
+                physics: const BouncingScrollPhysics(),
+                padding: EdgeInsets.only(
+                  left: 16,
+                  right: 16,
+                  top: isEditMode ? 8 : 0,
+                  bottom: isEditMode ? 100 : 20,
+                ),
                 child: Form(
                   key: _formKey,
                   child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
                     children: [
-                      // Galería de imágenes
+                      if (isEditMode) ...[
+                        // Header con indicador de progreso para modo creación
+                        if (widget.serviceId == 'new')
+                          FadeInDown(
+                            child: Container(
+                              margin: const EdgeInsets.only(bottom: 16, top: 8),
+                              padding: const EdgeInsets.all(16),
+                              decoration: BoxDecoration(
+                                gradient: const LinearGradient(
+                                  colors: [Color(0xFF667eea), Color(0xFF764ba2)],
+                                ),
+                                borderRadius: BorderRadius.circular(16),
+                                boxShadow: [
+                                  BoxShadow(
+                                    color: const Color(0xFF667eea).withValues(alpha: 0.3),
+                                    blurRadius: 12,
+                                    offset: const Offset(0, 4),
+                                  ),
+                                ],
+                              ),
+                              child: Row(
+                                children: [
+                                  Container(
+                                    padding: const EdgeInsets.all(12),
+                                    decoration: BoxDecoration(
+                                      color: Colors.white.withValues(alpha: 0.2),
+                                      borderRadius: BorderRadius.circular(12),
+                                    ),
+                                    child: const Icon(
+                                      Icons.add_business,
+                                      color: Colors.white,
+                                      size: 28,
+                                    ),
+                                  ),
+                                  const SizedBox(width: 16),
+                                  const Expanded(
+                                    child: Column(
+                                      crossAxisAlignment: CrossAxisAlignment.start,
+                                      children: [
+                                        Text(
+                                          'Crear Nuevo Servicio',
+                                          style: TextStyle(
+                                            color: Colors.white,
+                                            fontSize: 18,
+                                            fontWeight: FontWeight.bold,
+                                          ),
+                                        ),
+                                        SizedBox(height: 4),
+                                        Text(
+                                          'Completa todos los campos requeridos',
+                                          style: TextStyle(
+                                            color: Colors.white70,
+                                            fontSize: 13,
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ),
+                      ],
+                      // Galería de imágenes con diseño mejorado
                       FadeInDown(
-                        child: ServiceImageGallery(
-                          selectedImages: _selectedImages,
-                          isEditMode: _isEditMode,
-                          onPickImages: _pickImages,
+                        duration: const Duration(milliseconds: 600),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            if (isEditMode)
+                              const Padding(
+                                padding: EdgeInsets.only(bottom: 12, left: 4),
+                                child: Row(
+                                  children: [
+                                    Icon(
+                                      Icons.image_outlined,
+                                      color: Color(0xFF667eea),
+                                      size: 20,
+                                    ),
+                                    SizedBox(width: 8),
+                                    Text(
+                                      'Imagen del Servicio',
+                                      style: TextStyle(
+                                        fontSize: 16,
+                                        fontWeight: FontWeight.w600,
+                                        color: Color(0xFF2c3e50),
+                                      ),
+                                    ),
+                                    SizedBox(width: 4),
+                                    Text(
+                                      '*',
+                                      style: TextStyle(
+                                        color: Color(0xFFe74c3c),
+                                        fontSize: 16,
+                                        fontWeight: FontWeight.bold,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ServiceImageGallery(
+                              service: service,
+                              isEditMode: isEditMode,
+                            ),
+                          ],
                         ),
                       ),
 
-                      const SizedBox(height: 24),
+                      SizedBox(height: isEditMode ? 28 : 24),
 
-                      // Información básica
+                      // Información básica con header
                       FadeInUp(
                         delay: const Duration(milliseconds: 100),
-                        child: ServiceBasicInfo(
-                          isEditMode: _isEditMode,
-                          nameController: _nameController,
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            if (isEditMode)
+                              const Padding(
+                                padding: EdgeInsets.only(bottom: 12, left: 4),
+                                child: Row(
+                                  children: [
+                                    Icon(
+                                      Icons.edit_note,
+                                      color: Color(0xFF667eea),
+                                      size: 20,
+                                    ),
+                                    SizedBox(width: 8),
+                                    Text(
+                                      'Información Básica',
+                                      style: TextStyle(
+                                        fontSize: 16,
+                                        fontWeight: FontWeight.w600,
+                                        color: Color(0xFF2c3e50),
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ServiceBasicInfo(
+                              serviceId: widget.serviceId,
+                              service: service,
+                              isEditMode: isEditMode,
+                            ),
+                          ],
                         ),
                       ),
 
-                      const SizedBox(height: 20),
+                      SizedBox(height: isEditMode ? 24 : 20),
 
-                      // Descripción
+                      // Descripción con header
                       FadeInUp(
                         delay: const Duration(milliseconds: 200),
-                        child: ServiceDescription(
-                          isEditMode: _isEditMode,
-                          descriptionController: _descriptionController,
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            if (isEditMode)
+                              const Padding(
+                                padding: EdgeInsets.only(bottom: 12, left: 4),
+                                child: Row(
+                                  children: [
+                                    Icon(
+                                      Icons.description_outlined,
+                                      color: Color(0xFF667eea),
+                                      size: 20,
+                                    ),
+                                    SizedBox(width: 8),
+                                    Text(
+                                      'Descripción',
+                                      style: TextStyle(
+                                        fontSize: 16,
+                                        fontWeight: FontWeight.w600,
+                                        color: Color(0xFF2c3e50),
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ServiceDescription(
+                              isEditMode: isEditMode,
+                              serviceId: widget.serviceId,
+                              service: service,
+                            ),
+                          ],
                         ),
                       ),
 
-                      const SizedBox(height: 20),
+                      SizedBox(height: isEditMode ? 24 : 20),
 
-                      // Detalles del servicio
+                      // Detalles del servicio con header
                       FadeInUp(
                         delay: const Duration(milliseconds: 300),
-                        child: ServiceDetailsSection(
-                          isEditMode: _isEditMode,
-                          priceController: _priceController,
-                          durationController: _durationController,
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            if (isEditMode)
+                              const Padding(
+                                padding: EdgeInsets.only(bottom: 12, left: 4),
+                                child: Row(
+                                  children: [
+                                    Icon(
+                                      Icons.attach_money,
+                                      color: Color(0xFF667eea),
+                                      size: 20,
+                                    ),
+                                    SizedBox(width: 8),
+                                    Text(
+                                      'Precios y Detalles',
+                                      style: TextStyle(
+                                        fontSize: 16,
+                                        fontWeight: FontWeight.w600,
+                                        color: Color(0xFF2c3e50),
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ServiceDetailsSection(
+                              isEditMode: isEditMode,
+                              serviceId: widget.serviceId,
+                              service: service,
+                            ),
+                          ],
                         ),
                       ),
 
-                      const SizedBox(height: 20),
+                      SizedBox(height: isEditMode ? 24 : 20),
 
-                      // Categoría
+                      // Categoría con header
                       FadeInUp(
                         delay: const Duration(milliseconds: 400),
-                        child: CategorySelector(
-                          isEditMode: _isEditMode,
-                          selectedCategory: _selectedCategory,
-                          categories: _categories,
-                          onCategorySelected: (category) =>
-                              setState(() => _selectedCategory = category),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            if (isEditMode)
+                              const Padding(
+                                padding: EdgeInsets.only(bottom: 12, left: 4),
+                                child: Row(
+                                  children: [
+                                    Icon(
+                                      Icons.category_outlined,
+                                      color: Color(0xFF667eea),
+                                      size: 20,
+                                    ),
+                                    SizedBox(width: 8),
+                                    Text(
+                                      'Categoría',
+                                      style: TextStyle(
+                                        fontSize: 16,
+                                        fontWeight: FontWeight.w600,
+                                        color: Color(0xFF2c3e50),
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            CategorySelector(
+                              serviceId: widget.serviceId,
+                              service: service,
+                              isEditMode: isEditMode,
+                            ),
+                          ],
                         ),
                       ),
 
-                      const SizedBox(height: 32),
+                      SizedBox(height: isEditMode ? 32 : 32),
 
-                      // Botones de acción
-                      if (_isEditMode)
+                      // Botones de acción con diseño mejorado
+                      if (isEditMode)
                         FadeInUp(
                           delay: const Duration(milliseconds: 500),
-                          child: ServiceActionButtons(
-                            isNewService: isNewService,
-                            isSaving: _isSaving,
-                            onSave: _saveService,
-                            onDelete: _deleteService,
+                          child: Column(
+                            children: [
+                              // Divider decorativo
+                              Container(
+                                margin: const EdgeInsets.only(bottom: 24),
+                                height: 1,
+                                decoration: BoxDecoration(
+                                  gradient: LinearGradient(
+                                    colors: [
+                                      Colors.transparent,
+                                      const Color(0xFF667eea).withValues(alpha: 0.3),
+                                      Colors.transparent,
+                                    ],
+                                  ),
+                                ),
+                              ),
+                              ServiceActionButtons(
+                                serviceId: widget.serviceId,
+                                service: service,
+                              ),
+                            ],
                           ),
                         )
                       else if (!isAdmin)
@@ -218,147 +396,16 @@ class ModernServiceDetailPageState
                                 '/reservations?service=${widget.serviceId}',
                               );
                             },
-                            onAddToCart: () {
-                              ScaffoldMessenger.of(context).showSnackBar(
-                                const SnackBar(
-                                  content: Text('Servicio agregado al carrito'),
-                                  backgroundColor: Color(0xFF27ae60),
-                                ),
-                              );
-                            },
                           ),
                         ),
+
+                      // Espaciado adicional al final
+                      const SizedBox(height: 20),
                     ],
                   ),
                 ),
               ),
             ),
     );
-  }
-
-  void _pickImages() {
-    // Implementar selector de imágenes
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(
-        content: Text('Selector de imágenes próximamente'),
-        backgroundColor: Color(0xFF3498db),
-      ),
-    );
-  }
-
-  Future<void> _saveService() async {
-    if (!_formKey.currentState!.validate()) {
-      return;
-    }
-
-    setState(() => _isSaving = true);
-
-    try {
-      final price = int.tryParse(_priceController.text) ?? 0;
-      final serviceData = {
-        'id': widget.serviceId == 'new' ? null : widget.serviceId,
-        'name': _nameController.text.trim(),
-        'description': _descriptionController.text.trim(),
-        'minPrice': price,
-        'maxPrice': price,
-        'isActive': true,
-        'images': _selectedImages,
-      };
-
-      final saved = await ref
-          .read(servicesProvider.notifier)
-          .createOrUpdateService(serviceData);
-
-      if (mounted) {
-        if (!saved) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Text('No se pudo guardar el servicio'),
-              backgroundColor: Color(0xFFe74c3c),
-            ),
-          );
-          return;
-        }
-
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(
-              widget.serviceId == 'new'
-                  ? 'Servicio creado'
-                  : 'Cambios guardados',
-            ),
-            backgroundColor: const Color(0xFF27ae60),
-          ),
-        );
-
-        if (widget.serviceId == 'new') {
-          context.pop();
-        } else {
-          setState(() => _isEditMode = false);
-        }
-      }
-    } catch (e) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Error: $e'),
-            backgroundColor: const Color(0xFFe74c3c),
-          ),
-        );
-      }
-    } finally {
-      if (mounted) {
-        setState(() => _isSaving = false);
-      }
-    }
-  }
-
-  Future<void> _deleteService() async {
-    final confirmed = await showDialog<bool>(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Eliminar Servicio'),
-        content: const Text(
-          '¿Estás seguro de que deseas eliminar este servicio? Esta acción no se puede deshacer.',
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(context).pop(false),
-            child: const Text('Cancelar'),
-          ),
-          ModernButton(
-            text: 'Eliminar',
-            style: ModernButtonStyle.danger,
-            onPressed: () => Navigator.of(context).pop(true),
-          ),
-        ],
-      ),
-    );
-
-    if (confirmed == true && mounted) {
-      final deleted =
-          await ref.read(servicesProvider.notifier).deleteService(
-                widget.serviceId,
-              );
-
-      if (!deleted && mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('No se pudo eliminar el servicio'),
-            backgroundColor: Color(0xFFe74c3c),
-          ),
-        );
-        return;
-      }
-
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Servicio eliminado'),
-          backgroundColor: Color(0xFFe74c3c),
-        ),
-      );
-
-      context.pop();
-    }
   }
 }

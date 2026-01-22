@@ -119,49 +119,56 @@ class EmptyServicesView extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Center(
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Container(
-            width: 120,
-            height: 120,
-            decoration: BoxDecoration(
-              color: const Color(0xFF3498db).withOpacity(0.1),
-              borderRadius: BorderRadius.circular(60),
+      child: SingleChildScrollView(
+        padding: const EdgeInsets.symmetric(horizontal: 16),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Container(
+              width: 120,
+              height: 120,
+              decoration: BoxDecoration(
+                color: const Color(0xFF3498db).withOpacity(0.1),
+                borderRadius: BorderRadius.circular(60),
+              ),
+              child: const Icon(
+                Icons.build_outlined,
+                size: 60,
+                color: Color(0xFF3498db),
+              ),
             ),
-            child: const Icon(
-              Icons.build_outlined,
-              size: 60,
-              color: Color(0xFF3498db),
+
+            const SizedBox(height: 24),
+
+            const Text(
+              'No hay servicios registrados',
+              style: TextStyle(
+                fontSize: 20,
+                fontWeight: FontWeight.w700,
+                color: Color(0xFF2c3e50),
+              ),
             ),
-          ),
 
-          const SizedBox(height: 24),
+            const SizedBox(height: 8),
 
-          const Text(
-            'No hay servicios registrados',
-            style: TextStyle(
-              fontSize: 20,
-              fontWeight: FontWeight.w700,
-              color: Color(0xFF2c3e50),
+            const Text(
+              'Comienza creando tu primer servicio',
+              style: TextStyle(fontSize: 16, color: Color(0xFF7f8c8d)),
             ),
-          ),
 
-          const SizedBox(height: 8),
+            const SizedBox(height: 32),
 
-          const Text(
-            'Comienza creando tu primer servicio',
-            style: TextStyle(fontSize: 16, color: Color(0xFF7f8c8d)),
-          ),
-
-          const SizedBox(height: 32),
-
-          ModernButton(
-            text: 'Crear Servicio',
-            icon: Icons.add,
-            onPressed: onCreate,
-          ),
-        ],
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 15),
+              child: ModernButton(
+                text: 'Crear Servicio',
+                icon: Icons.add,
+                onPressed: onCreate,
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -247,13 +254,13 @@ class ServiceAdminCard extends StatelessWidget {
         }
       },
       child: Container(
-        margin: const EdgeInsets.only(bottom: 16),
+        margin: const EdgeInsets.only(bottom: 15),
         child: ModernCard(
           child: InkWell(
             onTap: onTap,
             borderRadius: BorderRadius.circular(20),
             child: Padding(
-              padding: const EdgeInsets.all(5),
+              padding: const EdgeInsets.all(2),
               child: Row(
                 children: [
                   // Imagen del servicio
@@ -301,8 +308,8 @@ class ServiceAdminCard extends StatelessWidget {
                           children: [
                             Container(
                               padding: const EdgeInsets.symmetric(
-                                horizontal: 8,
-                                vertical: 4,
+                                horizontal: 5,
+                                vertical: 3,
                               ),
                               decoration: BoxDecoration(
                                 color: const Color(0xFF27ae60).withOpacity(0.1),
@@ -332,7 +339,7 @@ class ServiceAdminCard extends StatelessWidget {
                             Text(
                               '\$${service.minPrice} - \$${service.maxPrice}',
                               style: const TextStyle(
-                                fontSize: 18,
+                                fontSize: 14,
                                 fontWeight: FontWeight.w700,
                                 color: Color(0xFF3498db),
                               ),

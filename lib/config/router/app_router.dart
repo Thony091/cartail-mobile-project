@@ -5,6 +5,8 @@ import 'package:portafolio_project/presentation/pages/auth/modern_check_auth_sta
 import 'package:portafolio_project/features/reservation/presentation/page/modern_config_reservations_page.dart';
 import 'package:portafolio_project/features/services/presentation/page/modern_config_services_page.dart';
 import 'package:portafolio_project/features/user/presentation/profile/modern_edit_profile.dart';
+import 'package:portafolio_project/features/category/presentation/page/modern_config_categories_page.dart';
+import 'package:portafolio_project/features/category/presentation/page/modern_category_detail_page.dart';
 import 'package:portafolio_project/features/auth/presentation/login/modern_login_page.dart';
 import 'package:portafolio_project/features/user/presentation/profile/modern_profile_page.dart';
 
@@ -35,6 +37,7 @@ import '../../features/service_tracking/presentation/pages/my_services_page.dart
 import '../../features/service_tracking/presentation/pages/service_detail_page.dart'
     as tracking;
 import '../../presentation/presentation_container.dart';
+import '../../features/user/domain/entities/user_role.dart';
 import 'route_guards.dart';
 import 'router.dart';
 
@@ -122,6 +125,14 @@ final goRouterProvider = Provider((ref) {
         builder: (context, state) =>
             ModernServiceDetailPage(serviceId: state.params['id'] ?? 'no-id'),
       ),
+      //* Category Edit (Admin)
+      GoRoute(
+        path: '/category-edit/:id',
+        name: ModernCategoryDetailPage.name,
+        builder: (context, state) => ModernCategoryDetailPage(
+          categoryId: state.params['id'] ?? 'no-id',
+        ),
+      ),
       //* Service Edit
       // GoRoute(
       //   path: '/service-edit/:id',
@@ -189,6 +200,12 @@ final goRouterProvider = Provider((ref) {
         path: '/admin-config-services',
         name: ModernConfigServicesPage.name,
         builder: (context, state) => const ModernConfigServicesPage(),
+      ),
+      //* ConfigCategoriesPage
+      GoRoute(
+        path: '/admin-config-categories',
+        name: ModernConfigCategoriesPage.name,
+        builder: (context, state) => const ModernConfigCategoriesPage(),
       ),
       // //* ConfigProductsPage - DISABLED: No product module
       // GoRoute(
@@ -334,6 +351,14 @@ final goRouterProvider = Provider((ref) {
         if (isGoingTo == '/login' ||
             isGoingTo == '/register' ||
             isGoingTo == '/reset-password') {
+          return '/';
+        }
+      }
+
+      // Si el usuario acaba de hacer logout (notAuthenticated) y está en una ruta que requiere autenticación
+      // o que requiere permisos específicos, redirigir al home
+      if (authStatus == AuthStatus.notAuthenticated) {
+        if (!RouteGuards.canAccessRoute(isGoingTo, UserRole.guest)) {
           return '/';
         }
       }

@@ -7,6 +7,8 @@ import 'package:portafolio_project/presentation/pages/auth/modern_scaffold_with_
 import 'package:url_launcher/url_launcher.dart';
 
 import 'package:portafolio_project/features/message/presentation/pages/modern_message_response_widgets.dart';
+import '../providers/message_provider.dart';
+import '../../domain/entities/message.dart';
 
 import '../../../shared/presentation/shared/widgets/modern_button.dart';
 import '../../../shared/presentation/shared/widgets/modern_card.dart';
@@ -31,8 +33,6 @@ class ModernMessageResponsePageState
   @override
   void initState() {
     super.initState();
-    // Cargar mensaje específico
-    // ref.read(messageProvider(widget.messageId));
   }
 
   @override
@@ -44,10 +44,8 @@ class ModernMessageResponsePageState
 
   @override
   Widget build(BuildContext context) {
-    // final messageState = ref.watch(messageProvider(widget.messageId));
-
-    // Datos simulados para el ejemplo - reemplazar con messageState.message
-    final message = _getSimulatedMessage();
+    final messageState = ref.watch(messageProvider(widget.messageId));
+    final message = messageState.message;
 
     return ModernScaffoldWithDrawer(
       title: 'Responder Mensaje',
@@ -55,10 +53,14 @@ class ModernMessageResponsePageState
         IconButton(
           icon: const Icon(Icons.email, color: Colors.white),
           tooltip: 'Abrir en cliente de correo',
-          onPressed: () => _openInEmailClient(message),
+          onPressed: message == null ? null : () => _openInEmailClient(message),
         ),
       ],
-      body: Container(
+      body: messageState.isLoading
+          ? const Center(child: CircularProgressIndicator())
+          : message == null
+              ? const Center(child: Text('No se encontró el mensaje'))
+              : Container(
         decoration: BoxDecoration(
           gradient: LinearGradient(
             begin: Alignment.topCenter,
@@ -109,7 +111,7 @@ class ModernMessageResponsePageState
     );
   }
 
-  Future<void> _sendResponse(MessageResponseData message) async {
+  Future<void> _sendResponse(Message message) async {
     if (_responseController.text.trim().isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
@@ -170,7 +172,7 @@ class ModernMessageResponsePageState
     }
   }
 
-  Future<void> _openInEmailClient(MessageResponseData message) async {
+  Future<void> _openInEmailClient(Message message) async {
     final mailtoLink = Mailto(
       to: [message.email],
       subject: 'Re: Tu mensaje - DriveTail',
@@ -182,16 +184,4 @@ class ModernMessageResponsePageState
     }
   }
 
-  MessageResponseData _getSimulatedMessage() {
-    return MessageResponseData(
-      id: widget.messageId,
-      name: 'Carlos Mendoza',
-      email: 'carlos@email.com',
-      phone: '+56 9 1234 5678',
-      message:
-          'Hola, quisiera consultar por el servicio de detailing para mi auto. ¿Cuánto tiempo demora y cuál es el precio? También me gustaría saber si trabajan los fines de semana.',
-      date: DateTime.now().subtract(const Duration(hours: 2)),
-      isRead: true,
-    );
-  }
 }

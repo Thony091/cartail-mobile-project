@@ -206,9 +206,12 @@ class AuthNotifier extends StateNotifier<AuthState> {
       state = state.copyWith(
         authStatus: AuthStatus.notAuthenticated,
         user: null,
+        token: '',
         errorMessage: errorMessage,
+        clearUserData: true,
       );
       debugPrint('Status desde logOut(): ${state.authStatus}');
+      debugPrint('UserData después de logout: ${state.userData}');
     } catch (e) {
       debugPrint(e.toString());
     }
@@ -256,11 +259,12 @@ class AuthState {
     String? errorMessage,
     User? userData,
     String? token,
+    bool clearUserData = false,
   }) => AuthState(
     authStatus: authStatus ?? this.authStatus,
-    user: user ?? this.user,
+    user: user,
     errorMessage: errorMessage ?? this.errorMessage,
-    userData: userData ?? this.userData,
+    userData: clearUserData ? null : (userData ?? this.userData),
     token: token ?? this.token,
   );
 

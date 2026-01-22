@@ -1,31 +1,11 @@
-import 'package:animate_do/animate_do.dart';
 import 'package:flutter/material.dart';
 
 import '../../../shared/presentation/shared/widgets/modern_button.dart';
 import '../../../shared/presentation/shared/widgets/modern_card.dart';
-
-class MessageResponseData {
-  final String id;
-  final String name;
-  final String email;
-  final String? phone;
-  final String message;
-  final DateTime date;
-  final bool isRead;
-
-  MessageResponseData({
-    required this.id,
-    required this.name,
-    required this.email,
-    this.phone,
-    required this.message,
-    required this.date,
-    this.isRead = false,
-  });
-}
+import '../../domain/entities/message.dart';
 
 class OriginalMessageCard extends StatelessWidget {
-  final MessageResponseData message;
+  final Message message;
 
   const OriginalMessageCard({super.key, required this.message});
 
@@ -90,73 +70,6 @@ class OriginalMessageCard extends StatelessWidget {
                     ],
                   ),
                 ),
-                Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 12,
-                    vertical: 6,
-                  ),
-                  decoration: BoxDecoration(
-                    color: message.isRead
-                        ? const Color(0xFF27ae60).withOpacity(0.1)
-                        : const Color(0xFF3498db).withOpacity(0.1),
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  child: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Icon(
-                        message.isRead ? Icons.check_circle : Icons.circle,
-                        size: 14,
-                        color: message.isRead
-                            ? const Color(0xFF27ae60)
-                            : const Color(0xFF3498db),
-                      ),
-                      const SizedBox(width: 4),
-                      Text(
-                        message.isRead ? 'Leído' : 'Nuevo',
-                        style: TextStyle(
-                          fontSize: 12,
-                          fontWeight: FontWeight.w600,
-                          color: message.isRead
-                              ? const Color(0xFF27ae60)
-                              : const Color(0xFF3498db),
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ],
-            ),
-
-            const SizedBox(height: 16),
-
-            Row(
-              children: [
-                const Icon(
-                  Icons.calendar_today,
-                  size: 14,
-                  color: Color(0xFF7f8c8d),
-                ),
-                const SizedBox(width: 4),
-                Text(
-                  _formatDate(message.date),
-                  style: const TextStyle(
-                    fontSize: 14,
-                    color: Color(0xFF7f8c8d),
-                  ),
-                ),
-                if (message.phone != null) ...[
-                  const SizedBox(width: 16),
-                  const Icon(Icons.phone, size: 14, color: Color(0xFF7f8c8d)),
-                  const SizedBox(width: 4),
-                  Text(
-                    message.phone!,
-                    style: const TextStyle(
-                      fontSize: 14,
-                      color: Color(0xFF7f8c8d),
-                    ),
-                  ),
-                ],
               ],
             ),
 
@@ -196,39 +109,10 @@ class OriginalMessageCard extends StatelessWidget {
     );
   }
 
-  String _formatDate(DateTime date) {
-    final now = DateTime.now();
-    final difference = now.difference(date);
-
-    if (difference.inDays == 0) {
-      if (difference.inHours == 0) {
-        return 'Hace ${difference.inMinutes} minutos';
-      }
-      return 'Hace ${difference.inHours} horas';
-    } else if (difference.inDays == 1) {
-      return 'Ayer';
-    } else {
-      final months = [
-        'Ene',
-        'Feb',
-        'Mar',
-        'Abr',
-        'May',
-        'Jun',
-        'Jul',
-        'Ago',
-        'Sep',
-        'Oct',
-        'Nov',
-        'Dic',
-      ];
-      return '${date.day} ${months[date.month - 1]} ${date.year}';
-    }
-  }
 }
 
 class ResponseEditor extends StatelessWidget {
-  final MessageResponseData message;
+  final Message message;
   final TextEditingController responseController;
   final FocusNode focusNode;
   final bool isSending;

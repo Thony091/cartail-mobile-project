@@ -1,63 +1,34 @@
 import 'package:animate_do/animate_do.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../presentation/pages/auth/modern_scaffold_with_drawer.dart';
 import 'modern_messages_widgets.dart';
+import '../providers/messages_provider.dart';
+import '../../domain/entities/message.dart';
 
-class ModernMessagesPage extends StatefulWidget {
+class ModernMessagesPage extends ConsumerStatefulWidget {
   static const name = 'ModernMessagesPage';
 
   const ModernMessagesPage({super.key});
 
   @override
-  State<ModernMessagesPage> createState() => _ModernMessagesPageState();
+  ConsumerState<ModernMessagesPage> createState() =>
+      _ModernMessagesPageState();
 }
 
-class _ModernMessagesPageState extends State<ModernMessagesPage> {
-  List<MessageData> _messages = [];
+class _ModernMessagesPageState extends ConsumerState<ModernMessagesPage> {
   String _searchQuery = '';
 
   @override
   void initState() {
     super.initState();
-    _loadMessages();
-  }
-
-  void _loadMessages() {
-    // Simular carga de mensajes
-    _messages = [
-      MessageData(
-        id: '1',
-        name: 'Carlos Mendoza',
-        email: 'carlos@email.com',
-        message:
-            'Hola, quisiera consultar por el servicio de detailing para mi auto. ¿Cuánto tiempo demora?',
-        date: DateTime.now().subtract(const Duration(hours: 2)),
-        isRead: false,
-      ),
-      MessageData(
-        id: '2',
-        name: 'María González',
-        email: 'maria@email.com',
-        message:
-            'Excelente servicio el que recibí la semana pasada. Mi auto quedó impecable. ¡Totalmente recomendado!',
-        date: DateTime.now().subtract(const Duration(days: 1)),
-        isRead: true,
-      ),
-      MessageData(
-        id: '3',
-        name: 'Pedro Silva',
-        email: 'pedro@email.com',
-        message:
-            'Necesito cotizar un servicio de pintura completa para mi camioneta. ¿Pueden darme más información?',
-        date: DateTime.now().subtract(const Duration(days: 2)),
-        isRead: false,
-      ),
-    ];
   }
 
   @override
   Widget build(BuildContext context) {
-    final filteredMessages = _messages.where((message) {
+    final messagesState = ref.watch(messagesProvider);
+    final messages = messagesState.messages;
+    final filteredMessages = messages.where((message) {
       if (_searchQuery.isEmpty) return true;
       return message.name.toLowerCase().contains(_searchQuery.toLowerCase()) ||
           message.email.toLowerCase().contains(_searchQuery.toLowerCase()) ||
@@ -88,21 +59,21 @@ class _ModernMessagesPageState extends State<ModernMessagesPage> {
             // Estadísticas
             Padding(
               padding: const EdgeInsets.all(20),
-              child: FadeInDown(
-                child: Row(
-                  children: [
-                    Expanded(
-                      child: MessageStatCard(
-                        value: '${_messages.where((m) => !m.isRead).length}',
-                        label: 'Sin Leer',
-                        icon: Icons.mark_email_unread,
-                        color: const Color(0xFFe74c3c),
-                      ),
+                child: FadeInDown(
+                  child: Row(
+                    children: [
+                      Expanded(
+                        child: MessageStatCard(
+                          value: '${messages.length}',
+                          label: 'Recibidos',
+                          icon: Icons.mark_email_unread,
+                          color: const Color(0xFFe74c3c),
+                        ),
                     ),
                     const SizedBox(width: 16),
                     Expanded(
                       child: MessageStatCard(
-                        value: '${_messages.length}',
+                        value: '${messages.length}',
                         label: 'Total',
                         icon: Icons.email,
                         color: const Color(0xFF3498db),
@@ -115,12 +86,13 @@ class _ModernMessagesPageState extends State<ModernMessagesPage> {
 
             // Lista de mensajes
             Expanded(
-              child: filteredMessages.isEmpty
-                  ? const MessageEmptyState()
-                  : RefreshIndicator(
+              child: messagesState.isLoading && messages.isEmpty
+                  ? const Center(child: CircularProgressIndicator())
+                  : filteredMessages.isEmpty
+                      ? const MessageEmptyState()
+                      : RefreshIndicator(
                       onRefresh: () async {
-                        _loadMessages();
-                        setState(() {});
+                        await ref.read(messagesProvider.notifier).getMessages();
                       },
                       child: ListView.builder(
                         padding: const EdgeInsets.symmetric(horizontal: 20),
@@ -134,11 +106,6 @@ class _ModernMessagesPageState extends State<ModernMessagesPage> {
                               onTap: () => _showMessageDetail(message),
                               onConfirmDismiss: (direction) async {
                                 if (direction == DismissDirection.startToEnd) {
-                                  // Marcar como leído
-                                  setState(() {
-                                    message.isRead = true;
-                                    _showMessageDetail(message);
-                                  });
                                   return false;
                                 } else {
                                   // Eliminar mensaje
@@ -170,7 +137,7 @@ class _ModernMessagesPageState extends State<ModernMessagesPage> {
     );
   }
 
-  void _showMessageDetail(MessageData message) {
+  void _showMessageDetail(Message message) {
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
@@ -180,21 +147,14 @@ class _ModernMessagesPageState extends State<ModernMessagesPage> {
         onReply: () => _showReplyDialog(message),
         onDelete: () async {
           if (await _showDeleteConfirmation(message)) {
-            setState(() {
-              _messages.removeWhere((m) => m.id == message.id);
-            });
+            await ref.read(messagesProvider.notifier).deleteMessage(message.id);
           }
-        },
-        onMarkAsRead: () {
-          setState(() {
-            message.isRead = true;
-          });
         },
       ),
     );
   }
 
-  void _showReplyDialog(MessageData message) {
+  void _showReplyDialog(Message message) {
     showDialog(
       context: context,
       builder: (context) => ReplyMessageDialog(
@@ -211,7 +171,7 @@ class _ModernMessagesPageState extends State<ModernMessagesPage> {
     );
   }
 
-  Future<bool> _showDeleteConfirmation(MessageData message) async {
+  Future<bool> _showDeleteConfirmation(Message message) async {
     return await showDialog<bool>(
           context: context,
           builder: (context) => DeleteMessageDialog(message: message),

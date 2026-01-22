@@ -88,7 +88,7 @@ class ModernConfigServicesPageState
               else if (services.isEmpty)
                 SliverFillRemaining(
                   child: EmptyServicesView(
-                    onCreate: () => context.push('/service-edit/new'),
+                    onCreate: () => context.push('/service/new'),
                   ),
                 )
               else

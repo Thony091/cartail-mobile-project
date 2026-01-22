@@ -1,8 +1,9 @@
 import 'package:animate_do/animate_do.dart';
 import 'package:flutter/material.dart';
+import 'package:portafolio_project/features/services/domain/entities/services.dart';
 import 'package:portafolio_project/features/services/presentation/page/views/components/admin_service_card_widget.dart';
 import 'package:portafolio_project/features/shared/presentation/shared/widgets/modern_button.dart';
-import '../../domain/entities/services.dart';
+// import '../../domain/entities/services.dart';
 
 class AdminServiceListWidget extends StatelessWidget {
   final List<Services> services;

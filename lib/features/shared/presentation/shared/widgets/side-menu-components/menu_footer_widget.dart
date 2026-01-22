@@ -58,7 +58,12 @@ class MenuFooterWidget extends ConsumerWidget {
                 text: 'Cerrar Sesión',
                 style: ModernButtonStyle.danger,
                 icon: Icons.logout,
-                onPressed: () => ref.read( authProvider.notifier ).logOut(),
+                onPressed: () async {
+                  await ref.read(authProvider.notifier).logOut();
+                  if (context.mounted) {
+                    context.go('/');
+                  }
+                },
                 // onPressed: () => _handleLogout(),
               ),
             ),

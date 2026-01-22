@@ -68,7 +68,16 @@ class ServicesDatasourceImpl extends ServicesDatasource {
           ? '/servicio'
           : '/servicio/$serviceId';
       serviceSimilar.remove('id');
-      serviceSimilar['images'] = await _uploadPhotos(serviceSimilar['images']);
+
+      // Procesar las imágenes (convertir a Base64 si son locales)
+      if (serviceSimilar.containsKey('images') && serviceSimilar['images'] != null) {
+        final images = serviceSimilar['images'] as List<String>;
+        final convertedImages = await _uploadPhotos(images);
+        // El backend espera 'imagen' (singular) con la primera imagen
+        serviceSimilar['imagen'] = convertedImages.isNotEmpty ? convertedImages.first : '';
+        serviceSimilar.remove('images');
+      }
+
       final response = await dio.request(
         url,
         data: serviceSimilar,
@@ -80,8 +89,11 @@ class ServicesDatasourceImpl extends ServicesDatasource {
         description: '',
         minPrice: 0,
         maxPrice: 0,
+        requiresReservation: false,
         isActive: false,
         images: [],
+        durationMinutes: 0,
+        categoryId: null,
       );
       if (response.statusCode == 200) {
         var data = response.data;
@@ -114,13 +126,16 @@ class ServicesDatasourceImpl extends ServicesDatasource {
         description: '',
         minPrice: 0,
         maxPrice: 0,
+        requiresReservation: false,
         isActive: false,
         images: [],
+        durationMinutes: 0,
+        categoryId: null,
       );
       if (response.statusCode == 200) {
-        var data = response.data;
-        if (data is Map<String, dynamic> && data.containsKey('data')) {
-          service = ServiceMapper.jsonToEntity(data['data']);
+        final data = _extractData(response.data);
+        if (data is Map<String, dynamic>) {
+          service = ServiceMapper.jsonToEntity(data);
         }
       }
       return service;
@@ -138,12 +153,10 @@ class ServicesDatasourceImpl extends ServicesDatasource {
       final response = await dio.get('/servicio');
       final List<Services> services = [];
       if (response.statusCode == 200) {
-        var data = response.data;
-
-        if (data is Map<String, dynamic> && data.containsKey('data')) {
-          var servicesData = data['data'];
-          if (servicesData is List) {
-            for (final service in servicesData) {
+        final data = _extractData(response.data);
+        if (data is List) {
+          for (final service in data) {
+            if (service is Map<String, dynamic>) {
               services.add(ServiceMapper.jsonToEntity(service));
             }
           }
@@ -154,5 +167,12 @@ class ServicesDatasourceImpl extends ServicesDatasource {
       print('Error $e');
       return [];
     }
+  }
+
+  dynamic _extractData(dynamic responseData) {
+    if (responseData is Map<String, dynamic> && responseData.containsKey('data')) {
+      return responseData['data'];
+    }
+    return responseData;
   }
 }

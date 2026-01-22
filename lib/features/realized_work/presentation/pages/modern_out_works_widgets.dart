@@ -3,21 +3,26 @@ import 'package:flutter/material.dart';
 import 'package:flutter_staggered_grid_view/flutter_staggered_grid_view.dart';
 
 import '../../../shared/presentation/shared/widgets/widgets.dart';
+import '../../domain/entities/works.dart';
 
-class WorkData {
-  final String id;
-  final String name;
-  final String description;
-  final String category;
-  final String image;
+String getWorkCategory(Works work) {
+  final name = work.name.toLowerCase();
+  final description = work.description.toLowerCase();
+  final source = '$name $description';
 
-  WorkData({
-    required this.id,
-    required this.name,
-    required this.description,
-    required this.category,
-    required this.image,
-  });
+  if (source.contains('detail')) {
+    return 'Detailing';
+  }
+  if (source.contains('restaur')) {
+    return 'Restauración';
+  }
+  if (source.contains('mecan') ||
+      source.contains('motor') ||
+      source.contains('aceite')) {
+    return 'Mecánica';
+  }
+
+  return 'General';
 }
 
 class WorkCategoryTabs extends StatelessWidget {
@@ -64,11 +69,11 @@ class WorkCategoryTabs extends StatelessWidget {
 }
 
 class WorksGrid extends StatelessWidget {
-  final List<WorkData> works;
+  final List<Works> works;
   final bool isAdmin;
-  final Function(WorkData) onWorkTap;
+  final Function(Works) onWorkTap;
   final Future<void> Function() onRefresh;
-  final Future<bool> Function(WorkData) onDeleteConfirmation;
+  final Future<bool> Function(Works) onDeleteConfirmation;
 
   const WorksGrid({
     super.key,
@@ -111,7 +116,7 @@ class WorksGrid extends StatelessWidget {
 }
 
 class UserWorkCard extends StatelessWidget {
-  final WorkData work;
+  final Works work;
   final VoidCallback onTap;
 
   const UserWorkCard({super.key, required this.work, required this.onTap});
@@ -191,15 +196,16 @@ class UserWorkCard extends StatelessWidget {
                       vertical: 4,
                     ),
                     decoration: BoxDecoration(
-                      color: getCategoryColor(work.category).withOpacity(0.1),
+                      color: getCategoryColor(getWorkCategory(work))
+                          .withOpacity(0.1),
                       borderRadius: BorderRadius.circular(12),
                     ),
                     child: Text(
-                      work.category,
+                      getWorkCategory(work),
                       style: TextStyle(
                         fontSize: 10,
                         fontWeight: FontWeight.w600,
-                        color: getCategoryColor(work.category),
+                        color: getCategoryColor(getWorkCategory(work)),
                       ),
                     ),
                   ),
@@ -214,7 +220,7 @@ class UserWorkCard extends StatelessWidget {
 }
 
 class AdminWorkCard extends StatelessWidget {
-  final WorkData work;
+  final Works work;
   final VoidCallback onDelete;
 
   const AdminWorkCard({super.key, required this.work, required this.onDelete});
@@ -305,15 +311,16 @@ class AdminWorkCard extends StatelessWidget {
                       vertical: 4,
                     ),
                     decoration: BoxDecoration(
-                      color: getCategoryColor(work.category).withOpacity(0.1),
+                      color: getCategoryColor(getWorkCategory(work))
+                          .withOpacity(0.1),
                       borderRadius: BorderRadius.circular(12),
                     ),
                     child: Text(
-                      work.category,
+                      getWorkCategory(work),
                       style: TextStyle(
                         fontSize: 12,
                         fontWeight: FontWeight.w600,
-                        color: getCategoryColor(work.category),
+                        color: getCategoryColor(getWorkCategory(work)),
                       ),
                     ),
                   ),
@@ -406,7 +413,7 @@ class EmptyWorksState extends StatelessWidget {
 }
 
 class WorkDetailSheet extends StatelessWidget {
-  final WorkData work;
+  final Works work;
 
   const WorkDetailSheet({super.key, required this.work});
 
@@ -477,15 +484,16 @@ class WorkDetailSheet extends StatelessWidget {
                       vertical: 6,
                     ),
                     decoration: BoxDecoration(
-                      color: getCategoryColor(work.category).withOpacity(0.1),
+                      color: getCategoryColor(getWorkCategory(work))
+                          .withOpacity(0.1),
                       borderRadius: BorderRadius.circular(20),
                     ),
                     child: Text(
-                      work.category,
+                      getWorkCategory(work),
                       style: TextStyle(
                         fontSize: 14,
                         fontWeight: FontWeight.w600,
-                        color: getCategoryColor(work.category),
+                        color: getCategoryColor(getWorkCategory(work)),
                       ),
                     ),
                   ),

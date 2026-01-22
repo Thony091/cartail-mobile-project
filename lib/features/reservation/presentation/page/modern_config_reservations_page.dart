@@ -4,6 +4,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../presentation/pages/auth/modern_scaffold_with_drawer.dart';
 import 'modern_config_reservations_widgets.dart';
+import '../providers/reservation_provider.dart';
+import '../../domain/entities/reservation.dart';
 
 class ModernConfigReservationsPage extends ConsumerStatefulWidget {
   static const name = 'ModernConfigReservationsPage';
@@ -20,15 +22,6 @@ class ModernConfigReservationsPageState
     with SingleTickerProviderStateMixin {
   late TabController _tabController;
   String _searchQuery = '';
-  String _filterStatus = 'Todas';
-
-  final List<String> _statusFilters = [
-    'Todas',
-    'Pendiente',
-    'Confirmada',
-    'Completada',
-    'Cancelada',
-  ];
 
   @override
   void initState() {
@@ -44,8 +37,11 @@ class ModernConfigReservationsPageState
 
   @override
   Widget build(BuildContext context) {
-    // Simulación de datos
-    final List<ReservationData> reservations = _getSimulatedReservations();
+    final reservationState = ref.watch(reservationProvider);
+    final List<Reservation> reservations = reservationState.reservations;
+    final int totalReservations = reservations.length;
+    final int todayReservations =
+        reservations.where((r) => _isToday(r.reservationDate)).length;
 
     return ModernScaffoldWithDrawer(
       title: 'Gestión de Reservas',
@@ -53,10 +49,6 @@ class ModernConfigReservationsPageState
         IconButton(
           icon: const Icon(Icons.search, color: Colors.white),
           onPressed: _showSearchDialog,
-        ),
-        IconButton(
-          icon: const Icon(Icons.filter_list, color: Colors.white),
-          onPressed: _showFilterDialog,
         ),
       ],
       body: Container(
@@ -80,8 +72,8 @@ class ModernConfigReservationsPageState
                   children: [
                     Expanded(
                       child: ReservationStatCard(
-                        value: '89',
-                        label: 'Pendientes',
+                        value: totalReservations.toString(),
+                        label: 'Totales',
                         icon: Icons.pending,
                         color: const Color(0xFFf39c12),
                       ),
@@ -89,8 +81,8 @@ class ModernConfigReservationsPageState
                     const SizedBox(width: 16),
                     Expanded(
                       child: ReservationStatCard(
-                        value: '156',
-                        label: 'Completadas',
+                        value: todayReservations.toString(),
+                        label: 'Hoy',
                         icon: Icons.check_circle,
                         color: const Color(0xFF27ae60),
                       ),
@@ -140,7 +132,9 @@ class ModernConfigReservationsPageState
                 children: [
                   _buildReservationsList(reservations),
                   _buildReservationsList(
-                    reservations.where((r) => _isToday(r.date)).toList(),
+                    reservations
+                        .where((r) => _isToday(r.reservationDate))
+                        .toList(),
                   ),
                 ],
               ),
@@ -151,14 +145,12 @@ class ModernConfigReservationsPageState
     );
   }
 
-  Widget _buildReservationsList(List<ReservationData> reservations) {
+  Widget _buildReservationsList(List<Reservation> reservations) {
     final filteredReservations = reservations.where((reservation) {
-      final matchesSearch = reservation.clientName.toLowerCase().contains(
+      final matchesSearch = reservation.name.toLowerCase().contains(
         _searchQuery.toLowerCase(),
       );
-      final matchesFilter =
-          _filterStatus == 'Todas' || reservation.status == _filterStatus;
-      return matchesSearch && matchesFilter;
+      return matchesSearch;
     }).toList();
 
     if (filteredReservations.isEmpty) {
@@ -167,7 +159,7 @@ class ModernConfigReservationsPageState
 
     return RefreshIndicator(
       onRefresh: () async {
-        await Future.delayed(const Duration(seconds: 1));
+        await ref.read(reservationProvider.notifier).getReservations();
       },
       child: ListView.builder(
         padding: const EdgeInsets.all(20),
@@ -179,17 +171,19 @@ class ModernConfigReservationsPageState
             child: ReservationCard(
               reservation: reservation,
               onConfirmDismiss: (isConfirm) async {
-                if (isConfirm) {
-                  return await _showConfirmDialog(
-                    '¿Confirmar reserva?',
-                    '¿Deseas marcar esta reserva como confirmada?',
+                if (!isConfirm) {
+                  final confirmed = await _showConfirmDialog(
+                    '¿Eliminar reserva?',
+                    '¿Estás seguro de eliminar esta reserva?',
                   );
-                } else {
-                  return await _showConfirmDialog(
-                    '¿Cancelar reserva?',
-                    '¿Estás seguro de cancelar esta reserva?',
-                  );
+                  if (confirmed) {
+                    await ref
+                        .read(reservationProvider.notifier)
+                        .deleteReservation(reservation.id);
+                  }
+                  return confirmed;
                 }
+                return false;
               },
               onViewDetails: () => _showReservationDetails(reservation),
               onEdit: () {},
@@ -200,7 +194,11 @@ class ModernConfigReservationsPageState
     );
   }
 
-  bool _isToday(DateTime date) {
+  bool _isToday(String reservationDate) {
+    final date = DateTime.tryParse(reservationDate);
+    if (date == null) {
+      return false;
+    }
     final now = DateTime.now();
     return date.year == now.year &&
         date.month == now.month &&
@@ -215,22 +213,6 @@ class ModernConfigReservationsPageState
           setState(() {
             _searchQuery = value;
           });
-        },
-      ),
-    );
-  }
-
-  void _showFilterDialog() {
-    showDialog(
-      context: context,
-      builder: (context) => FilterReservationDialog(
-        currentFilter: _filterStatus,
-        filters: _statusFilters,
-        onFilterChanged: (value) {
-          setState(() {
-            _filterStatus = value;
-          });
-          Navigator.pop(context);
         },
       ),
     );
@@ -260,55 +242,10 @@ class ModernConfigReservationsPageState
         false;
   }
 
-  void _showReservationDetails(ReservationData reservation) {
+  void _showReservationDetails(Reservation reservation) {
     showDialog(
       context: context,
       builder: (context) => ReservationDetailDialog(reservation: reservation),
     );
-  }
-
-  List<ReservationData> _getSimulatedReservations() {
-    return [
-      ReservationData(
-        id: '1',
-        clientName: 'Juan Pérez',
-        clientEmail: 'juan@email.com',
-        clientRut: '12345678-9',
-        serviceName: 'Detailing Completo',
-        date: DateTime.now(),
-        time: '10:00',
-        status: 'Pendiente',
-      ),
-      ReservationData(
-        id: '2',
-        clientName: 'María González',
-        clientEmail: 'maria@email.com',
-        clientRut: '98765432-1',
-        serviceName: 'Lavado Express',
-        date: DateTime.now().add(const Duration(days: 1)),
-        time: '14:30',
-        status: 'Confirmada',
-      ),
-      ReservationData(
-        id: '3',
-        clientName: 'Carlos Silva',
-        clientEmail: 'carlos@email.com',
-        clientRut: '11111111-1',
-        serviceName: 'Pulido y Encerado',
-        date: DateTime.now().subtract(const Duration(days: 1)),
-        time: '09:00',
-        status: 'Completada',
-      ),
-      ReservationData(
-        id: '4',
-        clientName: 'Ana Martínez',
-        clientEmail: 'ana@email.com',
-        clientRut: '22222222-2',
-        serviceName: 'Limpieza de Tapiz',
-        date: DateTime.now().add(const Duration(days: 2)),
-        time: '16:00',
-        status: 'Pendiente',
-      ),
-    ];
   }
 }

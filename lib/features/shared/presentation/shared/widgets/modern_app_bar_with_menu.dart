@@ -153,7 +153,12 @@ class AuthButtonWidget extends ConsumerWidget {
     final authState = ref.watch(authProvider);
     return GestureDetector(
       onTap: authState.authStatus == AuthStatus.authenticated
-        ? () => ref.read( authProvider.notifier ).logOut()
+        ? () async {
+          ref.read( authProvider.notifier ).logOut();
+          if (context.mounted) {
+            context.go('/');
+          }
+        } 
         : () => context.push('/login'),
       child: Container(
         width: 36,

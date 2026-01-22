@@ -43,6 +43,8 @@ class RouteGuards {
     '/admin-config-reservations',
     '/admin-all-tickets',
     '/admin-assign-ticket/',
+    '/admin-config-categories',
+    '/category-edit/',
   ];
 
   /// Verifica si un usuario con el rol especificado puede acceder a la ruta

@@ -4,6 +4,9 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../shared/presentation/shared/widgets/widgets.dart';
 import '../../../../presentation/pages/auth/modern_scaffold_with_drawer.dart';
 import 'modern_out_works_widgets.dart';
+import '../providers/works_provider.dart';
+import '../../../auth/presentation/providers/auth_provider.dart';
+import '../../domain/entities/works.dart';
 
 class ModernOurWorksPage extends ConsumerStatefulWidget {
   static const name = 'ModernOurWorksPage';
@@ -32,11 +35,10 @@ class ModernOurWorksPageState extends ConsumerState<ModernOurWorksPage>
 
   @override
   Widget build(BuildContext context) {
-    // final worksState = ref.watch(worksProvider);
-    // final authState = ref.watch(authProvider);
-
-    final bool isAdmin = false; // authState.userData?.isAdmin ?? false
-    final List<WorkData> works = _getSimulatedWorks();
+    final worksState = ref.watch(worksProvider);
+    final authState = ref.watch(authProvider);
+    final bool isAdmin = authState.userData?.isAdmin ?? false;
+    final List<Works> works = worksState.works;
 
     return ModernScaffoldWithDrawer(
       title: isAdmin ? 'Gestión de Trabajos' : 'Nuestros Trabajos',
@@ -67,7 +69,7 @@ class ModernOurWorksPageState extends ConsumerState<ModernOurWorksPage>
                   ),
                   WorksGrid(
                     works: works
-                        .where((w) => w.category == 'Detailing')
+                        .where((w) => getWorkCategory(w) == 'Detailing')
                         .toList(),
                     isAdmin: isAdmin,
                     onWorkTap: _showWorkDetail,
@@ -76,7 +78,7 @@ class ModernOurWorksPageState extends ConsumerState<ModernOurWorksPage>
                   ),
                   WorksGrid(
                     works: works
-                        .where((w) => w.category == 'Restauración')
+                        .where((w) => getWorkCategory(w) == 'Restauración')
                         .toList(),
                     isAdmin: isAdmin,
                     onWorkTap: _showWorkDetail,
@@ -102,11 +104,10 @@ class ModernOurWorksPageState extends ConsumerState<ModernOurWorksPage>
   }
 
   Future<void> _refreshWorks() async {
-    // Refresh works
-    await Future.delayed(const Duration(seconds: 1));
+    await ref.read(worksProvider.notifier).getWorks();
   }
 
-  void _showWorkDetail(WorkData work) {
+  void _showWorkDetail(Works work) {
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
@@ -115,8 +116,8 @@ class ModernOurWorksPageState extends ConsumerState<ModernOurWorksPage>
     );
   }
 
-  Future<bool> _showDeleteWorkConfirmation(WorkData work) async {
-    return await showDialog<bool>(
+  Future<bool> _showDeleteWorkConfirmation(Works work) async {
+    final confirmed = await showDialog<bool>(
           context: context,
           builder: (context) => AlertDialog(
             title: const Text('Eliminar Trabajo'),
@@ -137,34 +138,12 @@ class ModernOurWorksPageState extends ConsumerState<ModernOurWorksPage>
           ),
         ) ??
         false;
-  }
 
-  List<WorkData> _getSimulatedWorks() {
-    return [
-      WorkData(
-        id: '1',
-        name: 'Detailing Renault Duster',
-        description:
-            'Limpieza profunda y encerado completo de Renault Duster 2022. Incluye lavado interior, tratamiento de cueros y protección cerámica.',
-        category: 'Detailing',
-        image: '',
-      ),
-      WorkData(
-        id: '2',
-        name: 'Restauración MINI Cooper',
-        description:
-            'Restauración completa de MINI Cooper Works. Pintura, detailing premium y modificaciones personalizadas.',
-        category: 'Restauración',
-        image: '',
-      ),
-      WorkData(
-        id: '3',
-        name: 'Protección Cerámica BMW',
-        description:
-            'Aplicación de protección cerámica premium en BMW Serie 3. Duración de 3 años con garantía.',
-        category: 'Detailing',
-        image: '',
-      ),
-    ];
+    if (!confirmed || !mounted) {
+      return false;
+    }
+
+    await ref.read(worksProvider.notifier).deleteWork(work.id);
+    return true;
   }
 }

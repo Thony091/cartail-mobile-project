@@ -4,27 +4,7 @@ import 'package:flutter/material.dart';
 import '../../../shared/presentation/shared/widgets/modern_button.dart';
 import '../../../shared/presentation/shared/widgets/modern_card.dart';
 import '../../../shared/presentation/shared/widgets/modern_input_field.dart';
-
-class WorkData {
-  final String id;
-  final String title;
-  final String? imageUrl;
-  final DateTime date;
-  final bool isFeatured;
-
-  final String description;
-  final String vehicle;
-
-  WorkData({
-    required this.id,
-    required this.title,
-    required this.description,
-    required this.vehicle,
-    this.imageUrl,
-    required this.date,
-    this.isFeatured = false,
-  });
-}
+import '../../domain/entities/works.dart';
 
 class WorksHeader extends StatelessWidget {
   final int totalWorks;
@@ -68,7 +48,7 @@ class WorksHeader extends StatelessWidget {
               Expanded(
                 child: WorkStatCard(
                   label: 'Este Mes',
-                  value: '5',
+                  value: totalWorks.toString(),
                   icon: Icons.add_photo_alternate,
                   color: const Color(0xFF3498db),
                 ),
@@ -132,8 +112,8 @@ class WorkStatCard extends StatelessWidget {
 }
 
 class WorksGrid extends StatelessWidget {
-  final List<WorkData> works;
-  final Function(WorkData) onWorkTap;
+  final List<Works> works;
+  final Function(Works) onWorkTap;
 
   const WorksGrid({super.key, required this.works, required this.onWorkTap});
 
@@ -161,7 +141,7 @@ class WorksGrid extends StatelessWidget {
 }
 
 class WorkCard extends StatelessWidget {
-  final WorkData work;
+  final Works work;
   final VoidCallback onTap;
 
   const WorkCard({super.key, required this.work, required this.onTap});
@@ -185,14 +165,14 @@ class WorkCard extends StatelessWidget {
                       top: Radius.circular(20),
                     ),
                     color: const Color(0xFF3498db).withOpacity(0.1),
-                    image: work.imageUrl != null
+                    image: work.image.isNotEmpty
                         ? DecorationImage(
-                            image: NetworkImage(work.imageUrl!),
+                            image: NetworkImage(work.image),
                             fit: BoxFit.cover,
                           )
                         : null,
                   ),
-                  child: work.imageUrl == null
+                  child: work.image.isEmpty
                       ? const Center(
                           child: Icon(
                             Icons.photo_camera,
@@ -203,37 +183,6 @@ class WorkCard extends StatelessWidget {
                       : null,
                 ),
 
-                // Badge de destacado
-                if (work.isFeatured)
-                  Positioned(
-                    top: 8,
-                    right: 8,
-                    child: Container(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 8,
-                        vertical: 4,
-                      ),
-                      decoration: BoxDecoration(
-                        color: const Color(0xFFf39c12),
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                      child: const Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Icon(Icons.star, size: 14, color: Colors.white),
-                          SizedBox(width: 4),
-                          Text(
-                            'Destacado',
-                            style: TextStyle(
-                              fontSize: 11,
-                              fontWeight: FontWeight.w600,
-                              color: Colors.white,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ),
               ],
             ),
 
@@ -244,7 +193,7 @@ class WorkCard extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    work.title,
+                    work.name,
                     style: const TextStyle(
                       fontSize: 16,
                       fontWeight: FontWeight.w700,
@@ -252,21 +201,6 @@ class WorkCard extends StatelessWidget {
                     ),
                     maxLines: 2,
                     overflow: TextOverflow.ellipsis,
-                  ),
-                  const SizedBox(height: 8),
-                  Row(
-                    children: [
-                      Icon(
-                        Icons.calendar_today,
-                        size: 14,
-                        color: Colors.grey[600],
-                      ),
-                      const SizedBox(width: 4),
-                      Text(
-                        _formatDate(work.date),
-                        style: TextStyle(fontSize: 12, color: Colors.grey[600]),
-                      ),
-                    ],
                   ),
                 ],
               ),
@@ -277,23 +211,6 @@ class WorkCard extends StatelessWidget {
     );
   }
 
-  String _formatDate(DateTime date) {
-    final months = [
-      'Ene',
-      'Feb',
-      'Mar',
-      'Abr',
-      'May',
-      'Jun',
-      'Jul',
-      'Ago',
-      'Sep',
-      'Oct',
-      'Nov',
-      'Dic',
-    ];
-    return '${date.day} ${months[date.month - 1]} ${date.year}';
-  }
 }
 
 class EmptyWorksView extends StatelessWidget {
@@ -353,16 +270,14 @@ class EmptyWorksView extends StatelessWidget {
 }
 
 class WorkOptionsSheet extends StatelessWidget {
-  final WorkData work;
+  final Works work;
   final VoidCallback onEdit;
-  final VoidCallback onToggleFeatured;
   final VoidCallback onDelete;
 
   const WorkOptionsSheet({
     super.key,
     required this.work,
     required this.onEdit,
-    required this.onToggleFeatured,
     required this.onDelete,
   });
 
@@ -392,7 +307,7 @@ class WorkOptionsSheet extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  work.title,
+                  work.name,
                   style: const TextStyle(
                     fontSize: 18,
                     fontWeight: FontWeight.w700,
@@ -400,10 +315,6 @@ class WorkOptionsSheet extends StatelessWidget {
                   ),
                 ),
                 const SizedBox(height: 4),
-                Text(
-                  _formatDate(work.date),
-                  style: TextStyle(fontSize: 14, color: Colors.grey[600]),
-                ),
               ],
             ),
           ),
@@ -412,14 +323,6 @@ class WorkOptionsSheet extends StatelessWidget {
             leading: const Icon(Icons.edit, color: Color(0xFF3498db)),
             title: const Text('Editar'),
             onTap: onEdit,
-          ),
-          ListTile(
-            leading: Icon(
-              work.isFeatured ? Icons.star : Icons.star_outline,
-              color: const Color(0xFFf39c12),
-            ),
-            title: Text(work.isFeatured ? 'Quitar de destacados' : 'Destacar'),
-            onTap: onToggleFeatured,
           ),
           ListTile(
             leading: const Icon(Icons.delete, color: Color(0xFFe74c3c)),
@@ -432,9 +335,6 @@ class WorkOptionsSheet extends StatelessWidget {
     );
   }
 
-  String _formatDate(DateTime date) {
-    return '${date.day}/${date.month}/${date.year}';
-  }
 }
 
 class SearchWorksDialog extends StatelessWidget {

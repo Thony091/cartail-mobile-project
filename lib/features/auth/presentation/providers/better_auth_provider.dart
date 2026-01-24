@@ -153,6 +153,9 @@ enum BetterAuthStatus {
 class BetterAuthNotifier extends StateNotifier<BetterAuthState> {
   final AuthRepository _repository;
   final AuthService _authService;
+  int _sessionRetryCount = 0;
+  bool _isChecking = false;
+  static const int _maxSessionRetries = 3;
 
   BetterAuthNotifier({
     required AuthRepository repository,
@@ -169,30 +172,25 @@ class BetterAuthNotifier extends StateNotifier<BetterAuthState> {
   /// Consulta al servidor si hay una sesión activa basándose en
   /// los tokens almacenados en AuthService.
   Future<void> _checkAuthStatus() async {
+    if (_isChecking) return;
+    _isChecking = true;
     try {
       state = state.copyWith(status: BetterAuthStatus.loading);
 
       // Inicializar AuthService si no está inicializado
       await _authService.init();
 
-      // Verificar si hay una sesión activa
-      if (!_authService.hasActiveSession) {
-        state = state.copyWith(
-          status: BetterAuthStatus.unauthenticated,
-          session: null,
-        );
-        return;
-      }
-
-      // Consultar al servidor la sesión actual
+      // Consultar al servidor la sesión actual (token o cookie)
       final session = await _repository.getCurrentSession();
       if (session != null) {
+        _sessionRetryCount = 0;
         state = state.copyWith(
           status: BetterAuthStatus.authenticated,
           session: session,
         );
       } else {
         // No hay sesión válida en el servidor
+        _sessionRetryCount = 0;
         state = state.copyWith(
           status: BetterAuthStatus.unauthenticated,
           session: null,
@@ -200,10 +198,30 @@ class BetterAuthNotifier extends StateNotifier<BetterAuthState> {
       }
     } catch (e) {
       debugPrint('Error verificando estado de autenticación: $e');
-      state = state.copyWith(
-        status: BetterAuthStatus.unauthenticated,
-        session: null,
-      );
+      if (_authService.hasActiveSession) {
+        _sessionRetryCount += 1;
+        if (_sessionRetryCount <= _maxSessionRetries) {
+          final delaySeconds = (_sessionRetryCount * 2).clamp(2, 10);
+          state = state.copyWith(status: BetterAuthStatus.loading);
+          Future<void>.delayed(Duration(seconds: delaySeconds), _checkAuthStatus);
+        } else {
+          _sessionRetryCount = 0;
+          state = state.copyWith(
+            status: BetterAuthStatus.error,
+            errorMessage:
+                'No se pudo restaurar la sesión. Intenta nuevamente.',
+            session: null,
+          );
+        }
+      } else {
+        _sessionRetryCount = 0;
+        state = state.copyWith(
+          status: BetterAuthStatus.unauthenticated,
+          session: null,
+        );
+      }
+    } finally {
+      _isChecking = false;
     }
   }
 

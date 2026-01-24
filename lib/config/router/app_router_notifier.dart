@@ -1,32 +1,55 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../features/auth/presentation/providers/better_auth_provider.dart';
 import '../../features/user/domain/entities/user_role.dart';
 import '../../presentation/presentation_container.dart';
 
-final goRouterNotifierProvider = Provider((ref) {
-  final authNotifier = ref.read(authProvider.notifier);
-  return GoRouterNotifier(authNotifier);
+final goRouterNotifierProvider = Provider<GoRouterNotifier>((ref) {
+  final notifier = GoRouterNotifier();
+
+  final initialAuthState = ref.read(betterAuthProvider);
+  notifier.updateFromAuth(initialAuthState);
+
+  ref.listen<BetterAuthState>(betterAuthProvider, (previous, next) {
+    notifier.updateFromAuth(next);
+  });
+
+  return notifier;
 });
 
 class GoRouterNotifier extends ChangeNotifier {
-  final AuthNotifier _authNotifier;
-
   AuthStatus _authStatus = AuthStatus.checking;
-
-  GoRouterNotifier(this._authNotifier) {
-    _authNotifier.addListener((state) {
-      authStatus = state.authStatus;
-    });
-  }
+  UserRole _userRole = UserRole.guest;
 
   AuthStatus get authStatus => _authStatus;
 
   /// Obtiene el rol del usuario actual
-  UserRole get userRole => _authNotifier.state.userRole;
+  UserRole get userRole => _userRole;
 
-  set authStatus(AuthStatus value) {
-    _authStatus = value;
+  void updateFromAuth(BetterAuthState state) {
+    final nextStatus = _mapStatus(state.status);
+    final nextRole = state.userRole;
+
+    if (_authStatus == nextStatus && _userRole == nextRole) return;
+
+    _authStatus = nextStatus;
+    _userRole = nextRole;
     notifyListeners();
+  }
+
+  AuthStatus _mapStatus(BetterAuthStatus status) {
+    switch (status) {
+      case BetterAuthStatus.initial:
+        return AuthStatus.checking;
+      case BetterAuthStatus.loading:
+        return AuthStatus.checking;
+      case BetterAuthStatus.authenticated:
+        return AuthStatus.authenticated;
+      case BetterAuthStatus.unauthenticated:
+        return AuthStatus.notAuthenticated;
+      case BetterAuthStatus.error:
+        return AuthStatus.notAuthenticated;
+    }
   }
 }

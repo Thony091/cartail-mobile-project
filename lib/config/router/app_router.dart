@@ -7,8 +7,11 @@ import 'package:portafolio_project/features/services/presentation/page/modern_co
 import 'package:portafolio_project/features/user/presentation/profile/modern_edit_profile.dart';
 import 'package:portafolio_project/features/category/presentation/page/modern_config_categories_page.dart';
 import 'package:portafolio_project/features/category/presentation/page/modern_category_detail_page.dart';
+import 'package:portafolio_project/features/vehicle/presentation/pages/modern_vehicle_detail_page.dart';
+import 'package:portafolio_project/features/vehicle/presentation/pages/modern_vehicles_page.dart';
 import 'package:portafolio_project/features/auth/presentation/login/modern_login_page.dart';
 import 'package:portafolio_project/features/user/presentation/profile/modern_profile_page.dart';
+import 'package:portafolio_project/features/auth/presentation/admin/pages/admin_users_page.dart';
 
 import '../../features/about/modern_about_page.dart';
 // import '../../features/product/presentation/product/modern_config_products_page.dart';
@@ -36,6 +39,9 @@ import '../../features/payment/presentation/pages/add_credit_card_page.dart';
 import '../../features/service_tracking/presentation/pages/my_services_page.dart';
 import '../../features/service_tracking/presentation/pages/service_detail_page.dart'
     as tracking;
+import '../../features/factura/presentation/page/modern_factura_page.dart';
+import '../../features/factura/presentation/page/modern_config_facturas_page.dart';
+import '../../features/factura/presentation/page/modern_factura_detail_page.dart';
 import '../../presentation/presentation_container.dart';
 import '../../features/user/domain/entities/user_role.dart';
 import 'route_guards.dart';
@@ -133,6 +139,14 @@ final goRouterProvider = Provider((ref) {
           categoryId: state.params['id'] ?? 'no-id',
         ),
       ),
+      //* Vehicle Model Edit (Admin)
+      GoRoute(
+        path: '/vehicle-edit/:id',
+        name: ModernVehicleDetailPage.name,
+        builder: (context, state) => ModernVehicleDetailPage(
+          vehicleId: state.params['id'] ?? 'no-id',
+        ),
+      ),
       //* Service Edit
       // GoRoute(
       //   path: '/service-edit/:id',
@@ -185,6 +199,12 @@ final goRouterProvider = Provider((ref) {
         name: ModernMessagesPage.name,
         builder: (context, state) => const ModernMessagesPage(),
       ),
+      //* Admin Users
+      GoRoute(
+        path: '/admin-users',
+        name: AdminUsersPage.name,
+        builder: (context, state) => const AdminUsersPage(),
+      ),
       // //* ConfigMessagesResponsePage
       // GoRoute(
       //   path: '/message-response/:id',
@@ -206,6 +226,12 @@ final goRouterProvider = Provider((ref) {
         path: '/admin-config-categories',
         name: ModernConfigCategoriesPage.name,
         builder: (context, state) => const ModernConfigCategoriesPage(),
+      ),
+      //* ConfigVehiclesPage
+      GoRoute(
+        path: '/admin-config-vehicles',
+        name: ModernVehiclesPage.name,
+        builder: (context, state) => const ModernVehiclesPage(),
       ),
       // //* ConfigProductsPage - DISABLED: No product module
       // GoRoute(
@@ -269,6 +295,27 @@ final goRouterProvider = Provider((ref) {
         path: '/my-history',
         name: UserHistoryPage.name,
         builder: (context, state) => const UserHistoryPage(),
+      ),
+      //* User - My Invoices
+      GoRoute(
+        path: '/my-facturas',
+        name: ModernFacturaPage.name,
+        builder: (context, state) => const ModernFacturaPage(),
+      ),
+
+      //* Staff - Facturas
+      GoRoute(
+        path: '/staff-facturas',
+        name: ModernConfigFacturasPage.name,
+        builder: (context, state) => const ModernConfigFacturasPage(),
+      ),
+
+      //* Factura Detail (Create/Edit)
+      GoRoute(
+        path: '/factura-edit/:id',
+        name: ModernFacturaDetailPage.name,
+        builder: (context, state) =>
+            ModernFacturaDetailPage(facturaId: state.params['id'] ?? 'no-id'),
       ),
 
       //* User - My Services (Service Tracking)
@@ -336,9 +383,9 @@ final goRouterProvider = Provider((ref) {
       final authStatus = goRouterNotifier.authStatus;
       final userRole = goRouterNotifier.userRole;
 
-      // Permitir splash screen durante verificación
-      if (isGoingTo == '/splash' && authStatus == AuthStatus.checking) {
-        return null;
+      // Mientras se verifica la sesión, mantener en splash
+      if (authStatus == AuthStatus.checking) {
+        return isGoingTo == '/splash' ? null : '/splash';
       }
 
       // Redirigir desde splash después de verificación

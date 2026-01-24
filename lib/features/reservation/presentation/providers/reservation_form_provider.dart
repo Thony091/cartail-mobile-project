@@ -4,42 +4,61 @@ import 'package:intl/intl.dart';
 
 
 import '../../../../presentation/presentation_container.dart';
+import '../../../auth/presentation/providers/better_auth_provider.dart';
 
-final reservationFormProvider = StateNotifierProvider.autoDispose<ReservationFormNotifier, ReservationFormState>    ((ref) {
-
-  final createReservationCallback = ref.watch( reservationProvider.notifier ).createReservation;
+final reservationFormProvider = StateNotifierProvider.autoDispose<ReservationFormNotifier, ReservationFormState>((ref) {
+  final createReservationCallback = ref.watch(reservationProvider.notifier).createReservation;
 
   return ReservationFormNotifier(
-    createReservationCallback: createReservationCallback
+    createReservationCallback: createReservationCallback,
+    ref: ref,
   );
 });
 
 class ReservationFormNotifier extends StateNotifier<ReservationFormState>{
 
-  final Function( String, String, String, String, String, String ) createReservationCallback;
+  final Future<bool> Function( Map<String, dynamic> reservationSimilar ) createReservationCallback;
+  final Ref ref;
 
   ReservationFormNotifier({
     required this.createReservationCallback,
+    required this.ref,
   }): super( ReservationFormState() );
 
-  onNameChange( String value ) {
-    final newName = Name.dirty(value);
+  onVehiclePlateChange( String value ) {
+    final newPlate = Name.dirty(value);
     state = state.copyWith(
-      name: newName,
-      isValid: Formz.validate([ newName, state.name ])
+      vehiclePlate: newPlate,
+      isValid: Formz.validate([ newPlate, state.vehiclePlate ])
     );
   }
 
-  onEmailChange( String value ) {
+  onClientNameChange( String value ) {
+    final newName = Name.dirty(value);
+    state = state.copyWith(
+      clientName: newName,
+      isValid: Formz.validate([ newName, state.clientName ])
+    );
+  }
+
+  onClientEmailChange( String value ) {
     final newEmail = Email.dirty(value);
     state = state.copyWith(
-      email: newEmail,
-      isValid: Formz.validate([ newEmail, state.email ])
+      clientEmail: newEmail,
+      isValid: Formz.validate([ newEmail, state.clientEmail ])
+    );
+  }
+
+  onClientPhoneChange( String value ) {
+    final newPhone = Phone.dirty(value);
+    state = state.copyWith(
+      clientPhone: newPhone,
+      isValid: Formz.validate([ newPhone, state.clientPhone ])
     );
   }
 
   onReservationDate( DateTime value ) {
-    final newDate = ReservationDate.dirty(DateFormat('yyyy-MM-dd').format(value));    
+    final newDate = ReservationDate.dirty(DateFormat('yyyy-MM-dd').format(value));
     state = state.copyWith(
       date: newDate,
       isValid: Formz.validate([newDate, state.date])
@@ -48,53 +67,70 @@ class ReservationFormNotifier extends StateNotifier<ReservationFormState>{
 
   onReservationTime( String value) {
     final newTime = ReservationTime.dirty(value.toString());
-    // final newTime = ReservationTime.dirty(value.toString());
     state = state.copyWith(
       time: newTime,
       isValid: Formz.validate([newTime, state.time])
     );
   }
 
-  onRutChange( String value ) {
-    final newRut = Rut.dirty(value);
+  onEndTimeEstimatedChange( String value) {
     state = state.copyWith(
-      rut: newRut,
-      isValid: Formz.validate([ newRut, state.rut ])
+      endTimeEstimated: value
     );
   }
 
-  onServiceNameChange( String value ) {
+  onCustomerNotesChange( String value ) {
     state = state.copyWith(
-      serviceName: value
+      customerNotes: value
     );
   }
 
-  Future<bool> createReservation() async {
+  onReminderChange( bool value ) {
+    state = state.copyWith(
+      reminder: value
+    );
+  }
+
+  onServiceIdChange( String value ) {
+    state = state.copyWith(
+      serviceId: value
+    );
+  }
+
+  Future<bool> onFormSubmit() async {
 
     try {
 
       _touchEveryField();
       
-      if ( !state.isValid ) return false;
+      if ( !state.isValid || state.serviceId.isEmpty ) return false;
 
       state = state.copyWith( isPosting: true );
 
-      /// Convertir la fecha y la hora a strings antes de enviarlas
-      String formattedDate = DateFormat('yyyy-MM-dd').format(DateTime.parse(state.date.value)).toString();
-      String formattedTime = state.time.value;
-      
-      await createReservationCallback(
-        state.name.value,
-        state.email.value,
-        state.rut.value,
-        formattedDate,
-        formattedTime,
-        state.serviceName
+      final clientId = await _ensureClientId();
+      if (clientId == null) return false;
+
+      final reservationSimilar = {
+        'patenteVehiculo': state.vehiclePlate.value,
+        'fecha': state.date.value,
+        'horaInicio': state.time.value,
+        'horaFinEstimada': state.endTimeEstimated,
+        'notasCliente': state.customerNotes,
+        'notasMecanico': '',
+        'recordatorio': state.reminder,
+        'idEstado': state.statusId,
+        'idServicio': int.tryParse(state.serviceId) ?? state.statusId,
+        'idCliente': clientId,
+      };
+      reservationSimilar.removeWhere(
+        (key, value) => value == null || (value is String && value.trim().isEmpty),
       );
+
+      final created = await createReservationCallback(reservationSimilar);
 
       state = state.copyWith( isPosting: false );
 
-      return true;
+      return created;
 
     } catch (e) {
       return false;
@@ -102,22 +138,84 @@ class ReservationFormNotifier extends StateNotifier<ReservationFormState>{
 
   }
 
+  Future<int?> _ensureClientId() async {
+    if (state.clientId != null) {
+      return state.clientId;
+    }
+
+    final userData = ref.read(betterAuthProvider).user;
+    final clientRepository = ref.read(clientRepositoryProvider);
+
+    final name = (userData?.name?.isNotEmpty ?? false)
+        ? userData!.name!
+        : state.clientName.value;
+    final email = (userData?.email.isNotEmpty ?? false)
+        ? userData!.email
+        : state.clientEmail.value;
+    final phone = (userData?.phone?.isNotEmpty ?? false)
+        ? userData!.phone!
+        : state.clientPhone.value;
+
+    if (name.isEmpty || email.isEmpty || phone.isEmpty) {
+      return null;
+    }
+
+    final existing = await clientRepository.findClientByEmailOrPhone(
+      email: email,
+      phone: phone,
+    );
+    if (existing != null) {
+      state = state.copyWith(clientId: existing.id);
+      return existing.id;
+    }
+
+    final client = await clientRepository.createUpdateClient({
+      'nombre': name,
+      'email': email,
+      'telefono': phone,
+    });
+
+    state = state.copyWith(clientId: client.id);
+    return client.id;
+  }
+
   void _touchEveryField() {
+    final authState = ref.read(betterAuthProvider);
+    final isAuthenticated = authState.isAuthenticated;
+    final userData = authState.user;
+    final needsClientInfo = !isAuthenticated ||
+        userData == null ||
+        (userData.name?.isEmpty ?? true) ||
+        userData.email.isEmpty ||
+        (userData.phone?.isEmpty ?? true);
+
+    final validationInputs = <FormzInput>[
+      Name.dirty(state.vehiclePlate.value),
+      ReservationDate.dirty(state.date.value),
+      ReservationTime.dirty(state.time.value),
+    ];
+
+    if (needsClientInfo) {
+      validationInputs.addAll([
+        Name.dirty(state.clientName.value),
+        Email.dirty(state.clientEmail.value),
+        Phone.dirty(state.clientPhone.value),
+      ]);
+    }
+
     state = state.copyWith(
-      name: Name.dirty(state.name.value),
-      email: Email.dirty(state.email.value),
-      rut: Rut.dirty(state.rut.value),
+      vehiclePlate: Name.dirty(state.vehiclePlate.value),
       date: ReservationDate.dirty(state.date.value),
       time: ReservationTime.dirty(state.time.value),
-      serviceName: state.serviceName,
-      isValid: Formz.validate([
-        Name.dirty(state.name.value),
-        Email.dirty(state.email.value),
-        Rut.dirty(state.rut.value),
-        ReservationDate.dirty(state.date.value),
-        ReservationTime.dirty(state.time.value),
-      ])
+      clientName: Name.dirty(state.clientName.value),
+      clientEmail: Email.dirty(state.clientEmail.value),
+      clientPhone: Phone.dirty(state.clientPhone.value),
+      isValid: Formz.validate(validationInputs)
     );
+  }
+
+  void resetForm() {
+    state = ReservationFormState();
   }
 
 
@@ -128,24 +226,36 @@ class ReservationFormState {
   final bool isPosting;
   final bool isFormPosted;
   final bool isValid;
-  final Name name;
-  final Email email;
-  final Rut rut;
+  final Name vehiclePlate;
   final ReservationDate date;
   final ReservationTime time;
-  final String serviceName;
+  final String endTimeEstimated;
+  final String customerNotes;
+  final bool reminder;
+  final int statusId;
+  final int? clientId;
+  final String serviceId;
+  final Name clientName;
+  final Email clientEmail;
+  final Phone clientPhone;
   final List<String> timeOptions;
 
   ReservationFormState({
     this.isPosting      = false,
     this.isFormPosted   = false,
     this.isValid        = false,
-    this.name           = const Name.pure(),
-    this.email          = const Email.pure(),
-    this.rut            = const Rut.pure(),
+    this.vehiclePlate   = const Name.pure(),
     this.date           = minValidDate,
     this.time           = minValidTime,
-    this.serviceName    = '',
+    this.endTimeEstimated = '',
+    this.customerNotes  = '',
+    this.reminder       = true,
+    this.statusId       = 1,
+    this.clientId,
+    this.serviceId      = '',
+    this.clientName     = const Name.pure(),
+    this.clientEmail    = const Email.pure(),
+    this.clientPhone    = const Phone.pure(),
     this.timeOptions    = const []
   });
 
@@ -153,23 +263,35 @@ class ReservationFormState {
     bool? isPosting,
     bool? isFormPosted,
     bool? isValid,
-    Name? name,
-    Email? email,
-    Rut? rut,
+    Name? vehiclePlate,
     ReservationDate? date,
     ReservationTime? time,
-    String? serviceName,
+    String? endTimeEstimated,
+    String? customerNotes,
+    bool? reminder,
+    int? statusId,
+    int? clientId,
+    String? serviceId,
+    Name? clientName,
+    Email? clientEmail,
+    Phone? clientPhone,
     List<String>? timeOptions,
   }) => ReservationFormState(
     isPosting: isPosting ?? this.isPosting,
     isFormPosted: isFormPosted ?? this.isFormPosted,
     isValid: isValid ?? this.isValid,
-    name: name ?? this.name,
-    email: email ?? this.email,
-    rut: rut ?? this.rut,
+    vehiclePlate: vehiclePlate ?? this.vehiclePlate,
     date: date ?? this.date,
     time: time ?? this.time,
-    serviceName: serviceName ?? this.serviceName,
+    endTimeEstimated: endTimeEstimated ?? this.endTimeEstimated,
+    customerNotes: customerNotes ?? this.customerNotes,
+    reminder: reminder ?? this.reminder,
+    statusId: statusId ?? this.statusId,
+    clientId: clientId ?? this.clientId,
+    serviceId: serviceId ?? this.serviceId,
+    clientName: clientName ?? this.clientName,
+    clientEmail: clientEmail ?? this.clientEmail,
+    clientPhone: clientPhone ?? this.clientPhone,
     timeOptions: timeOptions ?? this.timeOptions,
   );
 
@@ -180,16 +302,22 @@ class ReservationFormState {
         isPosting: $isPosting
         isFormPosted: $isFormPosted
         isValid: $isValid
-        name: $name
-        email: $email
-        rut: $rut
+        vehiclePlate: $vehiclePlate
         date: $date
         time: $time
-        serviceName: $serviceName
+        endTimeEstimated: $endTimeEstimated
+        customerNotes: $customerNotes
+        reminder: $reminder
+        statusId: $statusId
+        clientId: $clientId
+        serviceId: $serviceId
+        clientName: $clientName
+        clientEmail: $clientEmail
+        clientPhone: $clientPhone
         timeOptions: $timeOptions
       ''';
   }
 
 }
-const ReservationDate minValidDate = ReservationDate.dirty('01-01-2000'); // Asumiendo un formato válido
-const ReservationTime minValidTime = ReservationTime.dirty('00:00'); // Asumiendo un formato válido
+const ReservationDate minValidDate = ReservationDate.dirty('01-01-2000');
+const ReservationTime minValidTime = ReservationTime.dirty('00:00');

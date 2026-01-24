@@ -62,6 +62,12 @@ class Ticket {
   final DateTime? updatedAt;
   final String title;
   final String description;
+  final String startDate;
+  final String endDate;
+  final int? serviceId;
+  final int? stateId;
+  final int? importanceId;
+  final int? urgencyId;
   final Map<String, dynamic> metadata;
 
   Ticket({
@@ -76,6 +82,12 @@ class Ticket {
     this.updatedAt,
     required this.title,
     required this.description,
+    this.startDate = '',
+    this.endDate = '',
+    this.serviceId,
+    this.stateId,
+    this.importanceId,
+    this.urgencyId,
     required this.metadata,
   });
 
@@ -104,6 +116,12 @@ class Ticket {
     DateTime? updatedAt,
     String? title,
     String? description,
+    String? startDate,
+    String? endDate,
+    int? serviceId,
+    int? stateId,
+    int? importanceId,
+    int? urgencyId,
     Map<String, dynamic>? metadata,
   }) {
     return Ticket(
@@ -118,6 +136,12 @@ class Ticket {
       updatedAt: updatedAt ?? this.updatedAt,
       title: title ?? this.title,
       description: description ?? this.description,
+      startDate: startDate ?? this.startDate,
+      endDate: endDate ?? this.endDate,
+      serviceId: serviceId ?? this.serviceId,
+      stateId: stateId ?? this.stateId,
+      importanceId: importanceId ?? this.importanceId,
+      urgencyId: urgencyId ?? this.urgencyId,
       metadata: metadata ?? this.metadata,
     );
   }

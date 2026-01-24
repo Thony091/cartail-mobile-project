@@ -45,8 +45,8 @@ class OurWorkEditPage extends ConsumerWidget{
     void showErrorSnackbar( BuildContext context ) {
       ScaffoldMessenger.of(context).clearSnackBars();
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: workForm.image.value.isEmpty 
-          ? Text('${workForm.image.errorMessage}')
+        SnackBar(content: workForm.beforeImage.value.isEmpty 
+          ? Text('${workForm.afterImage.errorMessage}')
           : const Text('')
         )
       );
@@ -64,7 +64,7 @@ class OurWorkEditPage extends ConsumerWidget{
               if ( photoPath == null ) return;
               
               ref.read( workFormProvider(workState.work!).notifier )
-                .updateWorkImage(photoPath);
+                .updateBeforeImage(photoPath);
     
             }, 
             icon: const Icon( Icons.photo_library_outlined )),
@@ -74,7 +74,7 @@ class OurWorkEditPage extends ConsumerWidget{
               if ( photoPath == null ) return;
 
               ref.read( workFormProvider( workState.work!).notifier )
-                .updateWorkImage(photoPath);
+                .updateAfterImage(photoPath);
             }, 
             icon: const Icon( Icons.camera_alt_outlined ))
           ],
@@ -126,14 +126,14 @@ class _WorkDetailBodyPage extends ConsumerWidget {
         SizedBox(
           height: 250,
           width: 550,
-          child: CustomImageGallery(image: workForm.image.value),
+          child: CustomImageGallery(image: workForm.afterImage.value),
         ),
 
         const SizedBox( height: 20 ),
 
         Center( 
           child: Text( 
-            workForm.name.value, 
+            workForm.title.value, 
             style: TextStyle(
               fontSize: 17,
               fontStyle: FontStyle.italic,
@@ -206,9 +206,9 @@ class _WorkInformation extends ConsumerWidget {
                       )
                     ],
                 hint: 'Nombre del trabajo',
-                initialValue: workForm.name.value,
-                onChanged: ref.read( workFormProvider( work ).notifier ).onNameChange,
-                errorMessage: workForm.name.errorMessage,
+                initialValue: workForm.title.value,
+                onChanged: ref.read( workFormProvider( work ).notifier ).onTitleChange,
+                errorMessage: workForm.title.errorMessage,
               ),
 
               const SizedBox(height: 15 ),
@@ -266,8 +266,8 @@ class _WorkInformation extends ConsumerWidget {
                       )
                     ],
                 hint: 'Nombre del trabajo',
-                onChanged: ref.read( workFormProvider( work ).notifier ).onNameChange,
-                errorMessage: workForm.name.errorMessage,
+                onChanged: ref.read( workFormProvider( work ).notifier ).onTitleChange,
+                errorMessage: workForm.title.errorMessage,
               ),
 
               const SizedBox(height: 15 ),

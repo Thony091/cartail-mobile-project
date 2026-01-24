@@ -23,7 +23,9 @@ class AuthService {
   bool _isInitialized = false;
 
   /// URL base de la API de Better Auth
-  static const String _baseUrl = 'https://agendashop.instatunnel.my';
+  static const String _baseUrl = 'https://agendashop.fabersoft.cl';
+  // static const String _baseUrl = 'https://agendashop.instatunnel.my';
+  static const String _originHeader = 'https://agendashop.fabersoft.cl';
 
   /// Keys para almacenamiento seguro de tokens
   static const String _tokenKey = 'better_auth_token';
@@ -54,6 +56,7 @@ class AuthService {
       BaseOptions(
         baseUrl: _baseUrl,
         contentType: 'application/json',
+        headers: {'Origin': _originHeader},
         connectTimeout: const Duration(seconds: 30),
         receiveTimeout: const Duration(seconds: 30),
         validateStatus: (status) {
@@ -216,7 +219,7 @@ class AuthService {
   Future<Response> signInWithEmail({
     required String email,
     required String password,
-    String? callbackURL,
+    String? callbackURL = '',
     bool? rememberMe,
   }) async {
     final dio = await client;
@@ -1340,10 +1343,13 @@ class AuthService {
   Options _authOptions() {
     if (_currentToken != null) {
       return Options(
-        headers: {'Authorization': 'Bearer $_currentToken'},
+        headers: {
+          'Authorization': 'Bearer $_currentToken',
+          'Origin': _originHeader,
+        },
       );
     }
-    return Options();
+    return Options(headers: {'Origin': _originHeader});
   }
 
   /// Intenta refrescar el token automáticamente.

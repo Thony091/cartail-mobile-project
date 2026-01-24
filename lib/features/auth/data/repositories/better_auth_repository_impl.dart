@@ -101,26 +101,21 @@ class BetterAuthRepositoryImpl implements AuthRepository {
   /// Si la sesión ha expirado, intenta refrescarla automáticamente.
   @override
   Future<AuthSession?> getCurrentSession() async {
-    try {
-      // Consultar al servidor la sesión actual
-      final sessionResponse = await _datasource.getSession();
+    // Consultar al servidor la sesión actual
+    final sessionResponse = await _datasource.getSession();
 
-      if (sessionResponse != null) {
-        _currentSession = AuthSession(
-          token: sessionResponse.session.token,
-          user: sessionResponse.user.toEntity(),
-          expiresAt: sessionResponse.session.expiresAt,
-          refreshToken: null,
-        );
-        return _currentSession;
-      }
-
-      _currentSession = null;
-      return null;
-    } catch (e) {
-      _currentSession = null;
-      return null;
+    if (sessionResponse != null) {
+      _currentSession = AuthSession(
+        token: sessionResponse.session.token,
+        user: sessionResponse.user.toEntity(),
+        expiresAt: sessionResponse.session.expiresAt,
+        refreshToken: null,
+      );
+      return _currentSession;
     }
+
+    _currentSession = null;
+    return null;
   }
 
   /// Refresca el token de autenticación.

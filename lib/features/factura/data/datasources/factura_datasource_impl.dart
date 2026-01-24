@@ -25,7 +25,7 @@ class FacturaDatasourceImpl extends FacturaDatasource {
   Future<Factura> createUpdateFactura(Map<String, dynamic> facturaLike) async {
     try {
       final String? facturaId = facturaLike['id'];
-      final String method = (facturaId == null) ? 'POST' : 'PUT';
+      final String method = (facturaId == null) ? 'POST' : 'PATCH';
       final String url = (facturaId == null)
           ? '/factura'
           : '/factura/$facturaId';
@@ -35,6 +35,7 @@ class FacturaDatasourceImpl extends FacturaDatasource {
       if (facturaLike.containsKey('id')) {
         facturaLike.remove('id');
       }
+      facturaLike.removeWhere((key, value) => value == null);
 
       final response = await dio.request(
         url,
@@ -42,20 +43,13 @@ class FacturaDatasourceImpl extends FacturaDatasource {
         options: Options(method: method),
       );
 
-      Factura factura = Factura(
-        id: '',
-        date: DateTime.now(),
-        total: 0.0,
-        description: '',
-      );
-
       if (response.statusCode == 200 || response.statusCode == 201) {
-        var data = response.data;
-        if (data is Map<String, dynamic> && data.containsKey('data')) {
-          factura = FacturaMapper.jsonToEntity(data['data']);
+        final data = _extractData(response.data);
+        if (data is Map<String, dynamic>) {
+          return FacturaMapper.jsonToEntity(data);
         }
       }
-      return factura;
+      return _emptyFactura();
     } catch (e) {
       throw Exception(e);
     }
@@ -74,20 +68,14 @@ class FacturaDatasourceImpl extends FacturaDatasource {
   Future<Factura> getFacturaById(String id) async {
     try {
       final response = await dio.get('/factura/$id');
-      Factura factura = Factura(
-        id: '',
-        date: DateTime.now(),
-        total: 0.0,
-        description: '',
-      );
 
       if (response.statusCode == 200) {
-        var data = response.data;
-        if (data is Map<String, dynamic> && data.containsKey('data')) {
-          factura = FacturaMapper.jsonToEntity(data['data']);
+        final data = _extractData(response.data);
+        if (data is Map<String, dynamic>) {
+          return FacturaMapper.jsonToEntity(data);
         }
       }
-      return factura;
+      return _emptyFactura();
     } on DioException catch (e) {
       if (e.response?.statusCode == 404)
         throw FacturaFetchError('Factura no encontrada');
@@ -101,23 +89,45 @@ class FacturaDatasourceImpl extends FacturaDatasource {
   Future<List<Factura>> getFacturas() async {
     try {
       final response = await dio.get('/factura');
-      final List<Factura> facturas = [];
       if (response.statusCode == 200) {
-        var data = response.data;
-
-        if (data is Map<String, dynamic> && data.containsKey('data')) {
-          var facturasData = data['data'];
-          if (facturasData is List) {
-            for (final factura in facturasData) {
-              facturas.add(FacturaMapper.jsonToEntity(factura));
-            }
-          }
-        }
+        return _parseFacturas(response.data);
       }
-      return facturas;
+      return [];
     } catch (e) {
       print('Error $e');
       return [];
     }
+  }
+
+  Factura _emptyFactura() {
+    return Factura(
+      id: '',
+      identificadorFactura: '',
+      fechaEmision: DateTime.now(),
+      subtotal: 0,
+      impuesto: 0,
+      total: 0,
+      estado: '',
+      pdf: '',
+      idTransaccion: 0,
+    );
+  }
+
+  List<Factura> _parseFacturas(dynamic responseData) {
+    final data = _extractData(responseData);
+    if (data is List) {
+      return data
+          .whereType<Map<String, dynamic>>()
+          .map(FacturaMapper.jsonToEntity)
+          .toList();
+    }
+    return [];
+  }
+
+  dynamic _extractData(dynamic responseData) {
+    if (responseData is Map<String, dynamic> && responseData.containsKey('data')) {
+      return responseData['data'];
+    }
+    return responseData;
   }
 }

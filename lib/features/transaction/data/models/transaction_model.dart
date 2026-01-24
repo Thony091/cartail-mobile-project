@@ -24,16 +24,18 @@ class TransactionModel {
   factory TransactionModel.fromJson(Map<String, dynamic> json) {
     return TransactionModel(
       id: json['id'] as int,
-      date: json['date'] != null
-        ? DateTime.parse(json['date'] as String)
-        : DateTime.now(),
+      date: json['fecha'] != null
+        ? DateTime.parse(json['fecha'] as String)
+        : json['date'] != null
+          ? DateTime.parse(json['date'] as String)
+          : DateTime.now(),
       createdAt: json['created_at'] != null
         ? DateTime.parse(json['created_at'] as String)
         : DateTime.now(),
       updatedAt: json['updated_at'] != null
         ? DateTime.parse(json['updated_at'] as String)
         : DateTime.now(),
-      transactionId: json['id_transaction'] as int,
+      transactionId: json['id_transaction'] as int? ?? json['id'] as int,
       reservationId: json['id_reservation'] as int?,
       items: json['items'] != null
         ? (json['items'] as List)
@@ -46,7 +48,7 @@ class TransactionModel {
   Map<String, dynamic> toJson() {
     return {
       'id': id,
-      'date': date.toIso8601String(),
+      'fecha': date.toIso8601String(),
       'created_at': createdAt.toIso8601String(),
       'updated_at': updatedAt.toIso8601String(),
       'id_transaction': transactionId,

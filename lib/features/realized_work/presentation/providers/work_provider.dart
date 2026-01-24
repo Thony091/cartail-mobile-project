@@ -42,21 +42,26 @@ class WorkNotifier extends StateNotifier<WorkState>{
       if( state.id == 'new' ){
         state = state.copyWith(
           work: newEmptyService(),
-          isLoading: false
+          isLoading: false,
+          isEditMode: true,
         );
         return;
       }
-        
+
       final work = await workRepository.getRealizedWorkById(state.id);
-      
+
       state = state.copyWith(
         work: work,
         isLoading: false
-      );  
+      );
 
     } catch (e) {
       print('Error al obtener el servicio: $e');
     }
+  }
+
+  void setEditMode(bool isEditMode) {
+    state = state.copyWith(isEditMode: isEditMode);
   }
     
   Future<void> deleteWork( String id ) async {
@@ -83,6 +88,7 @@ class WorkState {
   final List<Works> works;
   final bool isLoading;
   final bool isSaving;
+  final bool isEditMode;
 
   WorkState({
     required this.id,
@@ -90,6 +96,7 @@ class WorkState {
     this.works = const [],
     this.isLoading = true,
     this.isSaving = false,
+    this.isEditMode = false,
   });
 
   WorkState copyWith({
@@ -98,13 +105,15 @@ class WorkState {
     List<Works>? works,
     bool? isLoading,
     bool? isSaving,
+    bool? isEditMode,
   }) => WorkState(
       id: id ?? this.id,
       work: work ?? this.work,
       works: works ?? this.works,
       isLoading: isLoading ?? this.isLoading,
       isSaving: isSaving ?? this.isSaving,
+      isEditMode: isEditMode ?? this.isEditMode,
     );
-  
-}  
+
+}
   

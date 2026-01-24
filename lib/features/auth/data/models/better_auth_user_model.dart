@@ -98,10 +98,14 @@ class BetterAuthUserModel {
       case 'admin':
         return UserRole.admin;
       case 'operator':
+      case 'operario':
         return UserRole.operator;
       case 'user':
+      case 'client':
+      case 'cliente':
         return UserRole.user;
       case 'guest':
+      case 'invitado':
         return UserRole.guest;
       default:
         return UserRole.user;

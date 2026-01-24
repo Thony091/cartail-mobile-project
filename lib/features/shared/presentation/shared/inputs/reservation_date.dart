@@ -44,8 +44,11 @@ class ReservationDate extends FormzInput<String, ReservationDateError> {
     try {
       DateFormat format = DateFormat('yyyy-MM-dd');
       DateTime parsedDate = format.parseStrict(value);
-      // Verifica si la fecha es futura
-      if (!parsedDate.isAfter(DateTime.now())) {
+      // Verifica si la fecha es hoy o futura
+      final now = DateTime.now();
+      final today = DateTime(now.year, now.month, now.day);
+      final selected = DateTime(parsedDate.year, parsedDate.month, parsedDate.day);
+      if (selected.isBefore(today)) {
         return ReservationDateError.futureDate;
       }
     } catch (_) {

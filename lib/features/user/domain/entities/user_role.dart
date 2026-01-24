@@ -47,9 +47,23 @@ enum UserRole {
   /// Crea un UserRole desde un strings
   /// Por defecto retorna 'guest' para valores no reconocidos
   static UserRole fromJson(String value) {
-    return UserRole.values.firstWhere(
-      (role) => role.name == value,
-      orElse: () => UserRole.guest,
-    );
+    final normalized = value.toLowerCase();
+    switch (normalized) {
+      case 'admin':
+        return UserRole.admin;
+      case 'operator':
+      case 'operario':
+        return UserRole.operator;
+      case 'user':
+      case 'client':
+      case 'cliente':
+        return UserRole.user;
+      case 'guest':
+      case 'invited':
+      case 'invitado':
+        return UserRole.guest;
+      default:
+        return UserRole.guest;
+    }
   }
 }

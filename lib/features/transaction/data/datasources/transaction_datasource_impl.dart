@@ -28,11 +28,10 @@ class TransactionDatasourceImpl extends TransactionDatasource {
       final response = await dio.get('/transaccion');
       final List<Transaction> transactions = [];
       if (response.statusCode == 200) {
-        var data = response.data;
-        if (data is Map<String, dynamic> && data.containsKey('data')) {
-          var transactionsData = data['data'];
-          if (transactionsData is List) {
-            for (final transaction in transactionsData) {
+        final data = _extractData(response.data);
+        if (data is List) {
+          for (final transaction in data) {
+            if (transaction is Map<String, dynamic>) {
               transactions.add(TransactionMapper.jsonToEntity(transaction));
             }
           }
@@ -57,9 +56,9 @@ class TransactionDatasourceImpl extends TransactionDatasource {
         transactionId: 0,
       );
       if (response.statusCode == 200) {
-        var data = response.data;
-        if (data is Map<String, dynamic> && data.containsKey('data')) {
-          transaction = TransactionMapper.jsonToEntity(data['data']);
+        final data = _extractData(response.data);
+        if (data is Map<String, dynamic>) {
+          transaction = TransactionMapper.jsonToEntity(data);
         }
       }
       return transaction;
@@ -79,11 +78,10 @@ class TransactionDatasourceImpl extends TransactionDatasource {
       final response = await dio.get('/transaccion/reserva/$reservationId');
       final List<Transaction> transactions = [];
       if (response.statusCode == 200) {
-        var data = response.data;
-        if (data is Map<String, dynamic> && data.containsKey('data')) {
-          var transactionsData = data['data'];
-          if (transactionsData is List) {
-            for (final transaction in transactionsData) {
+        final data = _extractData(response.data);
+        if (data is List) {
+          for (final transaction in data) {
+            if (transaction is Map<String, dynamic>) {
               transactions.add(TransactionMapper.jsonToEntity(transaction));
             }
           }
@@ -99,8 +97,7 @@ class TransactionDatasourceImpl extends TransactionDatasource {
   @override
   Future<Transaction> createTransaction(Transaction transaction) async {
     try {
-      final transactionData = TransactionMapper.entityToJson(transaction);
-      transactionData.remove('id');
+      final transactionData = {'fecha': transaction.date.toIso8601String()};
 
       final response = await dio.post('/transaccion', data: transactionData);
 
@@ -112,9 +109,9 @@ class TransactionDatasourceImpl extends TransactionDatasource {
         transactionId: 0,
       );
       if (response.statusCode == 200 || response.statusCode == 201) {
-        var data = response.data;
-        if (data is Map<String, dynamic> && data.containsKey('data')) {
-          newTransaction = TransactionMapper.jsonToEntity(data['data']);
+        final data = _extractData(response.data);
+        if (data is Map<String, dynamic>) {
+          newTransaction = TransactionMapper.jsonToEntity(data);
         }
       }
       return newTransaction;
@@ -126,11 +123,10 @@ class TransactionDatasourceImpl extends TransactionDatasource {
   @override
   Future<Transaction> updateTransaction(Transaction transaction) async {
     try {
-      final transactionData = TransactionMapper.entityToJson(transaction);
-      final int transactionId = transactionData['id'];
-      transactionData.remove('id');
+      final transactionData = {'fecha': transaction.date.toIso8601String()};
+      final int transactionId = transaction.id;
 
-      final response = await dio.put(
+      final response = await dio.patch(
         '/transaccion/$transactionId',
         data: transactionData,
       );
@@ -143,9 +139,9 @@ class TransactionDatasourceImpl extends TransactionDatasource {
         transactionId: 0,
       );
       if (response.statusCode == 200) {
-        var data = response.data;
-        if (data is Map<String, dynamic> && data.containsKey('data')) {
-          updatedTransaction = TransactionMapper.jsonToEntity(data['data']);
+        final data = _extractData(response.data);
+        if (data is Map<String, dynamic>) {
+          updatedTransaction = TransactionMapper.jsonToEntity(data);
         }
       }
       return updatedTransaction;
@@ -161,5 +157,12 @@ class TransactionDatasourceImpl extends TransactionDatasource {
     } catch (e) {
       throw Exception(e);
     }
+  }
+
+  dynamic _extractData(dynamic responseData) {
+    if (responseData is Map<String, dynamic> && responseData.containsKey('data')) {
+      return responseData['data'];
+    }
+    return responseData;
   }
 }

@@ -1,0 +1,1 @@
+class ClientNotFound implements Exception {}

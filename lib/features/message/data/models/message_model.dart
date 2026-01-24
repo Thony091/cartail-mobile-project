@@ -16,18 +16,18 @@ class MessageModel {
   factory MessageModel.fromJson(Map<String, dynamic> json) {
     return MessageModel(
       id: json['id']?.toString() ?? '',
-      name: json['name'] as String? ?? '',
+      name: json['nombre'] as String? ?? json['name'] as String? ?? '',
       email: json['email'] as String? ?? '',
-      message: json['message'] as String? ?? '',
+      message: json['mensaje'] as String? ?? json['message'] as String? ?? '',
     );
   }
 
   Map<String, dynamic> toJson() {
     return {
       'id': id,
-      'name': name,
+      'nombre': name,
       'email': email,
-      'message': message,
+      'mensaje': message,
     };
   }
 

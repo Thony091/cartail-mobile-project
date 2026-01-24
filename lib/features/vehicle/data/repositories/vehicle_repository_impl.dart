@@ -18,13 +18,8 @@ class VehicleRepositoryImpl extends VehicleRepository {
   }
 
   @override
-  Future<Vehicle> createVehicle(Vehicle vehicle) {
-    return datasource.createVehicle(vehicle);
-  }
-
-  @override
-  Future<Vehicle> updateVehicle(Vehicle vehicle) {
-    return datasource.updateVehicle(vehicle);
+  Future<Vehicle> createUpdateVehicle(Map<String, dynamic> vehicleSimilar) {
+    return datasource.createUpdateVehicle(vehicleSimilar);
   }
 
   @override

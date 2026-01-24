@@ -7,6 +7,14 @@ class Reservation{
   final String reservationDate;
   final String reservationTime;
   final String serviceName;
+  final String vehiclePlate;
+  final String endTimeEstimated;
+  final String customerNotes;
+  final String mechanicNotes;
+  final bool reminder;
+  final int? statusId;
+  final int? serviceId;
+  final int? clientId;
 
   Reservation({
     required this.id,
@@ -16,5 +24,13 @@ class Reservation{
     required this.reservationDate,
     required this.reservationTime,
     required this.serviceName,
+    this.vehiclePlate = '',
+    this.endTimeEstimated = '',
+    this.customerNotes = '',
+    this.mechanicNotes = '',
+    this.reminder = false,
+    this.statusId,
+    this.serviceId,
+    this.clientId,
   });
 }

@@ -4,8 +4,8 @@ class MessageMapper{
 
   static jsonToEntity( Map<String, dynamic> json) => Message(
     id: json['id'].toString(), 
-    name: json['name'] ?? '',
+    name: json['nombre'] ?? json['name'] ?? '',
     email: json['email'] ?? '',
-    message: json['message'] ?? '',
+    message: json['mensaje'] ?? json['message'] ?? '',
   );
 }

@@ -98,8 +98,9 @@ class _ReservationFormBody extends ConsumerWidget {
 
     final List<String> timeOptions = [];
     for (int hour = 9; hour <= 18; hour++) {
-      timeOptions.add('$hour:00');
-      timeOptions.add('$hour:30');
+      final formattedHour = hour.toString().padLeft(2, '0');
+      timeOptions.add('$formattedHour:00');
+      timeOptions.add('$formattedHour:30');
     }
 
     if ( timeOptions.isEmpty ) return;
@@ -132,10 +133,16 @@ class _ReservationFormBody extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     
     final servicios =  ref.watch( servicesProvider);
-    final opciones = servicios.services.map((e) => e.name).toList();
     final size = MediaQuery.of(context).size;
     final state = ref.watch(reservationFormProvider);
     final authState = ref.watch(authProvider);
+    final isAuthenticated = authState.authStatus == AuthStatus.authenticated;
+    final userData = authState.userData;
+    final needsClientInfo = !isAuthenticated ||
+        userData == null ||
+        userData.nombre.isEmpty ||
+        userData.email.isEmpty ||
+        userData.telefono.isEmpty;
 
     return SingleChildScrollView(
       keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag ,
@@ -171,44 +178,55 @@ class _ReservationFormBody extends ConsumerWidget {
                       CustomProductField(
                         isBottomField: true,
                         isTopField: true,
-                        label: "Name",
-                        initialValue: authState.authStatus == AuthStatus.authenticated
-                          ? authState.userData!.nombre
-                          : state.name.value,
-                        hint: "Nombre Completo",
+                        label: "Patente",
+                        initialValue: state.vehiclePlate.value,
+                        hint: "Patente del Vehículo",
                         onChanged: (value) {
-                          ref.read( reservationFormProvider.notifier ).onNameChange(value);
+                          ref.read( reservationFormProvider.notifier ).onVehiclePlateChange(value);
                         },
                       ),
                       const SizedBox(height: 10.0),
-                        
-                      CustomProductField(
-                        isBottomField: true,
-                        isTopField: true,
-                        label: "Rut",
-                        initialValue: authState.authStatus == AuthStatus.authenticated
-                          ? authState.userData!.rut
-                          : state.rut.value,
-                        hint: "Rut",
-                        onChanged: (value) {
-                          ref.read( reservationFormProvider.notifier ).onRutChange(value);
-                        },
-                      ),
-                      const SizedBox(height: 10.0),
-                        
-                      CustomProductField(
-                        isBottomField: true,
-                        isTopField: true,
-                        initialValue: authState.authStatus == AuthStatus.authenticated
-                          ? authState.userData!.email
-                          : state.email.value,
-                        label: "Correo Electrónico",
-                        hint: "Correo Electrónico",
-                        onChanged: (value) {
-                          ref.read( reservationFormProvider.notifier ).onEmailChange(value);
-                        },
-                      ),
-                      const SizedBox(height: 10.0),
+
+                      if (needsClientInfo) ...[
+                        CustomProductField(
+                          isBottomField: true,
+                          isTopField: true,
+                          label: "Nombre",
+                          initialValue: state.clientName.value,
+                          hint: "Nombre Completo",
+                          onChanged: (value) {
+                            ref.read(reservationFormProvider.notifier)
+                              .onClientNameChange(value);
+                          },
+                        ),
+                        const SizedBox(height: 10.0),
+
+                        CustomProductField(
+                          isBottomField: true,
+                          isTopField: true,
+                          label: "Correo Electrónico",
+                          initialValue: state.clientEmail.value,
+                          hint: "Correo Electrónico",
+                          onChanged: (value) {
+                            ref.read(reservationFormProvider.notifier)
+                              .onClientEmailChange(value);
+                          },
+                        ),
+                        const SizedBox(height: 10.0),
+
+                        CustomProductField(
+                          isBottomField: true,
+                          isTopField: true,
+                          label: "Teléfono",
+                          initialValue: state.clientPhone.value,
+                          hint: "Teléfono",
+                          onChanged: (value) {
+                            ref.read(reservationFormProvider.notifier)
+                              .onClientPhoneChange(value);
+                          },
+                        ),
+                        const SizedBox(height: 10.0),
+                      ],
                         
                       Container(
                         padding: const EdgeInsets.symmetric(horizontal: 10),
@@ -222,25 +240,26 @@ class _ReservationFormBody extends ConsumerWidget {
                         child: DropdownButtonHideUnderline(
                           child: DropdownButton<String>(
                             hint: const Text('Elije una opción'),
-                            value: state.serviceName.isNotEmpty
-                              ? state.serviceName
+                            value: state.serviceId.isNotEmpty
+                              ? state.serviceId
                               : null,
-                            items: opciones.map((String value) {
+                            items: servicios.services.map((service) {
                               return DropdownMenuItem<String>(
-                                value: value,
-                                child: Text(value),
+                                value: service.id,
+                                child: Text(service.name),
                               );
                             }).toList(),
                             onChanged: (value) {
+                              if (value == null) return;
                               ref.read(reservationFormProvider.notifier)
-                                .onServiceNameChange(value!);
+                                .onServiceIdChange(value);
                             },
                           ),
                         ),
                       ), 
                       const SizedBox(height: 10.0),
 
-                      if ( state.serviceName.isNotEmpty )
+                      if ( state.serviceId.isNotEmpty )
                         CustomProductField(
                           isBottomField: true,
                           isTopField: true,
@@ -252,7 +271,7 @@ class _ReservationFormBody extends ConsumerWidget {
                             ref.read( reservationFormProvider.notifier ).onReservationDate(DateTime.parse(value));
                           },
                           onTap: () {
-                            if (state.serviceName.isNotEmpty) {
+                            if (state.serviceId.isNotEmpty) {
                               _selectDate(context, ref);
                             } else {
                               ScaffoldMessenger.of(context).showSnackBar(
@@ -263,7 +282,7 @@ class _ReservationFormBody extends ConsumerWidget {
                         ),
                       const SizedBox(height: 10.0),
 
-                      if ( state.serviceName.isNotEmpty && state.date.value.isNotEmpty )
+                      if ( state.serviceId.isNotEmpty && state.date.value.isNotEmpty )
                         CustomProductField(
                           isBottomField: true,
                           isTopField: true,
@@ -300,7 +319,7 @@ class _ReservationFormBody extends ConsumerWidget {
                         buttonColor: Colors.blueAccent.shade400,
                   
                         onPressed: () {
-                          ref.read(reservationFormProvider.notifier).createReservation().then(
+                          ref.read(reservationFormProvider.notifier).onFormSubmit().then(
                             (value) {
                               if (value) {
                                 ScaffoldMessenger.of(context).showSnackBar(
@@ -318,13 +337,15 @@ class _ReservationFormBody extends ConsumerWidget {
                                         ? state.date.errorMessage.toString()
                                         : ( state.time.errorMessage != null ) 
                                           ? state.time.errorMessage.toString()
-                                          : ( state.name.errorMessage != null ) 
-                                            ? state.name.errorMessage.toString()
-                                            : ( state.email.errorMessage != null ) 
-                                              ? state.email.errorMessage.toString()
-                                              : ( state.rut.errorMessage != null ) 
-                                                ? state.rut.errorMessage.toString()
-                                                : "Error al realizar la reserva"
+                                          : ( state.vehiclePlate.errorMessage != null ) 
+                                            ? state.vehiclePlate.errorMessage.toString()
+                                          : ( needsClientInfo && state.clientName.errorMessage != null )
+                                            ? state.clientName.errorMessage.toString()
+                                            : ( needsClientInfo && state.clientEmail.errorMessage != null )
+                                              ? state.clientEmail.errorMessage.toString()
+                                              : ( needsClientInfo && state.clientPhone.errorMessage != null )
+                                                  ? state.clientPhone.errorMessage.toString()
+                                                  : "Error al realizar la reserva"
                                     ),
                                     backgroundColor: Colors.red,
                                   )
@@ -354,5 +375,3 @@ class _ReservationFormBody extends ConsumerWidget {
     );
   }
 }
-
-

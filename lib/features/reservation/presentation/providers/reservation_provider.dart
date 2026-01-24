@@ -50,21 +50,20 @@ class ReservationNotifier extends StateNotifier<ReservartionState>{
     }
   }
 
-  Future<void> createReservation( 
-      String name, String rut, String email, String reservationDate, String reservationTime, String serviceName
-    ) async {
+  Future<bool> createReservation( Map<String, dynamic> reservationSimilar ) async {
     
     state = state.copyWith(isLoading: true);
 
     try {
       
       final reservation = await reservationRepository.createUpdateReservation( 
-        name, rut, email, reservationDate, reservationTime, serviceName );
+        reservationSimilar );
       
       state = state.copyWith(
         reservations: [...state.reservations, reservation],
         isLoading: false
       );
+      return true;
 
     } catch (e) {
       
@@ -72,6 +71,7 @@ class ReservationNotifier extends StateNotifier<ReservartionState>{
         isLoading: false,
         error: 'Error al crear la reserva'
       );
+      return false;
 
     }
   }

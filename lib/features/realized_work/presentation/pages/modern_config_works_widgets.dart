@@ -1,3 +1,6 @@
+import 'dart:convert';
+import 'dart:io';
+
 import 'package:animate_do/animate_do.dart';
 import 'package:flutter/material.dart';
 
@@ -148,6 +151,7 @@ class WorkCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final imageProvider = _buildImageProvider(work.image);
     return ModernCard(
       child: InkWell(
         onTap: onTap,
@@ -165,11 +169,8 @@ class WorkCard extends StatelessWidget {
                       top: Radius.circular(20),
                     ),
                     color: const Color(0xFF3498db).withOpacity(0.1),
-                    image: work.image.isNotEmpty
-                        ? DecorationImage(
-                            image: NetworkImage(work.image),
-                            fit: BoxFit.cover,
-                          )
+                    image: imageProvider != null
+                        ? DecorationImage(image: imageProvider, fit: BoxFit.cover)
                         : null,
                   ),
                   child: work.image.isEmpty
@@ -211,6 +212,22 @@ class WorkCard extends StatelessWidget {
     );
   }
 
+}
+
+ImageProvider? _buildImageProvider(String path) {
+  if (path.isEmpty) return null;
+  if (path.startsWith('http')) {
+    return NetworkImage(path);
+  }
+  final file = File(path);
+  if (file.existsSync()) {
+    return FileImage(file);
+  }
+  try {
+    return MemoryImage(base64Decode(path));
+  } catch (_) {
+    return null;
+  }
 }
 
 class EmptyWorksView extends StatelessWidget {

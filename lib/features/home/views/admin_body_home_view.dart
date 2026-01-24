@@ -1,14 +1,27 @@
 import 'package:animate_do/animate_do.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:portafolio_project/features/home/views/components/components.dart';
+import 'package:portafolio_project/features/message/presentation/providers/messages_provider.dart';
+import 'package:portafolio_project/features/services/presentation/providers/services_provider.dart';
 import 'package:portafolio_project/features/shared/presentation/shared/shared.dart';
+import 'package:portafolio_project/features/ticket/presentation/providers/tickets_provider.dart';
+import 'package:portafolio_project/features/reservation/presentation/providers/reservation_provider.dart';
+import 'package:portafolio_project/features/realized_work/presentation/providers/works_provider.dart';
 
-class AdminBodyHomeView extends StatelessWidget {
+class AdminBodyHomeView extends ConsumerWidget {
   const AdminBodyHomeView({super.key});
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+
+    final serviceState = ref.watch( servicesProvider );
+    final messageState = ref.watch( messagesProvider );
+    final reservationState = ref.watch( reservationProvider );
+    final ticketState = ref.watch( ticketsProvider );
+    final worksState = ref.watch( worksProvider );
+
     return Padding(
       padding: const EdgeInsets.all(20),
       child: Column(
@@ -64,23 +77,25 @@ class AdminBodyHomeView extends StatelessWidget {
           // Estadísticas rápidas
           FadeInUp(
             delay: const Duration(milliseconds: 100),
-            child: const Row(
+            child: Row(
               children: [
                 Expanded(
                   child: StatCardWidget(
-                    value: '24',
+                    value: serviceState.services.length.toString(),
                     label: 'Servicios',
                     icon: Icons.build,
-                    color: Color(0xFF3498db),
+                    color: const Color(0xFF3498db),
+                    modalType: DashboardModalType.services,
                   ),
                 ),
-                SizedBox(width: 16),
-                Expanded(
+                const SizedBox(width: 16),
+                 Expanded(
                   child: StatCardWidget(
-                    value: '89',
+                    value: reservationState.reservations.length.toString(),
                     label: 'Reservas',
                     icon: Icons.calendar_today,
-                    color: Color(0xFFf39c12),
+                    color: const Color(0xFFf39c12),
+                    modalType: DashboardModalType.reservations,
                   ),
                 ),
               ],
@@ -91,23 +106,55 @@ class AdminBodyHomeView extends StatelessWidget {
 
           FadeInUp(
             delay: const Duration(milliseconds: 200),
-            child: const Row(
+            child:  Row(
               children: [
                 Expanded(
                   child: StatCardWidget(
-                    value: '156',
-                    label: 'Completados',
-                    icon: Icons.check_circle,
-                    color: Color(0xFF27ae60),
+                    value: worksState.works.length.toString(),
+                    label: 'Trabajos',
+                    icon: Icons.diamond,
+                    color: const Color(0xFF9b59b6),
+                    modalType: DashboardModalType.works,
                   ),
                 ),
-                SizedBox(width: 16),
+                const SizedBox(width: 16),
                 Expanded(
                   child: StatCardWidget(
-                    value: '12',
+                    value: ticketState.tickets.length.toString(),
+                    label: 'Tickets',
+                    icon: Icons.check_circle,
+                    color: const Color(0xFF27ae60),
+                    modalType: DashboardModalType.tickets,
+                  ),
+                ),
+              ],
+            ),
+          ),
+
+          const SizedBox(height: 16),
+
+          FadeInUp(
+            delay: const Duration(milliseconds: 300),
+            child:  Row(
+              children: [
+                Expanded(
+                  child: StatCardWidget(
+                    value: messageState.messages.length.toString(),
                     label: 'Mensajes',
                     icon: Icons.mail,
-                    color: Color(0xFFe74c3c),
+                    color: const Color(0xFFe74c3c),
+                    modalType: DashboardModalType.messages,
+                  ),
+                ),
+                const SizedBox(width: 16),
+                Expanded(
+                  child: StatCardWidget(
+                    value: '0',
+                    label: 'Operarios',
+                    icon: Icons.people,
+                    color: const Color(0xFF16a085),
+                    modalType: DashboardModalType.operators,
+                    isEnabled: false,
                   ),
                 ),
               ],
@@ -118,7 +165,7 @@ class AdminBodyHomeView extends StatelessWidget {
 
           // Acciones rápidas del admin
           FadeInUp(
-            delay: const Duration(milliseconds: 300),
+            delay: const Duration(milliseconds: 400),
             child: ModernCard(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -173,10 +220,46 @@ class AdminBodyHomeView extends StatelessWidget {
                   SizedBox(
                     width: double.infinity,
                     child: ModernButton(
+                      text: 'Gestión de Tickets',
+                      icon: Icons.check_circle,
+                      style: ModernButtonStyle.success,
+                      onPressed: () => context.push('/admin-all-tickets'),
+                    ),
+                  ),
+
+                  const SizedBox(height: 12),
+
+                  SizedBox(
+                    width: double.infinity,
+                    child: ModernButton(
                       text: 'Gestión de Mensajes',
                       icon: Icons.message,
                       style: ModernButtonStyle.secondary,
                       onPressed: () => context.push('/messages'),
+                    ),
+                  ),
+
+                  const SizedBox(height: 12),
+
+                  SizedBox(
+                    width: double.infinity,
+                    child: ModernButton(
+                      text: 'Gestión de Usuarios',
+                      icon: Icons.people_alt,
+                      style: ModernButtonStyle.primary,
+                      onPressed: () => context.push('/admin-users'),
+                    ),
+                  ),
+
+                  const SizedBox(height: 12),
+
+                  SizedBox(
+                    width: double.infinity,
+                    child: ModernButton(
+                      text: 'Gestión de Categorías',
+                      icon: Icons.category,
+                      style: ModernButtonStyle.primary,
+                      onPressed: () => context.push('/admin-config-categories'),
                     ),
                   ),
                   // const SizedBox(height: 12),

@@ -24,6 +24,7 @@ class RouteGuards {
     '/payment-methods',
     '/my-history',
     '/my-services',
+    '/my-facturas',
   ];
 
   /// Rutas solo para operarios y administradores
@@ -34,6 +35,8 @@ class RouteGuards {
     '/operator/work-orders',
     '/operator/order/',
     '/operator/reception/',
+    '/staff-facturas',
+    '/factura-edit/',
   ];
 
   /// Rutas solo para administradores

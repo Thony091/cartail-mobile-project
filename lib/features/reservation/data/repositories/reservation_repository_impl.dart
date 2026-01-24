@@ -10,8 +10,8 @@ class ReservationRepositoryImpl extends ReservationRepository {
   ReservationRepositoryImpl(this.reservationDatasource);
   
   @override
-  Future<Reservation> createUpdateReservation( String name, String rut, String email, String reservationDate, String reservationTime, String serviceName ) {
-    return reservationDatasource.createUpdateReservation( name, rut, email, reservationDate, reservationTime, serviceName );
+  Future<Reservation> createUpdateReservation( Map<String, dynamic> reservationSimilar ) {
+    return reservationDatasource.createUpdateReservation( reservationSimilar );
   }
   
   @override

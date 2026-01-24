@@ -3,10 +3,10 @@ import '../../domain/entities/ticket.dart';
 class TicketMapper {
   static Ticket jsonToEntity(Map<String, dynamic> json) => Ticket(
     id: json['id']?.toString() ?? '',
-    userId: json['userId']?.toString() ?? '',
-    userName: json['userName'] as String? ?? '',
-    type: TicketType.fromJson(json['type'] as String? ?? 'order'),
-    status: TicketStatus.fromJson(json['status'] as String? ?? 'pending'),
+    userId: json['id_user']?.toString() ?? json['userId']?.toString() ?? '',
+    userName: json['nombre'] as String? ?? json['userName'] as String? ?? '',
+    type: TicketType.fromJson(json['type'] as String? ?? 'reservation'),
+    status: _statusFromId(_parseInt(json['id_estado'])),
     assignedToId: json['assignedToId']?.toString(),
     assignedToName: json['assignedToName'] as String?,
     createdAt: json['createdAt'] != null
@@ -15,23 +15,56 @@ class TicketMapper {
     updatedAt: json['updatedAt'] != null
       ? DateTime.parse(json['updatedAt'] as String)
       : null,
-    title: json['title'] as String? ?? '',
+    title: json['nombre'] as String? ?? json['title'] as String? ?? '',
     description: json['description'] as String? ?? '',
+    startDate: json['desde'] as String? ?? '',
+    endDate: json['hasta'] as String? ?? '',
+    serviceId: _parseInt(json['id_servicio']),
+    stateId: _parseInt(json['id_estado']),
+    importanceId: _parseInt(json['id_importancia']),
+    urgencyId: _parseInt(json['id_urgencia']),
     metadata: json['metadata'] as Map<String, dynamic>? ?? {},
   );
 
   static Map<String, dynamic> entityToJson(Ticket ticket) => {
     'id': ticket.id,
-    'userId': ticket.userId,
-    'userName': ticket.userName,
-    'type': ticket.type.toJson(),
-    'status': ticket.status.toJson(),
+    'id_user': ticket.userId,
+    'nombre': ticket.title,
+    'description': ticket.description,
+    'desde': ticket.startDate,
+    'hasta': ticket.endDate,
+    'id_servicio': ticket.serviceId,
+    'id_estado': ticket.stateId,
+    'id_importancia': ticket.importanceId,
+    'id_urgencia': ticket.urgencyId,
     if (ticket.assignedToId != null) 'assignedToId': ticket.assignedToId,
     if (ticket.assignedToName != null) 'assignedToName': ticket.assignedToName,
-    'createdAt': ticket.createdAt.toIso8601String(),
-    if (ticket.updatedAt != null) 'updatedAt': ticket.updatedAt!.toIso8601String(),
-    'title': ticket.title,
-    'description': ticket.description,
     'metadata': ticket.metadata,
   };
+
+  static int? _parseInt(dynamic value) {
+    if (value == null) return null;
+    try {
+      return int.parse(value.toString());
+    } catch (e) {
+      return null;
+    }
+  }
+
+  static TicketStatus _statusFromId(int? id) {
+    switch (id) {
+      case 1:
+        return TicketStatus.pending;
+      case 2:
+        return TicketStatus.assigned;
+      case 3:
+        return TicketStatus.inProgress;
+      case 4:
+        return TicketStatus.completed;
+      case 5:
+        return TicketStatus.completed;
+      default:
+        return TicketStatus.pending;
+    }
+  }
 }

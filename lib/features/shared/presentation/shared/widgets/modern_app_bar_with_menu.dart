@@ -1,8 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:portafolio_project/features/auth/presentation/providers/better_auth_provider.dart';
 
-import '../../../../auth/presentation/providers/auth_provider.dart';
+// import '../../../../auth/presentation/providers/auth_provider.dart';
 
 class ModernAppBarWithMenu extends StatelessWidget implements PreferredSizeWidget {
   final String title;
@@ -150,11 +151,11 @@ class AuthButtonWidget extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final authState = ref.watch(authProvider);
+    final authState = ref.watch(betterAuthProvider);
     return GestureDetector(
-      onTap: authState.authStatus == AuthStatus.authenticated
+      onTap: authState.isAuthenticated
         ? () async {
-          ref.read( authProvider.notifier ).logOut();
+          await ref.read(betterAuthProvider.notifier).signOut();
           if (context.mounted) {
             context.go('/');
           }
@@ -164,13 +165,13 @@ class AuthButtonWidget extends ConsumerWidget {
         width: 36,
         height: 36,
         decoration: BoxDecoration(
-          color: authState.authStatus == AuthStatus.authenticated
+          color: authState.isAuthenticated
             ? Colors.red.withValues( alpha: .45 )
             : Colors.blueAccent.withValues( alpha: .45 ),
           borderRadius: BorderRadius.circular(18),
         ),
         child: Icon(
-          authState.authStatus == AuthStatus.authenticated 
+          authState.isAuthenticated
             ? Icons.logout 
             : Icons.person,
           color: Colors.white,

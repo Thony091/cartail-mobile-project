@@ -4,10 +4,9 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import 'package:portafolio_project/features/realized_work/presentation/pages/modern_work_detail_widgets.dart';
-
 import '../../../auth/presentation/providers/auth_provider.dart';
-import '../../../shared/presentation/shared/widgets/modern_button.dart';
 import '../../../../presentation/pages/auth/modern_scaffold_with_drawer.dart';
+import '../providers/work_provider.dart';
 
 class ModernWorkDetailPage extends ConsumerStatefulWidget {
   final String workId;
@@ -21,235 +20,377 @@ class ModernWorkDetailPage extends ConsumerStatefulWidget {
 
 class ModernWorkDetailPageState extends ConsumerState<ModernWorkDetailPage> {
   final _formKey = GlobalKey<FormState>();
-  final _titleController = TextEditingController();
-  final _descriptionController = TextEditingController();
-  final _vehicleController = TextEditingController();
-
-  bool _isEditMode = false;
-  bool _isLoading = false;
-  bool _isSaving = false;
-  bool _isFeatured = false;
-  List<String> _selectedImages = [];
-  DateTime _completedDate = DateTime.now();
-
-  @override
-  void initState() {
-    super.initState();
-    _loadWork();
-  }
-
-  @override
-  void dispose() {
-    _titleController.dispose();
-    _descriptionController.dispose();
-    _vehicleController.dispose();
-    super.dispose();
-  }
-
-  void _loadWork() async {
-    if (widget.workId == 'new') {
-      setState(() {
-        _isEditMode = true;
-        _isLoading = false;
-      });
-      return;
-    }
-
-    setState(() => _isLoading = true);
-
-    // Simular carga
-    await Future.delayed(const Duration(milliseconds: 500));
-
-    _titleController.text = 'Renault Duster Detailing Premium';
-    _descriptionController.text =
-        'Transformación completa de Renault Duster con servicio de detailing premium. Se realizó lavado profundo, pulido de carrocería, tratamiento de cuero interior y encerado profesional.';
-    _vehicleController.text = 'Renault Duster 2019';
-    _isFeatured = true;
-
-    setState(() => _isLoading = false);
-  }
 
   @override
   Widget build(BuildContext context) {
     final authState = ref.watch(authProvider);
+    final workState = ref.watch(workProvider(widget.workId));
+    final work = workState.work;
+
+    if (workState.isLoading) {
+      return const ModernScaffoldWithDrawer(
+        title: 'Cargando...',
+        body: Center(child: CircularProgressIndicator()),
+      );
+    }
+
+    if (work == null) {
+      return const ModernScaffoldWithDrawer(
+        title: 'Error',
+        body: Center(child: Text('No se pudo cargar el trabajo')),
+      );
+    }
+
+    final workNotifier = ref.read(workProvider(widget.workId).notifier);
     final isAdmin = authState.userData?.isAdmin ?? false;
-    // final isAdmin = true; // Simular admin
     final isNewWork = widget.workId == 'new';
+    final isEditMode = workState.isEditMode;
 
     return ModernScaffoldWithDrawer(
       title: isNewWork
-          ? 'Nuevo Trabajo'
-          : _isEditMode
-          ? 'Editar Trabajo'
-          : 'Detalles del Trabajo',
+          ? 'Crear Trabajo'
+          : isEditMode
+              ? 'Editar Trabajo'
+              : 'Detalles del Trabajo',
       appBarActions: [
-        if (!isNewWork && isAdmin && !_isEditMode)
+        if (!isNewWork && isAdmin && !isEditMode)
           IconButton(
             icon: const Icon(Icons.edit, color: Colors.white),
-            onPressed: () => setState(() => _isEditMode = true),
+            onPressed: () => workNotifier.setEditMode(true),
+          ),
+        if (isEditMode && !isNewWork)
+          IconButton(
+            icon: const Icon(Icons.close, color: Colors.white),
+            onPressed: () => workNotifier.setEditMode(false),
           ),
       ],
-      body: _isLoading
-          ? const Center(child: CircularProgressIndicator())
-          : Container(
-              decoration: BoxDecoration(
-                gradient: LinearGradient(
-                  begin: Alignment.topCenter,
-                  end: Alignment.bottomCenter,
-                  colors: [
-                    const Color(0xFF667eea).withOpacity(0.1),
-                    const Color(0xFFf8fafc),
-                  ],
-                ),
-              ),
-              child: SingleChildScrollView(
-                padding: const EdgeInsets.all(20),
-                child: Form(
-                  key: _formKey,
+      body: Container(
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+            colors: [
+              Colors.white,
+              const Color(0xFF667eea).withValues(alpha: 0.03),
+              const Color(0xFF764ba2).withValues(alpha: 0.03),
+            ],
+          ),
+        ),
+        child: SingleChildScrollView(
+          physics: const BouncingScrollPhysics(),
+          padding: EdgeInsets.only(
+            left: 16,
+            right: 16,
+            top: isEditMode ? 8 : 0,
+            bottom: isEditMode ? 100 : 20,
+          ),
+          child: Form(
+            key: _formKey,
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                if (isEditMode) ...[
+                  // Header con indicador de progreso para modo creación
+                  if (widget.workId == 'new')
+                    FadeInDown(
+                      child: Container(
+                        margin: const EdgeInsets.only(bottom: 16, top: 8),
+                        padding: const EdgeInsets.all(16),
+                        decoration: BoxDecoration(
+                          gradient: const LinearGradient(
+                            colors: [Color(0xFF667eea), Color(0xFF764ba2)],
+                          ),
+                          borderRadius: BorderRadius.circular(16),
+                          boxShadow: [
+                            BoxShadow(
+                              color: const Color(0xFF667eea).withValues(alpha: 0.3),
+                              blurRadius: 12,
+                              offset: const Offset(0, 4),
+                            ),
+                          ],
+                        ),
+                        child: Row(
+                          children: [
+                            Container(
+                              padding: const EdgeInsets.all(12),
+                              decoration: BoxDecoration(
+                                color: Colors.white.withValues(alpha: 0.2),
+                                borderRadius: BorderRadius.circular(12),
+                              ),
+                              child: const Icon(
+                                Icons.add_business,
+                                color: Colors.white,
+                                size: 28,
+                              ),
+                            ),
+                            const SizedBox(width: 16),
+                            const Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    'Crear Nuevo Trabajo',
+                                    style: TextStyle(
+                                      color: Colors.white,
+                                      fontSize: 18,
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                  ),
+                                  SizedBox(height: 4),
+                                  Text(
+                                    'Completa todos los campos requeridos',
+                                    style: TextStyle(
+                                      color: Colors.white70,
+                                      fontSize: 13,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                ],
+
+                // Galería de imágenes con diseño mejorado
+                FadeInDown(
+                  duration: const Duration(milliseconds: 600),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      // Galería de fotos
-                      FadeInDown(
-                        child: WorkPhotoGallery(
-                          selectedImages: _selectedImages,
-                          isEditMode: _isEditMode,
-                          onPickImages: _pickImages,
-                        ),
-                      ),
-
-                      const SizedBox(height: 24),
-
-                      // Información principal
-                      FadeInUp(
-                        delay: const Duration(milliseconds: 100),
-                        child: WorkMainInfo(
-                          isEditMode: _isEditMode,
-                          titleController: _titleController,
-                          vehicleController: _vehicleController,
-                          isFeatured: _isFeatured,
-                          onFeaturedChanged: (value) =>
-                              setState(() => _isFeatured = value!),
-                        ),
-                      ),
-
-                      const SizedBox(height: 20),
-
-                      // Descripción
-                      FadeInUp(
-                        delay: const Duration(milliseconds: 200),
-                        child: WorkDescription(
-                          isEditMode: _isEditMode,
-                          descriptionController: _descriptionController,
-                        ),
-                      ),
-
-                      const SizedBox(height: 20),
-
-                      // Detalles adicionales
-                      FadeInUp(
-                        delay: const Duration(milliseconds: 300),
-                        child: WorkAdditionalDetails(
-                          isEditMode: _isEditMode,
-                          completedDate: _completedDate,
-                          onDateTap: () async {
-                            final date = await showDatePicker(
-                              context: context,
-                              initialDate: _completedDate,
-                              firstDate: DateTime(2020),
-                              lastDate: DateTime.now(),
-                            );
-                            if (date != null) {
-                              setState(() => _completedDate = date);
-                            }
-                          },
-                        ),
-                      ),
-
-                      const SizedBox(height: 32),
-
-                      // Botones
-                      if (_isEditMode)
-                        FadeInUp(
-                          delay: const Duration(milliseconds: 400),
-                          child: WorkActionButtons(
-                            isNewWork: isNewWork,
-                            isSaving: _isSaving,
-                            onSave: _saveWork,
-                            onDelete: _deleteWork,
+                      if (isEditMode)
+                        const Padding(
+                          padding: EdgeInsets.only(bottom: 12, left: 4),
+                          child: Row(
+                            children: [
+                              Icon(
+                                Icons.image_outlined,
+                                color: Color(0xFF667eea),
+                                size: 20,
+                              ),
+                              SizedBox(width: 8),
+                              Text(
+                                'Imágenes del Trabajo',
+                                style: TextStyle(
+                                  fontSize: 16,
+                                  fontWeight: FontWeight.w600,
+                                  color: Color(0xFF2c3e50),
+                                ),
+                              ),
+                              SizedBox(width: 4),
+                              Text(
+                                '*',
+                                style: TextStyle(
+                                  color: Color(0xFFe74c3c),
+                                  fontSize: 16,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                            ],
                           ),
                         ),
+                      WorkPhotoGallery(
+                        work: work,
+                        isEditMode: isEditMode,
+                      ),
                     ],
                   ),
                 ),
-              ),
+
+                SizedBox(height: isEditMode ? 28 : 24),
+
+                // Información básica con header
+                FadeInUp(
+                  delay: const Duration(milliseconds: 100),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      if (isEditMode)
+                        const Padding(
+                          padding: EdgeInsets.only(bottom: 12, left: 4),
+                          child: Row(
+                            children: [
+                              Icon(
+                                Icons.edit_note,
+                                color: Color(0xFF667eea),
+                                size: 20,
+                              ),
+                              SizedBox(width: 8),
+                              Text(
+                                'Información Básica',
+                                style: TextStyle(
+                                  fontSize: 16,
+                                  fontWeight: FontWeight.w600,
+                                  color: Color(0xFF2c3e50),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      WorkBasicInfo(
+                        workId: widget.workId,
+                        work: work,
+                        isEditMode: isEditMode,
+                      ),
+                    ],
+                  ),
+                ),
+
+                SizedBox(height: isEditMode ? 24 : 20),
+
+                // Descripción con header
+                FadeInUp(
+                  delay: const Duration(milliseconds: 200),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      if (isEditMode)
+                        const Padding(
+                          padding: EdgeInsets.only(bottom: 12, left: 4),
+                          child: Row(
+                            children: [
+                              Icon(
+                                Icons.description_outlined,
+                                color: Color(0xFF667eea),
+                                size: 20,
+                              ),
+                              SizedBox(width: 8),
+                              Text(
+                                'Descripción',
+                                style: TextStyle(
+                                  fontSize: 16,
+                                  fontWeight: FontWeight.w600,
+                                  color: Color(0xFF2c3e50),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      WorkDescription(
+                        isEditMode: isEditMode,
+                        workId: widget.workId,
+                        work: work,
+                      ),
+                    ],
+                  ),
+                ),
+
+                SizedBox(height: isEditMode ? 24 : 20),
+
+                // Testimonio y calificación con header
+                FadeInUp(
+                  delay: const Duration(milliseconds: 300),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      if (isEditMode)
+                        const Padding(
+                          padding: EdgeInsets.only(bottom: 12, left: 4),
+                          child: Row(
+                            children: [
+                              Icon(
+                                Icons.rate_review_outlined,
+                                color: Color(0xFF667eea),
+                                size: 20,
+                              ),
+                              SizedBox(width: 8),
+                              Text(
+                                'Testimonio y Calificación',
+                                style: TextStyle(
+                                  fontSize: 16,
+                                  fontWeight: FontWeight.w600,
+                                  color: Color(0xFF2c3e50),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      WorkTestimonialAndRating(
+                        isEditMode: isEditMode,
+                        workId: widget.workId,
+                        work: work,
+                      ),
+                    ],
+                  ),
+                ),
+
+                SizedBox(height: isEditMode ? 24 : 20),
+
+                // Fecha con header
+                FadeInUp(
+                  delay: const Duration(milliseconds: 350),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      if (isEditMode)
+                        const Padding(
+                          padding: EdgeInsets.only(bottom: 12, left: 4),
+                          child: Row(
+                            children: [
+                              Icon(
+                                Icons.calendar_today_outlined,
+                                color: Color(0xFF667eea),
+                                size: 20,
+                              ),
+                              SizedBox(width: 8),
+                              Text(
+                                'Fecha del Trabajo',
+                                style: TextStyle(
+                                  fontSize: 16,
+                                  fontWeight: FontWeight.w600,
+                                  color: Color(0xFF2c3e50),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      WorkDateSection(
+                        isEditMode: isEditMode,
+                        workId: widget.workId,
+                        work: work,
+                      ),
+                    ],
+                  ),
+                ),
+
+                SizedBox(height: isEditMode ? 32 : 32),
+
+                // Botones de acción con diseño mejorado
+                if (isEditMode)
+                  FadeInUp(
+                    delay: const Duration(milliseconds: 400),
+                    child: Column(
+                      children: [
+                        // Divider decorativo
+                        Container(
+                          margin: const EdgeInsets.only(bottom: 24),
+                          height: 1,
+                          decoration: BoxDecoration(
+                            gradient: LinearGradient(
+                              colors: [
+                                Colors.transparent,
+                                const Color(0xFF667eea).withValues(alpha: 0.3),
+                                Colors.transparent,
+                              ],
+                            ),
+                          ),
+                        ),
+                        WorkActionButtons(
+                          workId: widget.workId,
+                          work: work,
+                        ),
+                      ],
+                    ),
+                  ),
+
+                // Espaciado adicional al final
+                const SizedBox(height: 20),
+              ],
             ),
-    );
-  }
-
-  void _pickImages() {
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('Selector de imágenes próximamente')),
-    );
-  }
-
-  Future<void> _saveWork() async {
-    if (!_formKey.currentState!.validate()) return;
-
-    setState(() => _isSaving = true);
-
-    try {
-      await Future.delayed(const Duration(seconds: 1));
-
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(
-              widget.workId == 'new' ? 'Trabajo creado' : 'Cambios guardados',
-            ),
-            backgroundColor: const Color(0xFF27ae60),
           ),
-        );
-
-        if (widget.workId == 'new') {
-          context.pop();
-        } else {
-          setState(() => _isEditMode = false);
-        }
-      }
-    } finally {
-      if (mounted) setState(() => _isSaving = false);
-    }
-  }
-
-  Future<void> _deleteWork() async {
-    final confirmed = await showDialog<bool>(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Eliminar Trabajo'),
-        content: const Text('¿Estás seguro? Esta acción no se puede deshacer.'),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(context).pop(false),
-            child: const Text('Cancelar'),
-          ),
-          ModernButton(
-            text: 'Eliminar',
-            style: ModernButtonStyle.danger,
-            onPressed: () => Navigator.of(context).pop(true),
-          ),
-        ],
+        ),
       ),
     );
-
-    if (confirmed == true && mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Trabajo eliminado'),
-          backgroundColor: Color(0xFFe74c3c),
-        ),
-      );
-      context.pop();
-    }
   }
 }

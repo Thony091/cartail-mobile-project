@@ -1,7 +1,7 @@
 import 'package:animate_do/animate_do.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:portafolio_project/features/auth/presentation/providers/auth_provider.dart';
+import 'package:portafolio_project/features/auth/presentation/providers/better_auth_provider.dart';
 import 'package:portafolio_project/presentation/pages/auth/modern_scaffold_with_drawer.dart';
 
 import '../../../shared/presentation/shared/widgets/modern_button.dart';
@@ -32,13 +32,21 @@ class ModernEditProfilePageState extends ConsumerState<ModernEditProfilePage> {
   }
 
   void _loadUserData() {
-    final authState = ref.read(authProvider).userData!;
+    final authState = ref.read(betterAuthProvider).user;
+    if (authState == null) {
+      _nameController.text = '';
+      _rutController.text = '';
+      _birthdayController.text = '';
+      _phoneController.text = '';
+      _bioController.text = '';
+      return;
+    }
     // Cargar datos actuales del usuario
-    _nameController.text = authState.nombre;
-    _rutController.text = authState.rut;
-    _birthdayController.text = authState.fechaNacimiento;
-    _phoneController.text = authState.telefono;
-    _bioController.text = authState.bio;
+    _nameController.text = authState.name ?? '';
+    _rutController.text = authState.rut ?? '';
+    _birthdayController.text = authState.birthday ?? '';
+    _phoneController.text = authState.phone ?? '';
+    _bioController.text = authState.bio ?? '';
   }
 
   @override

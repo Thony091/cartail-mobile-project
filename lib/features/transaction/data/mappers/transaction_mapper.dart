@@ -5,16 +5,18 @@ import '../models/transaction_item_model.dart';
 class TransactionMapper {
   static Transaction jsonToEntity(Map<String, dynamic> json) => Transaction(
     id: json['id'] as int,
-    date: json['date'] != null
-      ? DateTime.parse(json['date'] as String)
-      : DateTime.now(),
+    date: json['fecha'] != null
+      ? DateTime.parse(json['fecha'] as String)
+      : json['date'] != null
+        ? DateTime.parse(json['date'] as String)
+        : DateTime.now(),
     createdAt: json['created_at'] != null
       ? DateTime.parse(json['created_at'] as String)
       : DateTime.now(),
     updatedAt: json['updated_at'] != null
       ? DateTime.parse(json['updated_at'] as String)
       : DateTime.now(),
-    transactionId: json['id_transaction'] as int,
+    transactionId: json['id_transaction'] as int? ?? json['id'] as int,
     reservationId: json['id_reservation'] as int?,
     items: json['items'] != null
       ? (json['items'] as List)
@@ -25,7 +27,7 @@ class TransactionMapper {
 
   static Map<String, dynamic> entityToJson(Transaction transaction) => {
     'id': transaction.id,
-    'date': transaction.date.toIso8601String(),
+    'fecha': transaction.date.toIso8601String(),
     'created_at': transaction.createdAt.toIso8601String(),
     'updated_at': transaction.updatedAt.toIso8601String(),
     'id_transaction': transaction.transactionId,

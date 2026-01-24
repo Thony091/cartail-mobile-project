@@ -2,31 +2,49 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import 'package:portafolio_project/features/auth/presentation/providers/auth_provider.dart';
-import 'package:portafolio_project/features/shared/presentation/providers/forms/login_form_provider.dart';
+import 'package:portafolio_project/features/auth/presentation/providers/better_auth_provider.dart';
+import 'package:portafolio_project/features/auth/presentation/providers/forms/login_form_provider.dart';
 import 'package:portafolio_project/features/shared/presentation/shared/widgets/modern_button.dart';
 import 'package:portafolio_project/features/shared/presentation/shared/widgets/modern_input_field.dart';
 
-class LoginForm extends ConsumerWidget {
+class LoginForm extends ConsumerStatefulWidget {
   const LoginForm({super.key});
 
-  void showSnackBar( BuildContext context, String message ){
-    ScaffoldMessenger.of(context).hideCurrentSnackBar();
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text(message))
+  @override
+  ConsumerState<LoginForm> createState() => _LoginFormState();
+}
+
+class _LoginFormState extends ConsumerState<LoginForm> {
+  late final ProviderSubscription<BetterAuthState> _authListener;
+
+  @override
+  void initState() {
+    super.initState();
+
+    _authListener = ref.listenManual<BetterAuthState>(
+      betterAuthProvider,
+      (previous, next) {
+        final errorMessage = next.errorMessage;
+        if (errorMessage == null || errorMessage.isEmpty) return;
+        if (previous?.errorMessage == errorMessage) return;
+        ScaffoldMessenger.of(context).hideCurrentSnackBar();
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(errorMessage)),
+        );
+      },
     );
   }
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  void dispose() {
+    _authListener.close();
+    super.dispose();
+  }
 
-    final loginFormNotifier = ref.read( loginFormProvider.notifier );
-    final loginForm         = ref.watch( loginFormProvider );
-
-    ref.listen(authProvider, (previous, next) { 
-      if ( next.errorMessage.isEmpty )  return;
-      showSnackBar( context, next.errorMessage );
-    });
+  @override
+  Widget build(BuildContext context) {
+    final loginFormNotifier = ref.read(authLoginFormProvider.notifier);
+    final loginForm = ref.watch(authLoginFormProvider);
 
     return Form(
       child: Column(
@@ -42,20 +60,18 @@ class LoginForm extends ConsumerWidget {
           ),
 
           const SizedBox(height: 20),
-          
           ModernInputField(
             label: 'Correo Electrónico',
             hint: 'ejemplo@correo.com',
             keyboardType: TextInputType.emailAddress,
             prefixIcon: const Icon(Icons.email_outlined),
-            onChanged: ref.read(loginFormProvider.notifier).onEmailChange,
+            onChanged: loginFormNotifier.onEmailChange,
             errorMessage: loginForm.isFormPosted
               ? loginForm.email.errorMessage
               : null,
           ),
           
           const SizedBox(height: 20),
-          
           ModernInputField(
             label: 'Contraseña',
             hint: '••••••••',
@@ -67,7 +83,8 @@ class LoginForm extends ConsumerWidget {
                   ? Icons.visibility_outlined
                   : Icons.visibility_off_outlined,
               ),
-              onPressed: () => loginFormNotifier.changeObscurePassword(!loginForm.isObscurePassword),
+              onPressed: () => loginFormNotifier
+                  .changeObscurePassword(!loginForm.isObscurePassword),
             ),
             onChanged: loginFormNotifier.onPasswordChanged,
             errorMessage: loginForm.isFormPosted

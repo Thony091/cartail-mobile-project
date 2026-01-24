@@ -215,7 +215,7 @@ class AdminSuccessResponse {
 
   factory AdminSuccessResponse.fromJson(Map<String, dynamic> json) {
     return AdminSuccessResponse(
-      success: json['success'] as bool? ?? false,
+      success: json['success'] as bool? ?? json['status'] as bool? ?? false,
     );
   }
 }

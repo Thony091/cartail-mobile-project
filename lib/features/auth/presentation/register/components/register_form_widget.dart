@@ -2,14 +2,49 @@ import 'package:animate_do/animate_do.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:portafolio_project/features/auth/presentation/providers/better_auth_provider.dart';
+import 'package:portafolio_project/features/auth/presentation/providers/forms/register_form_provider.dart';
 import 'package:portafolio_project/presentation/presentation_container.dart';
 
-class RegisterFormWidget extends ConsumerWidget {
+class RegisterFormWidget extends ConsumerStatefulWidget {
   const RegisterFormWidget({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final registerForm = ref.watch(( registerFormProvider ));
+  ConsumerState<RegisterFormWidget> createState() =>
+      _RegisterFormWidgetState();
+}
+
+class _RegisterFormWidgetState extends ConsumerState<RegisterFormWidget> {
+  late final ProviderSubscription<BetterAuthState> _authListener;
+
+  @override
+  void initState() {
+    super.initState();
+
+    _authListener = ref.listenManual<BetterAuthState>(
+      betterAuthProvider,
+      (previous, next) {
+      final errorMessage = next.errorMessage;
+      if (errorMessage == null || errorMessage.isEmpty) return;
+      if (previous?.errorMessage == errorMessage) return;
+      ScaffoldMessenger.of(context).hideCurrentSnackBar();
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(errorMessage)),
+      );
+      },
+    );
+  }
+
+  @override
+  void dispose() {
+    _authListener.close();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final registerFormState = ref.watch(authRegisterFormProvider);
+    final registerFormNotifier = ref.read(authRegisterFormProvider.notifier);
 
     return Container(
       decoration: BoxDecoration(
@@ -60,9 +95,9 @@ class RegisterFormWidget extends ConsumerWidget {
                           label: 'Nombre Completo (*)',
                           hint: 'Ej: Juan Pérez',
                           prefixIcon: const Icon(Icons.person),
-                          onChanged: ref.read( registerFormProvider.notifier ).onNameChange,
-                          errorMessage: registerForm.isFormPosted
-                            ? registerForm.name.errorMessage
+                          onChanged: registerFormNotifier.onNameChange,
+                          errorMessage: registerFormState.isFormPosted
+                            ? registerFormState.name.errorMessage
                             : null,
                         ),
                         const SizedBox(height: 20),
@@ -70,23 +105,23 @@ class RegisterFormWidget extends ConsumerWidget {
                           label: 'RUT (*)',
                           hint: 'Ej: 12345678-9',
                           prefixIcon: const Icon(Icons.badge),
-                          onChanged: ref.read( registerFormProvider.notifier ).onRutChange,
-                          errorMessage: registerForm.isFormPosted
-                            ? registerForm.rut.errorMessage
+                          onChanged: registerFormNotifier.onRutChange,
+                          errorMessage: registerFormState.isFormPosted
+                            ? registerFormState.rut.errorMessage
                             : null,
                         ),
                         const SizedBox(height: 20),
                         ModernInputField(
                           label: 'Fecha de Nacimiento',
-                          hint: registerForm.birthday.value.isEmpty 
+                          hint: registerFormState.birthday.value.isEmpty 
                             ? 'DD/MM/AAAA' 
-                            : registerForm.birthday.value,
+                            : registerFormState.birthday.value,
                           prefixIcon: const Icon(Icons.calendar_today),
                           readOnly: true,
                           onTap: () => _selectBirthday(context, ref),
-                          onChanged: ref.read( registerFormProvider.notifier ).onBirthayChange,
-                          errorMessage: registerForm.isFormPosted
-                            ? registerForm.birthday.errorMessage
+                          onChanged: registerFormNotifier.onBirthayChange,
+                          errorMessage: registerFormState.isFormPosted
+                            ? registerFormState.birthday.errorMessage
                             : null,
                         ),
                         const SizedBox(height: 20),
@@ -95,9 +130,9 @@ class RegisterFormWidget extends ConsumerWidget {
                           hint: 'ejemplo@correo.com',
                           keyboardType: TextInputType.emailAddress,
                           prefixIcon: const Icon(Icons.email),
-                          onChanged: ref.read( registerFormProvider.notifier ).onEmailChange,
-                          errorMessage: registerForm.isFormPosted
-                            ? registerForm.email.errorMessage
+                          onChanged: registerFormNotifier.onEmailChange,
+                          errorMessage: registerFormState.isFormPosted
+                            ? registerFormState.email.errorMessage
                             : null,
                         ),
                         
@@ -108,28 +143,28 @@ class RegisterFormWidget extends ConsumerWidget {
                           hint: 'Ej: 987654321',
                           keyboardType: TextInputType.phone,
                           prefixIcon: const Icon(Icons.phone),
-                          onChanged: ref.read( registerFormProvider.notifier ).onPhoneChange,
-                          errorMessage: registerForm.isFormPosted
-                            ? registerForm.phone.errorMessage
+                          onChanged: registerFormNotifier.onPhoneChange,
+                          errorMessage: registerFormState.isFormPosted
+                            ? registerFormState.phone.errorMessage
                             : null,
                         ),
                         const SizedBox(height: 20),
                         ModernInputField(
                           label: 'Contraseña (*)',
                           hint: 'Mínimo 6 caracteres',
-                          obscureText: registerForm.isObscurePassword,
+                          obscureText: registerFormState.isObscurePassword,
                           prefixIcon: const Icon(Icons.lock),
                           suffixIcon: IconButton(
                             icon: Icon(
-                              registerForm.isObscurePassword
+                              registerFormState.isObscurePassword
                                 ? Icons.visibility_outlined
                                 : Icons.visibility_off_outlined,
                             ),
-                            onPressed: () => ref.read( registerFormProvider.notifier ).onObscurePasswordChanged(!registerForm.isObscurePassword),
+                            onPressed: () => registerFormNotifier.onObscurePasswordChanged(!registerFormState.isObscurePassword),
                           ),
-                          onChanged: ref.read( registerFormProvider.notifier ).onPasswordChanged,
-                          errorMessage: registerForm.isFormPosted
-                            ? registerForm.password.errorMessage
+                          onChanged: registerFormNotifier.onPasswordChanged,
+                          errorMessage: registerFormState.isFormPosted
+                            ? registerFormState.password.errorMessage
                             : null,
                         ),
                         const SizedBox(height: 32),
@@ -138,12 +173,12 @@ class RegisterFormWidget extends ConsumerWidget {
                           child: ModernButton(
                             text: 'Crear Cuenta',
                             icon: Icons.person_add,
-                            onPressed: registerForm.isPosting
+                            onPressed: registerFormState.isPosting
                               ? null
                               : () async {
-                                final bool value = await ref.read( registerFormProvider.notifier ).onFormSubmit();
+                                final bool value = await registerFormNotifier.onFormSubmit();
                                 if ( !context.mounted ) return;
-                                if ( registerForm.isValid && value == true ) {
+                                if ( registerFormState.isValid && value == true ) {
                                   showDialog(
                                     context: context, 
                                     builder: (context) => const PopUpMensajeFinalWidget( text: 'Se ha Registrado Exitosamente!' ),
@@ -198,7 +233,7 @@ class RegisterFormWidget extends ConsumerWidget {
       final birthday = '${picked.day.toString().padLeft(2, '0')}/'
         '${picked.month.toString().padLeft(2, '0')}/'
         '${picked.year}';
-      ref.read( registerFormProvider.notifier ).onBirthayChange( birthday );
+      ref.read(authRegisterFormProvider.notifier).onBirthayChange(birthday);
     }
   }
 }

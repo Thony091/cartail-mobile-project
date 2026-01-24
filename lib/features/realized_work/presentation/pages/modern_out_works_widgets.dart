@@ -1,3 +1,6 @@
+import 'dart:convert';
+import 'dart:io';
+
 import 'package:animate_do/animate_do.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_staggered_grid_view/flutter_staggered_grid_view.dart';
@@ -123,6 +126,7 @@ class UserWorkCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final imageProvider = _buildImageProvider(work.image);
     return GestureDetector(
       onTap: onTap,
       child: ModernCard(
@@ -137,9 +141,9 @@ class UserWorkCard extends StatelessWidget {
               ),
               child: AspectRatio(
                 aspectRatio: 1.2,
-                child: work.image.isNotEmpty
-                    ? Image.network(
-                        work.image,
+                child: imageProvider != null
+                    ? Image(
+                        image: imageProvider,
                         fit: BoxFit.cover,
                         errorBuilder: (context, error, stackTrace) {
                           return Container(
@@ -227,6 +231,7 @@ class AdminWorkCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final imageProvider = _buildImageProvider(work.image);
     return Dismissible(
       key: Key(work.id),
       direction: DismissDirection.horizontal,
@@ -259,9 +264,9 @@ class AdminWorkCard extends StatelessWidget {
                 width: 80,
                 height: 80,
                 color: const Color(0xFF3498db).withOpacity(0.1),
-                child: work.image.isNotEmpty
-                    ? Image.network(
-                        work.image,
+                child: imageProvider != null
+                    ? Image(
+                        image: imageProvider,
                         fit: BoxFit.cover,
                         errorBuilder: (context, error, stackTrace) {
                           return const Icon(
@@ -526,5 +531,21 @@ Color getCategoryColor(String category) {
       return const Color(0xFF27ae60);
     default:
       return const Color(0xFF7f8c8d);
+  }
+}
+
+ImageProvider? _buildImageProvider(String path) {
+  if (path.isEmpty) return null;
+  if (path.startsWith('http')) {
+    return NetworkImage(path);
+  }
+  final file = File(path);
+  if (file.existsSync()) {
+    return FileImage(file);
+  }
+  try {
+    return MemoryImage(base64Decode(path));
+  } catch (_) {
+    return null;
   }
 }

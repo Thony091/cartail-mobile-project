@@ -97,7 +97,7 @@ class ServiceDetailModal extends StatelessWidget {
                   const SizedBox(height: 24),
 
                   // Caracteristicas del servicio
-                  _buildFeaturesSection(),
+                  // _buildFeaturesSection(),
 
                   const SizedBox(height: 24),
 
@@ -267,25 +267,25 @@ class ServiceDetailModal extends StatelessWidget {
     );
   }
 
-  Widget _buildFeaturesSection() {
-    final features = _getServiceFeatures();
+  // Widget _buildFeaturesSection() {
+  //   final features = _getServiceFeatures();
 
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        const Text(
-          'Incluye',
-          style: TextStyle(
-            fontSize: 18,
-            fontWeight: FontWeight.w700,
-            color: Color(0xFF2c3e50),
-          ),
-        ),
-        const SizedBox(height: 16),
-        ...features.map((feature) => _buildFeatureItem(feature)),
-      ],
-    );
-  }
+  //   return Column(
+  //     crossAxisAlignment: CrossAxisAlignment.start,
+  //     children: [
+  //       const Text(
+  //         'Incluye',
+  //         style: TextStyle(
+  //           fontSize: 18,
+  //           fontWeight: FontWeight.w700,
+  //           color: Color(0xFF2c3e50),
+  //         ),
+  //       ),
+  //       const SizedBox(height: 16),
+  //       ...features.map((feature) => _buildFeatureItem(feature)),
+  //     ],
+  //   );
+  // }
 
   List<String> _getServiceFeatures() {
     switch (getServiceCategory(service).toLowerCase()) {
@@ -369,11 +369,11 @@ class ServiceDetailModal extends StatelessWidget {
       padding: const EdgeInsets.all(16),
       child: Column(
         children: [
-          _buildInfoRow(Icons.access_time, 'Duracion estimada', '1-2 horas'),
+          _buildInfoRow(Icons.access_time, 'Duracion estimada', '${(service.durationMinutes/60).toStringAsFixed(0).toString()} horas'),
           const Divider(height: 24),
           _buildInfoRow(Icons.verified, 'Garantia', '30 dias'),
-          const Divider(height: 24),
-          _buildInfoRow(Icons.star, 'Calificacion', '4.8/5.0'),
+          // const Divider(height: 24),
+          // _buildInfoRow(Icons.star, 'Calificacion', '4.8/5.0'),
         ],
       ),
     );
@@ -421,27 +421,27 @@ class ServiceDetailModal extends StatelessWidget {
       child: SafeArea(
         child: Row(
           children: [
-            Expanded(
-              child: ModernButton(
-                text: 'Agregar al Carrito',
-                icon: Icons.shopping_cart_outlined,
-                style: ModernButtonStyle.primary,
-                onPressed: () {
-                  onAddToCart?.call();
-                  Navigator.of(context).pop();
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(
-                      content: Text('${service.name} agregado al carrito'),
-                      backgroundColor: const Color(0xFF27ae60),
-                      behavior: SnackBarBehavior.floating,
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(10),
-                      ),
-                    ),
-                  );
-                },
-              ),
-            ),
+            // Expanded(
+            //   child: ModernButton(
+            //     text: 'Agregar al Carrito',
+            //     icon: Icons.shopping_cart_outlined,
+            //     style: ModernButtonStyle.primary,
+            //     onPressed: () {
+            //       onAddToCart?.call();
+            //       Navigator.of(context).pop();
+            //       ScaffoldMessenger.of(context).showSnackBar(
+            //         SnackBar(
+            //           content: Text('${service.name} agregado al carrito'),
+            //           backgroundColor: const Color(0xFF27ae60),
+            //           behavior: SnackBarBehavior.floating,
+            //           shape: RoundedRectangleBorder(
+            //             borderRadius: BorderRadius.circular(10),
+            //           ),
+            //         ),
+            //       );
+            //     },
+            //   ),
+            // ),
             const SizedBox(width: 12),
             Expanded(
               child: ModernButton(

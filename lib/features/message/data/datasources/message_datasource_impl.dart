@@ -29,15 +29,15 @@ class MessageDatasourceImpl extends MessageDatasource {
     String message,
   ) async {
     try {
-      final data = {'name': name, 'email': email, 'message': message};
+      final data = {'nombre': name, 'email': email, 'mensaje': message};
 
       final response = await dio.post('/mensaje', data: data);
 
       Message messsage = Message(id: '', name: '', email: '', message: '');
       if (response.statusCode == 200) {
-        var data = response.data;
-        if (data is Map<String, dynamic> && data.containsKey('data')) {
-          messsage = MessageMapper.jsonToEntity(data['data']);
+        final data = _extractData(response.data);
+        if (data is Map<String, dynamic>) {
+          messsage = MessageMapper.jsonToEntity(data);
         }
       }
       return messsage;
@@ -61,9 +61,9 @@ class MessageDatasourceImpl extends MessageDatasource {
       final response = await dio.get('/mensaje/$id');
       Message message = Message(id: '', name: '', email: '', message: '');
       if (response.statusCode == 200) {
-        var data = response.data;
-        if (data is Map<String, dynamic> && data.containsKey('data')) {
-          message = MessageMapper.jsonToEntity(data['data']);
+        final data = _extractData(response.data);
+        if (data is Map<String, dynamic>) {
+          message = MessageMapper.jsonToEntity(data);
         }
       }
       return message;
@@ -81,11 +81,10 @@ class MessageDatasourceImpl extends MessageDatasource {
       final response = await dio.get('/mensaje');
       final List<Message> messages = [];
       if (response.statusCode == 200) {
-        var data = response.data;
-        if (data is Map<String, dynamic> && data.containsKey('data')) {
-          var messagesData = data['data'];
-          if (messagesData is List) {
-            for (final message in messagesData) {
+        final data = _extractData(response.data);
+        if (data is List) {
+          for (final message in data) {
+            if (message is Map<String, dynamic>) {
               messages.add(MessageMapper.jsonToEntity(message));
             }
           }
@@ -95,5 +94,12 @@ class MessageDatasourceImpl extends MessageDatasource {
     } catch (e) {
       throw e;
     }
+  }
+
+  dynamic _extractData(dynamic responseData) {
+    if (responseData is Map<String, dynamic> && responseData.containsKey('data')) {
+      return responseData['data'];
+    }
+    return responseData;
   }
 }

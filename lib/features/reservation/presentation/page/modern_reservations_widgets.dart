@@ -1,9 +1,12 @@
 import 'package:animate_do/animate_do.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../shared/presentation/shared/widgets/modern_button.dart';
 import '../../../shared/presentation/shared/widgets/modern_card.dart';
 import '../../../shared/presentation/shared/widgets/modern_input_field.dart';
+import '../../../auth/presentation/providers/auth_provider.dart';
+import '../providers/reservation_form_provider.dart';
 
 class ServiceOption {
   final String id;
@@ -66,54 +69,40 @@ class ReservationHeader extends StatelessWidget {
   }
 }
 
-class ReservationForm extends StatefulWidget {
+class ReservationForm extends ConsumerWidget {
   final List<ServiceOption> services;
   final GlobalKey<FormState> formKey;
-  final bool isLoading;
   final VoidCallback onSubmit;
 
   const ReservationForm({
     super.key,
     required this.services,
     required this.formKey,
-    required this.isLoading,
     required this.onSubmit,
   });
 
   @override
-  State<ReservationForm> createState() => ReservationFormState();
-}
+  Widget build(BuildContext context, WidgetRef ref) {
+    final formState = ref.watch(reservationFormProvider);
+    final formNotifier = ref.read(reservationFormProvider.notifier);
+    final authState = ref.watch(authProvider);
+    final isAuthenticated = authState.authStatus == AuthStatus.authenticated;
+    final userData = authState.userData;
+    final needsClientInfo = !isAuthenticated ||
+        userData == null ||
+        userData.nombre.isEmpty ||
+        userData.email.isEmpty ||
+        userData.telefono.isEmpty;
+    final selectedService = formState.serviceId.isNotEmpty
+        ? formState.serviceId
+        : null;
+    final selectedDate = DateTime.tryParse(formState.date.value);
+    final selectedTime = _parseTime(formState.time.value);
 
-class ReservationFormState extends State<ReservationForm> {
-  String? selectedService;
-  DateTime? selectedDate;
-  TimeOfDay? selectedTime;
-  late final TextEditingController _nameController;
-  late final TextEditingController _rutController;
-  late final TextEditingController _emailController;
-
-  @override
-  void initState() {
-    super.initState();
-    _nameController = TextEditingController();
-    _rutController = TextEditingController();
-    _emailController = TextEditingController();
-  }
-
-  @override
-  void dispose() {
-    _nameController.dispose();
-    _rutController.dispose();
-    _emailController.dispose();
-    super.dispose();
-  }
-
-  @override
-  Widget build(BuildContext context) {
     return FadeInUp(
       child: ModernCard(
         child: Form(
-          key: widget.formKey,
+          key: formKey,
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
@@ -127,54 +116,45 @@ class ReservationFormState extends State<ReservationForm> {
               ),
               const SizedBox(height: 20),
 
-              // Nombre
+              // Patente
               ModernInputField(
-                label: 'Nombre Completo',
-                hint: 'Ingresa tu nombre',
-                controller: _nameController,
-                prefixIcon: const Icon(Icons.person_outline),
-                validator: (value) {
-                  if (value?.isEmpty ?? true) {
-                    return 'Por favor ingresa tu nombre';
-                  }
-                  return null;
-                },
+                label: 'Patente del Vehículo',
+                hint: 'ABCD12',
+                prefixIcon: const Icon(Icons.directions_car_outlined),
+                errorMessage: formState.vehiclePlate.errorMessage,
+                onChanged: formNotifier.onVehiclePlateChange,
               ),
 
               const SizedBox(height: 16),
 
-              // RUT
-              ModernInputField(
-                label: 'RUT',
-                hint: '12345678-9',
-                controller: _rutController,
-                prefixIcon: const Icon(Icons.badge_outlined),
-                validator: (value) {
-                  if (value?.isEmpty ?? true) {
-                    return 'Por favor ingresa tu RUT';
-                  }
-                  return null;
-                },
-              ),
-
-              const SizedBox(height: 16),
-
-              // Email
-              ModernInputField(
-                label: 'Correo Electrónico',
-                hint: 'ejemplo@correo.com',
-                keyboardType: TextInputType.emailAddress,
-                controller: _emailController,
-                prefixIcon: const Icon(Icons.email_outlined),
-                validator: (value) {
-                  if (value?.isEmpty ?? true) {
-                    return 'Por favor ingresa tu correo';
-                  }
-                  return null;
-                },
-              ),
-
-              const SizedBox(height: 16),
+              if (needsClientInfo) ...[
+                ModernInputField(
+                  label: 'Nombre del Cliente',
+                  hint: 'Ingresa tu nombre',
+                  prefixIcon: const Icon(Icons.person_outline),
+                  errorMessage: formState.clientName.errorMessage,
+                  onChanged: formNotifier.onClientNameChange,
+                ),
+                const SizedBox(height: 16),
+                ModernInputField(
+                  label: 'Correo Electrónico',
+                  hint: 'ejemplo@correo.com',
+                  keyboardType: TextInputType.emailAddress,
+                  prefixIcon: const Icon(Icons.email_outlined),
+                  errorMessage: formState.clientEmail.errorMessage,
+                  onChanged: formNotifier.onClientEmailChange,
+                ),
+                const SizedBox(height: 16),
+                ModernInputField(
+                  label: 'Teléfono',
+                  hint: '+56 9 1234 5678',
+                  keyboardType: TextInputType.phone,
+                  prefixIcon: const Icon(Icons.phone_outlined),
+                  errorMessage: formState.clientPhone.errorMessage,
+                  onChanged: formNotifier.onClientPhoneChange,
+                ),
+                const SizedBox(height: 16),
+              ],
 
               // Servicio
               const Text(
@@ -203,7 +183,7 @@ class ReservationFormState extends State<ReservationForm> {
                     ),
                     hintText: 'Elige una opción',
                   ),
-                  items: widget.services.map((service) {
+                  items: services.map((service) {
                     return DropdownMenuItem(
                       value: service.id,
                       child: Row(
@@ -229,9 +209,9 @@ class ReservationFormState extends State<ReservationForm> {
                     return null;
                   },
                   onChanged: (value) {
-                    setState(() {
-                      selectedService = value;
-                    });
+                    if (value != null) {
+                      formNotifier.onServiceIdChange(value);
+                    }
                   },
                 ),
               ),
@@ -250,7 +230,7 @@ class ReservationFormState extends State<ReservationForm> {
               const SizedBox(height: 12),
 
               InkWell(
-                onTap: () => _selectDate(context),
+                onTap: () => _selectDate(context, formNotifier, selectedDate),
                 child: Container(
                   padding: const EdgeInsets.all(16),
                   decoration: BoxDecoration(
@@ -295,7 +275,11 @@ class ReservationFormState extends State<ReservationForm> {
               const SizedBox(height: 12),
 
               InkWell(
-                onTap: () => _selectTime(context),
+                onTap: () => _selectTime(
+                  context,
+                  formNotifier,
+                  selectedTime ?? TimeOfDay.now(),
+                ),
                 child: Container(
                   padding: const EdgeInsets.all(16),
                   decoration: BoxDecoration(
@@ -323,6 +307,44 @@ class ReservationFormState extends State<ReservationForm> {
                 ),
               ),
 
+              const SizedBox(height: 16),
+
+              // Hora fin estimada
+              const Text(
+                'Hora Fin Estimada (opcional)',
+                style: TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.w600,
+                  color: Color(0xFF2c3e50),
+                ),
+              ),
+              const SizedBox(height: 12),
+              ModernInputField(
+                label: 'Hora fin estimada',
+                hint: '18:30',
+                prefixIcon: const Icon(Icons.schedule),
+                onChanged: formNotifier.onEndTimeEstimatedChange,
+              ),
+
+              const SizedBox(height: 16),
+
+              // Notas cliente
+              ModernInputField(
+                label: 'Notas para el mecánico (opcional)',
+                hint: 'Describe cualquier detalle importante...',
+                maxLines: 4,
+                prefixIcon: const Icon(Icons.sticky_note_2_outlined),
+                onChanged: formNotifier.onCustomerNotesChange,
+              ),
+
+              const SizedBox(height: 12),
+
+              SwitchListTile.adaptive(
+                value: formState.reminder,
+                title: const Text('Recordatorio activado'),
+                onChanged: formNotifier.onReminderChange,
+              ),
+
               const SizedBox(height: 24),
 
               // Botón de reservar
@@ -332,8 +354,8 @@ class ReservationFormState extends State<ReservationForm> {
                   text: 'Reservar Ahora',
                   icon: Icons.check_circle,
                   style: ModernButtonStyle.success,
-                  isLoading: widget.isLoading,
-                  onPressed: widget.onSubmit,
+                  isLoading: formState.isPosting,
+                  onPressed: onSubmit,
                 ),
               ),
             ],
@@ -343,10 +365,14 @@ class ReservationFormState extends State<ReservationForm> {
     );
   }
 
-  Future<void> _selectDate(BuildContext context) async {
+  Future<void> _selectDate(
+    BuildContext context,
+    ReservationFormNotifier formNotifier,
+    DateTime? currentDate,
+  ) async {
     final DateTime? picked = await showDatePicker(
       context: context,
-      initialDate: selectedDate ?? DateTime.now(),
+      initialDate: currentDate ?? DateTime.now(),
       firstDate: DateTime.now(),
       lastDate: DateTime.now().add(const Duration(days: 90)),
       builder: (context, child) {
@@ -364,17 +390,19 @@ class ReservationFormState extends State<ReservationForm> {
       },
     );
 
-    if (picked != null && picked != selectedDate) {
-      setState(() {
-        selectedDate = picked;
-      });
+    if (picked != null && picked != currentDate) {
+      formNotifier.onReservationDate(picked);
     }
   }
 
-  Future<void> _selectTime(BuildContext context) async {
+  Future<void> _selectTime(
+    BuildContext context,
+    ReservationFormNotifier formNotifier,
+    TimeOfDay initialTime,
+  ) async {
     final TimeOfDay? picked = await showTimePicker(
       context: context,
-      initialTime: selectedTime ?? TimeOfDay.now(),
+      initialTime: initialTime,
       builder: (context, child) {
         return Theme(
           data: Theme.of(context).copyWith(
@@ -390,42 +418,25 @@ class ReservationFormState extends State<ReservationForm> {
       },
     );
 
-    if (picked != null && picked != selectedTime) {
-      setState(() {
-        selectedTime = picked;
-      });
+    if (picked != null) {
+      formNotifier.onReservationTime(_formatTime(picked));
     }
   }
 
-  bool validateSelections() {
-    return selectedDate != null && selectedTime != null;
+  String _formatTime(TimeOfDay time) {
+    final hour = time.hour.toString().padLeft(2, '0');
+    final minute = time.minute.toString().padLeft(2, '0');
+    return '$hour:$minute';
   }
 
-  String get name => _nameController.text.trim();
-  String get rut => _rutController.text.trim();
-  String get email => _emailController.text.trim();
-
-  String? get selectedServiceName {
-    if (selectedService == null) {
-      return null;
-    }
-    for (final service in widget.services) {
-      if (service.id == selectedService) {
-        return service.name;
-      }
-    }
-    return null;
-  }
-
-  void reset() {
-    setState(() {
-      selectedService = null;
-      selectedDate = null;
-      selectedTime = null;
-    });
-    _nameController.clear();
-    _rutController.clear();
-    _emailController.clear();
+  TimeOfDay? _parseTime(String value) {
+    if (value.isEmpty) return null;
+    final parts = value.split(':');
+    if (parts.length < 2) return null;
+    final hour = int.tryParse(parts[0]);
+    final minute = int.tryParse(parts[1]);
+    if (hour == null || minute == null) return null;
+    return TimeOfDay(hour: hour, minute: minute);
   }
 }
 

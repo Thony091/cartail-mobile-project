@@ -1,11 +1,11 @@
-import 'package:animate_do/animate_do.dart';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../presentation/pages/auth/modern_scaffold_with_drawer.dart';
 import '../../../shared/presentation/shared/widgets/modern_button.dart';
 import 'modern_reservations_widgets.dart';
-import '../providers/reservation_provider.dart';
+import '../providers/reservation_form_provider.dart';
 import '../../../services/presentation/providers/services_provider.dart';
 import '../../../services/domain/entities/services.dart';
 
@@ -21,9 +21,6 @@ class ModernReservationsPage extends ConsumerStatefulWidget {
 class ModernReservationsPageState
     extends ConsumerState<ModernReservationsPage> {
   final _formKey = GlobalKey<FormState>();
-  final GlobalKey<ReservationFormState> _formStateKey = GlobalKey();
-
-  bool _isLoading = false;
 
   @override
   Widget build(BuildContext context) {
@@ -55,10 +52,8 @@ class ModernReservationsPageState
 
               // Formulario de reserva
               ReservationForm(
-                key: _formStateKey,
                 services: serviceOptions,
                 formKey: _formKey,
-                isLoading: _isLoading,
                 onSubmit: _handleReservation,
               ),
 
@@ -74,52 +69,28 @@ class ModernReservationsPageState
   }
 
   void _handleReservation() async {
-    final formState = _formStateKey.currentState;
-    if (formState == null) return;
-
     if (_formKey.currentState?.validate() ?? false) {
-      if (!formState.validateSelections()) {
-        if (formState.selectedDate == null) {
+      final providerState = ref.read(reservationFormProvider);
+      if (providerState.date.value.isEmpty) {
           _showSnackBar('Por favor selecciona una fecha');
           return;
-        }
-        if (formState.selectedTime == null) {
+      }
+      if (providerState.time.value.isEmpty) {
           _showSnackBar('Por favor selecciona una hora');
           return;
-        }
       }
 
-      setState(() {
-        _isLoading = true;
-      });
-
-      final serviceName = formState.selectedServiceName;
-      if (serviceName == null) {
+      if (providerState.serviceId.isEmpty) {
         _showSnackBar('Por favor selecciona un servicio');
-        setState(() {
-          _isLoading = false;
-        });
         return;
       }
 
-      final reservationDate = _formatDate(formState.selectedDate!);
-      final reservationTime = formState.selectedTime!.format(context);
+      final created = await ref.read(reservationFormProvider.notifier).onFormSubmit();
 
-      await ref.read(reservationProvider.notifier).createReservation(
-            formState.name,
-            formState.rut,
-            formState.email,
-            reservationDate,
-            reservationTime,
-            serviceName,
-          );
-
-      setState(() {
-        _isLoading = false;
-      });
-
-      if (mounted) {
+      if (mounted && created) {
         _showSuccessDialog();
+      } else if (mounted && !created) {
+        _showSnackBar('No se pudo crear la reserva');
       }
     }
   }
@@ -203,15 +174,14 @@ class ModernReservationsPageState
               child: ModernButton(
                 text: 'Entendido',
                 style: ModernButtonStyle.success,
-                onPressed: () {
-                  Navigator.of(context).pop();
-                  // Limpiar el formulario
-                  _formStateKey.currentState?.reset();
+                  onPressed: () {
+                    Navigator.of(context).pop();
+                  ref.read(reservationFormProvider.notifier).resetForm();
                   _formKey.currentState?.reset();
-                },
+                  },
+                ),
               ),
-            ),
-          ],
+            ],
         ),
       ),
     );

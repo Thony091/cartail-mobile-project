@@ -18,6 +18,232 @@ import 'better_auth_datasource.dart';
 class BetterAuthDatasourceImpl implements BetterAuthDatasource {
   final AuthService _authService;
 
+  // ============================================================
+  // ENDPOINT KEYS (para mensajes amigables)
+  // ============================================================
+
+  static const String _epSignInEmail = 'sign-in-email';
+  static const String _epSignUpEmail = 'sign-up-email';
+  static const String _epSignOut = 'sign-out';
+  static const String _epGetSession = 'get-session';
+  static const String _epVerifyEmail = 'verify-email';
+  static const String _epSendVerificationEmail = 'send-verification-email';
+  static const String _epRequestPasswordReset = 'request-password-reset';
+  static const String _epResetPassword = 'reset-password';
+  static const String _epChangePassword = 'change-password';
+  static const String _epUpdateUser = 'update-user';
+  static const String _epChangeEmail = 'change-email';
+  static const String _epAccountInfo = 'account-info';
+  static const String _epDeleteUser = 'delete-user';
+  static const String _epListSessions = 'list-sessions';
+  static const String _epRevokeSession = 'revoke-session';
+  static const String _epRevokeSessions = 'revoke-sessions';
+  static const String _epRevokeOtherSessions = 'revoke-other-sessions';
+  static const String _epRefreshToken = 'refresh-token';
+  static const String _epSignInSocial = 'sign-in-social';
+  static const String _epLinkSocial = 'link-social';
+  static const String _epListAccounts = 'list-accounts';
+  static const String _epUnlinkAccount = 'unlink-account';
+  static const String _epHealthCheck = 'health-check';
+
+  // ============================================================
+  // MENSAJES AMIGABLES POR ENDPOINT/STATUS
+  // ============================================================
+
+  static const Map<int, String> _defaultStatusMessages = {
+    400: 'Solicitud inválida. Revisa los datos ingresados.',
+    401: 'No autorizado. Inicia sesión nuevamente.',
+    403: 'No tienes permisos para realizar esta acción.',
+    404: 'Recurso no encontrado.',
+    422: 'Datos inválidos. Verifica los campos.',
+    429: 'Demasiadas solicitudes. Intenta más tarde.',
+    500: 'Error del servidor. Intenta más tarde.',
+  };
+
+  static const Map<String, Map<int, String>> _endpointErrorMessages = {
+    _epSignInEmail: {
+      400: 'Datos inválidos. Revisa tu correo y contraseña.',
+      401: 'Correo o contraseña incorrectos.',
+      403: 'Tu cuenta no tiene permisos para acceder.',
+      404: 'No encontramos tu cuenta.',
+      429: 'Demasiados intentos. Intenta más tarde.',
+      500: 'No pudimos iniciar sesión. Intenta más tarde.',
+    },
+    _epSignUpEmail: {
+      400: 'Datos inválidos. Revisa el formulario.',
+      401: 'No autorizado. Intenta nuevamente.',
+      403: 'No tienes permisos para registrarte.',
+      404: 'Servicio no disponible. Intenta más tarde.',
+      422: 'El correo ya está registrado.',
+      429: 'Demasiadas solicitudes. Intenta más tarde.',
+      500: 'No pudimos crear tu cuenta. Intenta más tarde.',
+    },
+    _epSignInSocial: {
+      400: 'No pudimos validar el proveedor social.',
+      401: 'Sesión social inválida. Intenta nuevamente.',
+      403: 'No tienes permisos para acceder.',
+      404: 'Proveedor no disponible.',
+      429: 'Demasiadas solicitudes. Intenta más tarde.',
+      500: 'Error del servidor. Intenta más tarde.',
+    },
+    _epGetSession: {
+      400: 'Solicitud inválida al verificar sesión.',
+      401: 'Sesión expirada. Inicia sesión nuevamente.',
+      403: 'No autorizado para acceder a la sesión.',
+      404: 'Sesión no encontrada.',
+      429: 'Demasiadas solicitudes. Intenta más tarde.',
+      500: 'No pudimos verificar tu sesión. Intenta más tarde.',
+    },
+    _epSignOut: {
+      400: 'No pudimos cerrar sesión. Intenta más tarde.',
+      401: 'Tu sesión ya no es válida.',
+      403: 'No autorizado para cerrar sesión.',
+      404: 'Sesión no encontrada.',
+      429: 'Demasiadas solicitudes. Intenta más tarde.',
+      500: 'Error del servidor al cerrar sesión.',
+    },
+    _epRequestPasswordReset: {
+      400: 'Correo inválido. Revisa e intenta de nuevo.',
+      401: 'No autorizado. Intenta nuevamente.',
+      403: 'No tienes permisos para recuperar contraseña.',
+      404: 'No encontramos un usuario con ese correo.',
+      429: 'Demasiadas solicitudes. Intenta más tarde.',
+      500: 'No pudimos enviar el correo. Intenta más tarde.',
+    },
+    _epResetPassword: {
+      400: 'Token inválido o datos incorrectos.',
+      401: 'No autorizado para restablecer contraseña.',
+      403: 'No tienes permisos para restablecer contraseña.',
+      404: 'Token no encontrado o expirado.',
+      429: 'Demasiadas solicitudes. Intenta más tarde.',
+      500: 'No pudimos restablecer la contraseña.',
+    },
+    _epVerifyEmail: {
+      400: 'Token inválido. Solicita un nuevo enlace.',
+      401: 'No autorizado para verificar email.',
+      403: 'No tienes permisos para verificar email.',
+      404: 'Token no encontrado o expirado.',
+      429: 'Demasiadas solicitudes. Intenta más tarde.',
+      500: 'No pudimos verificar el email.',
+    },
+    _epSendVerificationEmail: {
+      400: 'Correo inválido. Revisa e intenta de nuevo.',
+      401: 'No autorizado. Inicia sesión nuevamente.',
+      403: 'No tienes permisos para esta acción.',
+      404: 'No encontramos el usuario.',
+      429: 'Demasiadas solicitudes. Intenta más tarde.',
+      500: 'No pudimos enviar el correo de verificación.',
+    },
+    _epChangeEmail: {
+      400: 'Correo inválido. Revisa e intenta de nuevo.',
+      401: 'No autorizado. Inicia sesión nuevamente.',
+      403: 'No tienes permisos para cambiar el correo.',
+      404: 'Usuario no encontrado.',
+      422: 'El correo ya está en uso.',
+      429: 'Demasiadas solicitudes. Intenta más tarde.',
+      500: 'No pudimos cambiar el correo.',
+    },
+    _epChangePassword: {
+      400: 'Contraseña actual inválida o datos incorrectos.',
+      401: 'No autorizado. Inicia sesión nuevamente.',
+      403: 'No tienes permisos para cambiar contraseña.',
+      404: 'Usuario no encontrado.',
+      429: 'Demasiadas solicitudes. Intenta más tarde.',
+      500: 'No pudimos cambiar la contraseña.',
+    },
+    _epUpdateUser: {
+      400: 'Datos inválidos. Revisa el formulario.',
+      401: 'No autorizado. Inicia sesión nuevamente.',
+      403: 'No tienes permisos para actualizar perfil.',
+      404: 'Usuario no encontrado.',
+      429: 'Demasiadas solicitudes. Intenta más tarde.',
+      500: 'No pudimos actualizar tu perfil.',
+    },
+    _epDeleteUser: {
+      400: 'Solicitud inválida para eliminar la cuenta.',
+      401: 'No autorizado. Inicia sesión nuevamente.',
+      403: 'No tienes permisos para eliminar la cuenta.',
+      404: 'Usuario no encontrado.',
+      429: 'Demasiadas solicitudes. Intenta más tarde.',
+      500: 'No pudimos eliminar la cuenta.',
+    },
+    _epListSessions: {
+      400: 'Solicitud inválida al listar sesiones.',
+      401: 'No autorizado. Inicia sesión nuevamente.',
+      403: 'No tienes permisos para ver sesiones.',
+      404: 'Sesiones no encontradas.',
+      429: 'Demasiadas solicitudes. Intenta más tarde.',
+      500: 'No pudimos obtener las sesiones.',
+    },
+    _epRevokeSession: {
+      400: 'Solicitud inválida al revocar sesión.',
+      401: 'No autorizado. Inicia sesión nuevamente.',
+      403: 'No tienes permisos para revocar sesiones.',
+      404: 'Sesión no encontrada.',
+      429: 'Demasiadas solicitudes. Intenta más tarde.',
+      500: 'No pudimos revocar la sesión.',
+    },
+    _epRevokeSessions: {
+      400: 'Solicitud inválida al revocar sesiones.',
+      401: 'No autorizado. Inicia sesión nuevamente.',
+      403: 'No tienes permisos para revocar sesiones.',
+      404: 'Sesiones no encontradas.',
+      429: 'Demasiadas solicitudes. Intenta más tarde.',
+      500: 'No pudimos revocar las sesiones.',
+    },
+    _epRevokeOtherSessions: {
+      400: 'Solicitud inválida al cerrar otras sesiones.',
+      401: 'No autorizado. Inicia sesión nuevamente.',
+      403: 'No tienes permisos para cerrar otras sesiones.',
+      404: 'Sesiones no encontradas.',
+      429: 'Demasiadas solicitudes. Intenta más tarde.',
+      500: 'No pudimos cerrar otras sesiones.',
+    },
+    _epRefreshToken: {
+      400: 'Token inválido. Inicia sesión nuevamente.',
+      401: 'No autorizado. Inicia sesión nuevamente.',
+      403: 'No tienes permisos para refrescar la sesión.',
+      404: 'Sesión no encontrada.',
+      429: 'Demasiadas solicitudes. Intenta más tarde.',
+      500: 'No pudimos refrescar la sesión.',
+    },
+    _epLinkSocial: {
+      400: 'Datos del proveedor inválidos.',
+      401: 'No autorizado. Inicia sesión nuevamente.',
+      403: 'No tienes permisos para vincular cuentas.',
+      404: 'Proveedor no encontrado.',
+      429: 'Demasiadas solicitudes. Intenta más tarde.',
+      500: 'No pudimos vincular la cuenta.',
+    },
+    _epListAccounts: {
+      400: 'Solicitud inválida al listar cuentas.',
+      401: 'No autorizado. Inicia sesión nuevamente.',
+      403: 'No tienes permisos para ver cuentas vinculadas.',
+      404: 'No se encontraron cuentas vinculadas.',
+      429: 'Demasiadas solicitudes. Intenta más tarde.',
+      500: 'No pudimos obtener las cuentas vinculadas.',
+    },
+    _epUnlinkAccount: {
+      400: 'Solicitud inválida al desvincular cuenta.',
+      401: 'No autorizado. Inicia sesión nuevamente.',
+      403: 'No tienes permisos para desvincular cuentas.',
+      404: 'Cuenta no encontrada.',
+      429: 'Demasiadas solicitudes. Intenta más tarde.',
+      500: 'No pudimos desvincular la cuenta.',
+    },
+    _epAccountInfo: {
+      400: 'Solicitud inválida al obtener la cuenta.',
+      401: 'No autorizado. Inicia sesión nuevamente.',
+      403: 'No tienes permisos para ver la cuenta.',
+      404: 'Cuenta no encontrada.',
+      429: 'Demasiadas solicitudes. Intenta más tarde.',
+      500: 'No pudimos obtener la información de la cuenta.',
+    },
+    _epHealthCheck: {
+      500: 'El servicio de autenticación no está disponible.',
+    },
+  };
+
   /// Constructor que recibe la instancia de AuthService.
   /// AuthService debe estar inicializado antes de usar este datasource.
   BetterAuthDatasourceImpl(this._authService);
@@ -49,10 +275,10 @@ class BetterAuthDatasourceImpl implements BetterAuthDatasource {
       if (response.statusCode == 200 && response.data != null) {
         return SignInResponse.fromJson(response.data as Map<String, dynamic>);
       } else {
-        throw _handleErrorResponse(response);
+        throw _handleErrorResponse(response, endpoint: _epSignInEmail);
       }
     } on DioException catch (e) {
-      throw _handleDioError(e);
+      throw _handleDioError(e, endpoint: _epSignInEmail);
     } catch (e) {
       if (e is AuthException) rethrow;
       throw AuthException('Error desconocido en sign-in: $e');
@@ -86,10 +312,10 @@ class BetterAuthDatasourceImpl implements BetterAuthDatasource {
       if (response.statusCode == 200 || response.statusCode == 201) {
         return SignUpResponse.fromJson(response.data as Map<String, dynamic>);
       } else {
-        throw _handleErrorResponse(response);
+        throw _handleErrorResponse(response, endpoint: _epSignUpEmail);
       }
     } on DioException catch (e) {
-      throw _handleDioError(e);
+      throw _handleDioError(e, endpoint: _epSignUpEmail);
     } catch (e) {
       if (e is AuthException) rethrow;
       throw AuthException('Error desconocido en sign-up: $e');
@@ -105,7 +331,7 @@ class BetterAuthDatasourceImpl implements BetterAuthDatasource {
     try {
       await _authService.signOut();
     } on DioException catch (e) {
-      throw _handleDioError(e);
+      throw _handleDioError(e, endpoint: _epSignOut);
     }
   }
 
@@ -131,7 +357,7 @@ class BetterAuthDatasourceImpl implements BetterAuthDatasource {
       if (e.response?.statusCode == 401) {
         return null;
       }
-      throw _handleDioError(e);
+      throw _handleDioError(e, endpoint: _epGetSession);
     }
   }
 
@@ -154,10 +380,10 @@ class BetterAuthDatasourceImpl implements BetterAuthDatasource {
           response.data as Map<String, dynamic>,
         );
       } else {
-        throw _handleErrorResponse(response);
+        throw _handleErrorResponse(response, endpoint: _epVerifyEmail);
       }
     } on DioException catch (e) {
-      throw _handleDioError(e);
+      throw _handleDioError(e, endpoint: _epVerifyEmail);
     }
   }
 
@@ -176,10 +402,10 @@ class BetterAuthDatasourceImpl implements BetterAuthDatasource {
           response.data as Map<String, dynamic>? ?? {'status': true},
         );
       } else {
-        throw _handleErrorResponse(response);
+        throw _handleErrorResponse(response, endpoint: _epSendVerificationEmail);
       }
     } on DioException catch (e) {
-      throw _handleDioError(e);
+      throw _handleDioError(e, endpoint: _epSendVerificationEmail);
     }
   }
 
@@ -202,10 +428,10 @@ class BetterAuthDatasourceImpl implements BetterAuthDatasource {
           response.data as Map<String, dynamic>? ?? {'status': true},
         );
       } else {
-        throw _handleErrorResponse(response);
+        throw _handleErrorResponse(response, endpoint: _epRequestPasswordReset);
       }
     } on DioException catch (e) {
-      throw _handleDioError(e);
+      throw _handleDioError(e, endpoint: _epRequestPasswordReset);
     }
   }
 
@@ -230,10 +456,10 @@ class BetterAuthDatasourceImpl implements BetterAuthDatasource {
           response.data as Map<String, dynamic>? ?? {'status': true},
         );
       } else {
-        throw _handleErrorResponse(response);
+        throw _handleErrorResponse(response, endpoint: _epResetPassword);
       }
     } on DioException catch (e) {
-      throw _handleDioError(e);
+      throw _handleDioError(e, endpoint: _epResetPassword);
     }
   }
 
@@ -260,10 +486,10 @@ class BetterAuthDatasourceImpl implements BetterAuthDatasource {
           response.data as Map<String, dynamic>,
         );
       } else {
-        throw _handleErrorResponse(response);
+        throw _handleErrorResponse(response, endpoint: _epChangePassword);
       }
     } on DioException catch (e) {
-      throw _handleDioError(e);
+      throw _handleDioError(e, endpoint: _epChangePassword);
     }
   }
 
@@ -297,10 +523,10 @@ class BetterAuthDatasourceImpl implements BetterAuthDatasource {
         }
         return BetterAuthUserModel.fromJson(data);
       } else {
-        throw _handleErrorResponse(response);
+        throw _handleErrorResponse(response, endpoint: _epUpdateUser);
       }
     } on DioException catch (e) {
-      throw _handleDioError(e);
+      throw _handleDioError(e, endpoint: _epUpdateUser);
     } catch (e) {
       if (e is AuthException) rethrow;
       throw AuthException('Error desconocido actualizando perfil: $e');
@@ -322,10 +548,10 @@ class BetterAuthDatasourceImpl implements BetterAuthDatasource {
           response.data as Map<String, dynamic>,
         );
       } else {
-        throw _handleErrorResponse(response);
+        throw _handleErrorResponse(response, endpoint: _epChangeEmail);
       }
     } on DioException catch (e) {
-      throw _handleDioError(e);
+      throw _handleDioError(e, endpoint: _epChangeEmail);
     }
   }
 
@@ -344,10 +570,10 @@ class BetterAuthDatasourceImpl implements BetterAuthDatasource {
           response.data as Map<String, dynamic>,
         );
       } else {
-        throw _handleErrorResponse(response);
+        throw _handleErrorResponse(response, endpoint: _epAccountInfo);
       }
     } on DioException catch (e) {
-      throw _handleDioError(e);
+      throw _handleDioError(e, endpoint: _epAccountInfo);
     }
   }
 
@@ -367,10 +593,10 @@ class BetterAuthDatasourceImpl implements BetterAuthDatasource {
           response.data as Map<String, dynamic>? ?? {'status': true},
         );
       } else {
-        throw _handleErrorResponse(response);
+        throw _handleErrorResponse(response, endpoint: _epDeleteUser);
       }
     } on DioException catch (e) {
-      throw _handleDioError(e);
+      throw _handleDioError(e, endpoint: _epDeleteUser);
     }
   }
 
@@ -394,10 +620,10 @@ class BetterAuthDatasourceImpl implements BetterAuthDatasource {
             .map((json) => SessionModel.fromJson(json as Map<String, dynamic>))
             .toList();
       } else {
-        throw _handleErrorResponse(response);
+        throw _handleErrorResponse(response, endpoint: _epListSessions);
       }
     } on DioException catch (e) {
-      throw _handleDioError(e);
+      throw _handleDioError(e, endpoint: _epListSessions);
     }
   }
 
@@ -416,10 +642,10 @@ class BetterAuthDatasourceImpl implements BetterAuthDatasource {
           response.data as Map<String, dynamic>? ?? {'status': true},
         );
       } else {
-        throw _handleErrorResponse(response);
+        throw _handleErrorResponse(response, endpoint: _epRevokeSession);
       }
     } on DioException catch (e) {
-      throw _handleDioError(e);
+      throw _handleDioError(e, endpoint: _epRevokeSession);
     }
   }
 
@@ -439,10 +665,10 @@ class BetterAuthDatasourceImpl implements BetterAuthDatasource {
           response.data as Map<String, dynamic>? ?? {'status': true},
         );
       } else {
-        throw _handleErrorResponse(response);
+        throw _handleErrorResponse(response, endpoint: _epRevokeSessions);
       }
     } on DioException catch (e) {
-      throw _handleDioError(e);
+      throw _handleDioError(e, endpoint: _epRevokeSessions);
     }
   }
 
@@ -462,10 +688,10 @@ class BetterAuthDatasourceImpl implements BetterAuthDatasource {
           response.data as Map<String, dynamic>? ?? {'status': true},
         );
       } else {
-        throw _handleErrorResponse(response);
+        throw _handleErrorResponse(response, endpoint: _epRevokeOtherSessions);
       }
     } on DioException catch (e) {
-      throw _handleDioError(e);
+      throw _handleDioError(e, endpoint: _epRevokeOtherSessions);
     }
   }
 
@@ -497,10 +723,10 @@ class BetterAuthDatasourceImpl implements BetterAuthDatasource {
           response.data as Map<String, dynamic>,
         );
       } else {
-        throw _handleErrorResponse(response);
+        throw _handleErrorResponse(response, endpoint: _epRefreshToken);
       }
     } on DioException catch (e) {
-      throw _handleDioError(e);
+      throw _handleDioError(e, endpoint: _epRefreshToken);
     }
   }
 
@@ -528,10 +754,10 @@ class BetterAuthDatasourceImpl implements BetterAuthDatasource {
       if (response.statusCode == 200 && response.data != null) {
         return SignInResponse.fromJson(response.data as Map<String, dynamic>);
       } else {
-        throw _handleErrorResponse(response);
+        throw _handleErrorResponse(response, endpoint: _epSignInSocial);
       }
     } on DioException catch (e) {
-      throw _handleDioError(e);
+      throw _handleDioError(e, endpoint: _epSignInSocial);
     }
   }
 
@@ -556,10 +782,10 @@ class BetterAuthDatasourceImpl implements BetterAuthDatasource {
           response.data as Map<String, dynamic>,
         );
       } else {
-        throw _handleErrorResponse(response);
+        throw _handleErrorResponse(response, endpoint: _epLinkSocial);
       }
     } on DioException catch (e) {
-      throw _handleDioError(e);
+      throw _handleDioError(e, endpoint: _epLinkSocial);
     }
   }
 
@@ -580,10 +806,10 @@ class BetterAuthDatasourceImpl implements BetterAuthDatasource {
                 LinkedAccountModel.fromJson(json as Map<String, dynamic>))
             .toList();
       } else {
-        throw _handleErrorResponse(response);
+        throw _handleErrorResponse(response, endpoint: _epListAccounts);
       }
     } on DioException catch (e) {
-      throw _handleDioError(e);
+      throw _handleDioError(e, endpoint: _epListAccounts);
     }
   }
 
@@ -602,10 +828,10 @@ class BetterAuthDatasourceImpl implements BetterAuthDatasource {
           response.data as Map<String, dynamic>? ?? {'status': true},
         );
       } else {
-        throw _handleErrorResponse(response);
+        throw _handleErrorResponse(response, endpoint: _epUnlinkAccount);
       }
     } on DioException catch (e) {
-      throw _handleDioError(e);
+      throw _handleDioError(e, endpoint: _epUnlinkAccount);
     }
   }
 
@@ -636,44 +862,54 @@ class BetterAuthDatasourceImpl implements BetterAuthDatasource {
   ///
   /// Analiza el status code y el cuerpo de la respuesta para crear
   /// la excepción apropiada.
-  AuthException _handleErrorResponse(Response response) {
+  AuthException _handleErrorResponse(
+    Response response, {
+    String? endpoint,
+  }) {
     final data = response.data;
     final message = data is Map
         ? (data['message'] ?? data['error'] ?? response.statusMessage)
         : response.statusMessage;
+    final statusCode = response.statusCode;
+    final friendlyMessage =
+        _friendlyMessage(endpoint: endpoint, statusCode: statusCode);
 
-    switch (response.statusCode) {
+    switch (statusCode) {
       case 400:
         return AuthException(
-          message?.toString() ?? 'Solicitud inválida',
+          friendlyMessage ?? message?.toString() ?? 'Solicitud inválida',
         );
       case 401:
         return InvalidCredentialsException(
-          message?.toString() ?? 'Credenciales inválidas',
+          friendlyMessage ?? message?.toString() ?? 'Credenciales inválidas',
         );
       case 403:
         return AuthException(
-          message?.toString() ?? 'Acceso denegado',
+          friendlyMessage ?? message?.toString() ?? 'Acceso denegado',
         );
       case 404:
         return UserNotFoundException(
-          message?.toString() ?? 'Usuario no encontrado',
+          friendlyMessage ?? message?.toString() ?? 'Usuario no encontrado',
         );
       case 409:
         return EmailAlreadyExistsException(
-          message?.toString() ?? 'El email ya está registrado',
+          friendlyMessage ?? message?.toString() ?? 'El email ya está registrado',
         );
       case 422:
         return AuthException(
-          message?.toString() ?? 'Datos de entrada inválidos',
+          friendlyMessage ?? message?.toString() ?? 'Datos de entrada inválidos',
         );
       case 429:
         return AuthException(
-          message?.toString() ?? 'Demasiadas solicitudes, intenta más tarde',
+          friendlyMessage ??
+              message?.toString() ??
+              'Demasiadas solicitudes, intenta más tarde',
         );
       default:
         return AuthException(
-          message?.toString() ?? 'Error del servidor (${response.statusCode})',
+          friendlyMessage ??
+              message?.toString() ??
+              'Error del servidor ($statusCode)',
         );
     }
   }
@@ -681,7 +917,10 @@ class BetterAuthDatasourceImpl implements BetterAuthDatasource {
   /// Convierte una excepción de Dio en una excepción de dominio.
   ///
   /// Maneja diferentes tipos de errores de red y conectividad.
-  AuthException _handleDioError(DioException e) {
+  AuthException _handleDioError(
+    DioException e, {
+    String? endpoint,
+  }) {
     switch (e.type) {
       case DioExceptionType.connectionTimeout:
         return AuthException('Tiempo de conexión agotado');
@@ -694,7 +933,7 @@ class BetterAuthDatasourceImpl implements BetterAuthDatasource {
 
       case DioExceptionType.badResponse:
         if (e.response != null) {
-          return _handleErrorResponse(e.response!);
+          return _handleErrorResponse(e.response!, endpoint: endpoint);
         }
         return AuthException('Respuesta inválida del servidor');
 
@@ -712,5 +951,14 @@ class BetterAuthDatasourceImpl implements BetterAuthDatasource {
       case DioExceptionType.unknown:
         return AuthException('Error desconocido: ${e.message}');
     }
+  }
+
+  String? _friendlyMessage({
+    String? endpoint,
+    int? statusCode,
+  }) {
+    if (statusCode == null) return null;
+    final endpointMessages = _endpointErrorMessages[endpoint];
+    return endpointMessages?[statusCode] ?? _defaultStatusMessages[statusCode];
   }
 }

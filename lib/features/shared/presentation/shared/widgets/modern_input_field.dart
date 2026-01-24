@@ -17,6 +17,7 @@ class ModernInputField extends StatefulWidget {
   final VoidCallback? onTap;
   final Widget? suffixIcon;
   final Widget? prefixIcon;
+  final String? initialValue;
 
   const ModernInputField({
     super.key,
@@ -35,6 +36,7 @@ class ModernInputField extends StatefulWidget {
     this.onTap,
     this.suffixIcon,
     this.prefixIcon,
+    this.initialValue,
   });
 
   @override
@@ -114,6 +116,7 @@ class _ModernInputFieldState extends State<ModernInputField> {
             keyboardType: widget.keyboardType,
             maxLines: widget.maxLines,
             controller: widget.controller,           // Agregado
+            initialValue: widget.controller == null ? widget.initialValue : null,
             inputFormatters: widget.inputFormatters, // Agregado
             style: const TextStyle(
               fontSize: 16,

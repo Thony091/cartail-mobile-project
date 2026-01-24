@@ -1,6 +1,7 @@
 import 'package:animate_do/animate_do.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:portafolio_project/features/auth/presentation/providers/better_auth_provider.dart';
 
 import 'package:portafolio_project/features/user/domain/entities/user_role.dart';
 
@@ -8,6 +9,7 @@ import 'package:portafolio_project/features/user/presentation/profile/modern_pro
 
 import '../../../../presentation/presentation_container.dart';
 import '../../../../presentation/pages/auth/modern_scaffold_with_drawer.dart';
+import '../../domain/entities/user.dart';
 
 class ModernProfilePage extends ConsumerStatefulWidget {
   static const name = 'ModernProfilePage';
@@ -21,7 +23,8 @@ class ModernProfilePage extends ConsumerStatefulWidget {
 class ModernProfilePageState extends ConsumerState<ModernProfilePage> {
   @override
   Widget build(BuildContext context) {
-    final authState = ref.watch(authProvider).userData!;
+    final authState = ref.watch(betterAuthProvider);
+    final profileUser = _mapAuthUser(authState);
 
     return ModernScaffoldWithDrawer(
       title: 'Mi Perfil',
@@ -43,16 +46,16 @@ class ModernProfilePageState extends ConsumerState<ModernProfilePage> {
               // Header del perfil
               FadeInDown(
                 child: ProfileHeader(
-                  user: authState,
+                  user: profileUser,
                   onChangeAvatar: _changeAvatar,
                 ),
               ),
               const SizedBox(height: 32),
               // Información personal
-              FadeInLeft(child: PersonalInfoSection(user: authState)),
+              FadeInLeft(child: PersonalInfoSection(user: profileUser)),
               const SizedBox(height: 24),
               // Estadísticas (solo para admin)
-              if (authState.role == UserRole.admin) ...[
+              if (profileUser.role == UserRole.admin) ...[
                 FadeInRight(child: const AdminStatsSection()),
                 const SizedBox(height: 24),
               ],
@@ -116,6 +119,24 @@ class ModernProfilePageState extends ConsumerState<ModernProfilePage> {
           ],
         ),
       ),
+    );
+  }
+
+  User _mapAuthUser(BetterAuthState authState) {
+    final authUser = authState.user;
+    return User(
+      uid: authUser?.id ?? '',
+      nombre: authUser?.name ?? 'Invitado',
+      rut: authUser?.rut ?? '',
+      fechaNacimiento: authUser?.birthday ?? '',
+      email: authUser?.email ?? '',
+      telefono: authUser?.phone ?? '',
+      direccion: authUser?.address ?? '',
+      password: '',
+      imagenPerfil: authUser?.image ?? '',
+      bio: authUser?.bio ?? '',
+      role: authUser?.role ?? UserRole.guest,
+      isAdmin: authUser?.role == UserRole.admin,
     );
   }
 }

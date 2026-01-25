@@ -7,6 +7,7 @@ import 'package:portafolio_project/features/auth/presentation/providers/better_a
 
 class ModernAppBarWithMenu extends StatelessWidget implements PreferredSizeWidget {
   final String title;
+  final Widget? titleWidget;
   final List<Widget>? actions;
   final bool automaticallyImplyLeading;
   final Widget? leading;
@@ -15,6 +16,7 @@ class ModernAppBarWithMenu extends StatelessWidget implements PreferredSizeWidge
   const ModernAppBarWithMenu({
     super.key,
     required this.title,
+    this.titleWidget,
     this.actions,
     this.automaticallyImplyLeading = true,
     this.leading,
@@ -57,15 +59,16 @@ class ModernAppBarWithMenu extends StatelessWidget implements PreferredSizeWidge
               
               // Título
               Expanded(
-                child: Text(
-                  title,
-                  style: const TextStyle(
-                    color: Colors.white,
-                    fontSize: 18,
-                    fontWeight: FontWeight.w600,
-                  ),
-                  textAlign: TextAlign.center,
-                ),
+                child: titleWidget ??
+                    Text(
+                      title,
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontSize: 18,
+                        fontWeight: FontWeight.w600,
+                      ),
+                      textAlign: TextAlign.center,
+                    ),
               ),
               
               // Acciones

@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:portafolio_project/features/auth/presentation/providers/better_auth_provider.dart';
+import 'package:portafolio_project/features/category/presentation/providers/categories_provider.dart';
+import 'package:portafolio_project/features/category/domain/entities/category.dart';
 // import 'package:animate_do/animate_do.dart'; removed unused
 // import 'package:portafolio_project/presentation/pages/auth/home/views/components/stat_card_widget.dart'; removed unused
 import 'package:portafolio_project/features/services/presentation/page/views/admin_services_list_widget.dart';
@@ -23,21 +25,17 @@ class ModernServicesPage extends ConsumerStatefulWidget {
 }
 
 class ModernServicesPageState extends ConsumerState<ModernServicesPage> {
-  String _searchQuery = '';
-  String _selectedCategory = 'Todos';
-  final List<String> _categories = [
-    'Todos',
-    'Detailing',
-    'Mecánica',
-    'Pintura',
-    'Neumáticos',
-  ];
-
   @override
   Widget build(BuildContext context) {
     final servicesState = ref.watch(servicesProvider);
+    final filtersState = ref.watch(servicesFiltersProvider);
+    final filtersNotifier = ref.read(servicesFiltersProvider.notifier);
     final authState = ref.watch(betterAuthProvider);
     final isAdmin = authState.session?.user.isAdmin;
+    final categoriesState = ref.watch(categoriesProvider);
+    final categories = categoriesState.categories
+        .where((category) => category.isActive)
+        .toList();
     final totalServices = servicesState.services.length;
     final activeServices = servicesState.services
         .where((service) => service.isActive)
@@ -79,19 +77,17 @@ class ModernServicesPageState extends ConsumerState<ModernServicesPage> {
               // Header con filtros
               SliverToBoxAdapter(
                 child: ServiceHeaderSection(
-                  categories: _categories,
-                  selectedCategory: _selectedCategory,
+                  categories: _buildCategoryLabels(categories),
+                  selectedCategory: _selectedCategoryLabel(
+                    filtersState.selectedCategoryId,
+                    categories,
+                  ),
                   totalServices: totalServices,
                   activeServices: activeServices,
-                  onSearchChanged: (value) {
-                    setState(() {
-                      _searchQuery = value;
-                    });
-                  },
+                  onSearchChanged: filtersNotifier.setSearchQuery,
                   onCategorySelected: (category) {
-                    setState(() {
-                      _selectedCategory = category;
-                    });
+                    final categoryId = _categoryIdFromLabel(category, categories);
+                    filtersNotifier.setCategoryId(categoryId);
                   },
                 ),
               ),
@@ -128,14 +124,11 @@ class ModernServicesPageState extends ConsumerState<ModernServicesPage> {
   }
 
   void _showSearchDialog() {
+    final filtersNotifier = ref.read(servicesFiltersProvider.notifier);
     showDialog(
       context: context,
       builder: (context) => SearchServicesDialog(
-        onSearch: (value) {
-          setState(() {
-            _searchQuery = value;
-          });
-        },
+        onSearch: filtersNotifier.setSearchQuery,
       ),
     );
   }
@@ -155,14 +148,38 @@ class ModernServicesPageState extends ConsumerState<ModernServicesPage> {
   }
 
   List<Services> _filterServices(List<Services> services) {
+    final filtersState = ref.read(servicesFiltersProvider);
     return services.where((service) {
       final category = getServiceCategory(service);
       final matchesSearch =
-          _searchQuery.isEmpty ||
-          service.name.toLowerCase().contains(_searchQuery.toLowerCase());
+          filtersState.searchQuery.isEmpty ||
+          service.name
+              .toLowerCase()
+              .contains(filtersState.searchQuery.toLowerCase());
       final matchesCategory =
-          _selectedCategory == 'Todos' || category == _selectedCategory;
+          filtersState.selectedCategoryId == 0 ||
+          service.categoryId == filtersState.selectedCategoryId ||
+          category == _selectedCategoryLabel(
+            filtersState.selectedCategoryId,
+            ref.read(categoriesProvider).categories,
+          );
       return matchesSearch && matchesCategory;
     }).toList();
+  }
+
+  List<String> _buildCategoryLabels(List<Category> categories) {
+    return ['Todos', ...categories.map((category) => category.name)];
+  }
+
+  String _selectedCategoryLabel(int selectedId, List<Category> categories) {
+    if (selectedId == 0) return 'Todos';
+    final match = categories.where((category) => category.id == selectedId);
+    return match.isNotEmpty ? match.first.name : 'Todos';
+  }
+
+  int _categoryIdFromLabel(String label, List<Category> categories) {
+    if (label == 'Todos') return 0;
+    final match = categories.where((category) => category.name == label);
+    return match.isNotEmpty ? match.first.id : 0;
   }
 }

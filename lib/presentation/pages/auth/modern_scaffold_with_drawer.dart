@@ -3,6 +3,7 @@ import 'package:portafolio_project/features/shared/presentation/shared/widgets/w
 
 class ModernScaffoldWithDrawer extends StatelessWidget {
   final String title;
+  final Widget? titleWidget;
   final Widget body;
   final Widget? floatingActionButton;
   final Widget? bottomNavigationBar;
@@ -11,6 +12,7 @@ class ModernScaffoldWithDrawer extends StatelessWidget {
   const ModernScaffoldWithDrawer({
     super.key,
     required this.title,
+    this.titleWidget,
     required this.body,
     this.floatingActionButton,
     this.bottomNavigationBar,
@@ -27,6 +29,7 @@ class ModernScaffoldWithDrawer extends StatelessWidget {
         key: scaffoldKey,
         appBar: ModernAppBarWithMenu(
           title: title,
+          titleWidget: titleWidget,
           actions: appBarActions,
           scaffoldKey: scaffoldKey,
         ),

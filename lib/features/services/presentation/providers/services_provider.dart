@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -12,6 +14,11 @@ final servicesProvider = StateNotifierProvider<ServicesNotifier, ServicesState>(
   return ServicesNotifier(
     servicesRepository: servicesRepository
   );
+});
+
+final servicesFiltersProvider =
+    StateNotifierProvider<ServicesFiltersNotifier, ServicesFiltersState>((ref) {
+  return ServicesFiltersNotifier();
 });
 
 class ServicesNotifier extends StateNotifier<ServicesState>{
@@ -87,6 +94,41 @@ class ServicesNotifier extends StateNotifier<ServicesState>{
   }
 }
 
+class ServicesFiltersNotifier extends StateNotifier<ServicesFiltersState> {
+  Timer? _debounce;
+
+  ServicesFiltersNotifier() : super(ServicesFiltersState());
+
+  void startSearch() {
+    state = state.copyWith(isSearching: true);
+  }
+
+  void stopSearch() {
+    _debounce?.cancel();
+    state = state.copyWith(
+      isSearching: false,
+      searchQuery: '',
+    );
+  }
+
+  void setSearchQuery(String value) {
+    _debounce?.cancel();
+    _debounce = Timer(const Duration(milliseconds: 250), () {
+      state = state.copyWith(searchQuery: value);
+    });
+  }
+
+  void setCategoryId(int value) {
+    state = state.copyWith(selectedCategoryId: value);
+  }
+
+  @override
+  void dispose() {
+    _debounce?.cancel();
+    super.dispose();
+  }
+}
+
 class ServicesState{
 
   final List<Services> services;
@@ -109,4 +151,26 @@ class ServicesState{
     error: error ?? this.error
   );
 
+}
+
+class ServicesFiltersState {
+  final String searchQuery;
+  final int selectedCategoryId;
+  final bool isSearching;
+
+  ServicesFiltersState({
+    this.searchQuery = '',
+    this.selectedCategoryId = 0,
+    this.isSearching = false,
+  });
+
+  ServicesFiltersState copyWith({
+    String? searchQuery,
+    int? selectedCategoryId,
+    bool? isSearching,
+  }) => ServicesFiltersState(
+      searchQuery: searchQuery ?? this.searchQuery,
+      selectedCategoryId: selectedCategoryId ?? this.selectedCategoryId,
+      isSearching: isSearching ?? this.isSearching,
+    );
 }

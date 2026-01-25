@@ -4,11 +4,11 @@ import 'package:go_router/go_router.dart';
 import 'package:portafolio_project/features/shared/presentation/shared/widgets/modern_floating_action_button.dart';
 
 import 'package:portafolio_project/features/services/presentation/page/modern_config_services_widgets.dart';
-import 'package:portafolio_project/features/services/presentation/page/modern_service_widgets.dart';
+import 'package:portafolio_project/features/category/presentation/providers/categories_provider.dart';
+import 'package:portafolio_project/features/category/domain/entities/category.dart';
 
 import '../../../shared/presentation/shared/widgets/modern_button.dart';
 
-import '../../../shared/presentation/shared/widgets/modern_input_field.dart';
 import '../../../../presentation/pages/auth/modern_scaffold_with_drawer.dart';
 import '../providers/services_provider.dart';
 import '../../domain/entities/services.dart';
@@ -25,16 +25,8 @@ class ModernConfigServicesPage extends ConsumerStatefulWidget {
 
 class ModernConfigServicesPageState
     extends ConsumerState<ModernConfigServicesPage> {
-  String _searchQuery = '';
-  String _selectedCategory = 'Todos';
-
-  final List<String> _categories = [
-    'Todos',
-    'Detailing',
-    'Mecánica',
-    'Pintura',
-    'Neumáticos',
-  ];
+  final TextEditingController _searchController = TextEditingController();
+  final FocusNode _searchFocusNode = FocusNode();
 
   @override
   void initState() {
@@ -42,21 +34,97 @@ class ModernConfigServicesPageState
   }
 
   @override
+  void dispose() {
+    _searchController.dispose();
+    _searchFocusNode.dispose();
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
     final servicesState = ref.watch(servicesProvider);
+    final filtersState = ref.watch(servicesFiltersProvider);
+    final filtersNotifier = ref.read(servicesFiltersProvider.notifier);
     final List<Services> services = _filterServices(servicesState.services);
+    final categoriesState = ref.watch(categoriesProvider);
+    final categories = categoriesState.categories
+        .where((category) => category.isActive)
+        .toList();
+
+    if (filtersState.isSearching && !_searchFocusNode.hasFocus) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted) _searchFocusNode.requestFocus();
+      });
+    }
 
     return ModernScaffoldWithDrawer(
       title: 'Gestión de Servicios',
+      titleWidget: filtersState.isSearching
+          ? Align(
+              alignment: Alignment.centerLeft,
+              child: Container(
+                height: 50,
+                padding: const EdgeInsets.symmetric(horizontal: 12),
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(18),
+                  border: Border.all(
+                    color: const Color(0xFF3498db).withValues(alpha: 0.6),
+                  ),
+                ),
+                child: Center(
+                  child: TextField(
+                    controller: _searchController,
+                    focusNode: _searchFocusNode,
+                    autofocus: true,
+                    cursorColor: const Color(0xFF2c3e50),
+                    keyboardAppearance: Brightness.light,
+                    textInputAction: TextInputAction.search,
+                    onChanged: filtersNotifier.setSearchQuery,
+                    style: const TextStyle(
+                      color: Color(0xFF2c3e50),
+                      fontSize: 20,
+                      fontWeight: FontWeight.w600,
+                    ),
+                    decoration: const InputDecoration(
+                      hintText: 'Buscar servicio...',
+                      hintStyle: TextStyle(color: Color(0xFF7f8c8d)),
+                      border: InputBorder.none,
+                      isDense: true,
+                      contentPadding: EdgeInsets.zero,
+                    ),
+                  ),
+                ),
+              ),
+            )
+          : null,
       appBarActions: [
-        IconButton(
-          icon: const Icon(Icons.search, color: Colors.white),
-          onPressed: _showSearchDialog,
-        ),
-        IconButton(
-          icon: const Icon(Icons.filter_list, color: Colors.white),
-          onPressed: _showFilterDialog,
-        ),
+        if (filtersState.isSearching)
+          IconButton(
+            icon: const Icon(Icons.close, color: Colors.white),
+            onPressed: () {
+              filtersNotifier.stopSearch();
+              _searchController.clear();
+              _searchFocusNode.unfocus();
+            },
+          )
+        else ...[
+          IconButton(
+            icon: const Icon(Icons.search, color: Colors.white),
+            onPressed: () {
+              filtersNotifier.startSearch();
+              WidgetsBinding.instance.addPostFrameCallback((_) {
+                _searchFocusNode.requestFocus();
+              });
+            },
+          ),
+          IconButton(
+            icon: const Icon(Icons.filter_list, color: Colors.white),
+            onPressed: categoriesState.loading
+                ? null
+                : () => _showFilterDialog(categories),
+          ),
+        ],
       ],
       body: Container(
         decoration: BoxDecoration(
@@ -166,45 +234,40 @@ class ModernConfigServicesPageState
     );
   }
 
-  void _showSearchDialog() {
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Buscar Servicio'),
-        content: ModernInputField(
-          label: 'Buscar',
-          hint: 'Nombre del servicio...',
-          onChanged: (value) => setState(() => _searchQuery = value),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text('Cerrar'),
-          ),
-        ],
-      ),
-    );
-  }
-
-  void _showFilterDialog() {
+  void _showFilterDialog(List<Category> categories) {
+    final filtersNotifier = ref.read(servicesFiltersProvider.notifier);
+    final filtersState = ref.read(servicesFiltersProvider);
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
         title: const Text('Filtrar por Categoría'),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: _categories.map((category) {
-            return RadioListTile<String>(
-              title: Text(category),
-              value: category,
-              groupValue: _selectedCategory,
-              onChanged: (value) {
-                setState(() => _selectedCategory = value!);
-                Navigator.pop(context);
-              },
-            );
-          }).toList(),
-        ),
+        content: categories.isEmpty
+            ? const Text('No hay categorías disponibles')
+            : Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  RadioListTile<int>(
+                    title: const Text('Todos'),
+                    value: 0,
+                    groupValue: filtersState.selectedCategoryId,
+                    onChanged: (value) {
+                      filtersNotifier.setCategoryId(value ?? 0);
+                      Navigator.pop(context);
+                    },
+                  ),
+                  ...categories.map((category) {
+                    return RadioListTile<int>(
+                      title: Text(category.name),
+                      value: category.id,
+                      groupValue: filtersState.selectedCategoryId,
+                      onChanged: (value) {
+                        filtersNotifier.setCategoryId(value ?? 0);
+                        Navigator.pop(context);
+                      },
+                    );
+                  }).toList(),
+                ],
+              ),
       ),
     );
   }
@@ -261,13 +324,16 @@ class ModernConfigServicesPageState
   }
 
   List<Services> _filterServices(List<Services> services) {
+    final filtersState = ref.read(servicesFiltersProvider);
     return services.where((service) {
-      final category = getServiceCategory(service);
       final matchesSearch =
-          _searchQuery.isEmpty ||
-          service.name.toLowerCase().contains(_searchQuery.toLowerCase());
+          filtersState.searchQuery.isEmpty ||
+          service.name
+              .toLowerCase()
+              .contains(filtersState.searchQuery.toLowerCase());
       final matchesCategory =
-          _selectedCategory == 'Todos' || category == _selectedCategory;
+          filtersState.selectedCategoryId == 0 ||
+          service.categoryId == filtersState.selectedCategoryId;
       return matchesSearch && matchesCategory;
     }).toList();
   }

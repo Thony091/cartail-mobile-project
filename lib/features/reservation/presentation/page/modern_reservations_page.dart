@@ -80,6 +80,21 @@ class ModernReservationsPageState
           return;
       }
 
+      if (providerState.endTimeEstimated.value.isEmpty) {
+        _showSnackBar('Por favor ingresa la hora fin estimada');
+        return;
+      }
+
+      if (providerState.customerNotes.value.isEmpty) {
+        _showSnackBar('Por favor ingresa las notas del cliente');
+        return;
+      }
+
+      if (providerState.mechanicNotes.value.isEmpty) {
+        _showSnackBar('Por favor ingresa las notas del mecánico');
+        return;
+      }
+
       if (providerState.serviceId.isEmpty) {
         _showSnackBar('Por favor selecciona un servicio');
         return;

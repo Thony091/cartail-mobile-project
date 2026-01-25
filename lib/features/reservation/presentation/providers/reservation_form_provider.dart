@@ -2,7 +2,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:formz/formz.dart';
 import 'package:intl/intl.dart';
 
-
+import '../../../../config/services/error_handler_service.dart';
 import '../../../../presentation/presentation_container.dart';
 import '../../../auth/presentation/providers/better_auth_provider.dart';
 
@@ -74,14 +74,26 @@ class ReservationFormNotifier extends StateNotifier<ReservationFormState>{
   }
 
   onEndTimeEstimatedChange( String value) {
+    final newEndTime = ReservationTime.dirty(value.toString());
     state = state.copyWith(
-      endTimeEstimated: value
+      endTimeEstimated: newEndTime,
+      isValid: Formz.validate([newEndTime, state.endTimeEstimated])
     );
   }
 
   onCustomerNotesChange( String value ) {
+    final newNotes = Messages.dirty(value);
     state = state.copyWith(
-      customerNotes: value
+      customerNotes: newNotes,
+      isValid: Formz.validate([newNotes, state.customerNotes])
+    );
+  }
+
+  onMechanicNotesChange( String value ) {
+    final newNotes = Messages.dirty(value);
+    state = state.copyWith(
+      mechanicNotes: newNotes,
+      isValid: Formz.validate([newNotes, state.mechanicNotes])
     );
   }
 
@@ -98,11 +110,14 @@ class ReservationFormNotifier extends StateNotifier<ReservationFormState>{
   }
 
   Future<bool> onFormSubmit() async {
+    // Limpiar error previo
+    state = state.copyWith(errorMessage: '');
 
     try {
 
+      state = state.copyWith(isFormPosted: true);
       _touchEveryField();
-      
+
       if ( !state.isValid || state.serviceId.isEmpty ) return false;
 
       state = state.copyWith( isPosting: true );
@@ -112,19 +127,16 @@ class ReservationFormNotifier extends StateNotifier<ReservationFormState>{
 
       final reservationSimilar = {
         'patenteVehiculo': state.vehiclePlate.value,
-        'fecha': state.date.value,
+        'fecha': _buildReservationDateTime(),
         'horaInicio': state.time.value,
-        'horaFinEstimada': state.endTimeEstimated,
-        'notasCliente': state.customerNotes,
-        'notasMecanico': '',
+        'horaFinEstimada': state.endTimeEstimated.value,
+        'notasCliente': state.customerNotes.value,
+        'notasMecanico': state.mechanicNotes.value,
         'recordatorio': state.reminder,
         'idEstado': state.statusId,
         'idServicio': int.tryParse(state.serviceId) ?? state.statusId,
         'idCliente': clientId,
       };
-      reservationSimilar.removeWhere(
-        (key, value) => value == null || (value is String && value.trim().isEmpty),
-      );
 
       final created = await createReservationCallback(reservationSimilar);
 
@@ -133,6 +145,10 @@ class ReservationFormNotifier extends StateNotifier<ReservationFormState>{
       return created;
 
     } catch (e) {
+      state = state.copyWith(
+        isPosting: false,
+        errorMessage: ErrorHandlerService.readableError(e),
+      );
       return false;
     }
 
@@ -156,7 +172,7 @@ class ReservationFormNotifier extends StateNotifier<ReservationFormState>{
         ? userData!.phone!
         : state.clientPhone.value;
 
-    if (name.isEmpty || email.isEmpty || phone.isEmpty) {
+    if (name.isEmpty || email.isEmpty) {
       return null;
     }
 
@@ -179,6 +195,26 @@ class ReservationFormNotifier extends StateNotifier<ReservationFormState>{
     return client.id;
   }
 
+  String _buildReservationDateTime() {
+    final date = state.date.value;
+    final time = state.time.value;
+    if (date.isEmpty) return date;
+    if (time.isEmpty) return date;
+    return '${date}T${_buildNormalizedTime(time)}';
+  }
+
+  String _buildNormalizedTime(String value) {
+    if (value.isEmpty) return value;
+    final parts = value.split(':');
+    if (parts.length == 2) {
+      return '${parts[0].padLeft(2, '0')}:${parts[1].padLeft(2, '0')}:00';
+    }
+    if (parts.length == 3) {
+      return '${parts[0].padLeft(2, '0')}:${parts[1].padLeft(2, '0')}:${parts[2].padLeft(2, '0')}';
+    }
+    return value;
+  }
+
   void _touchEveryField() {
     final authState = ref.read(betterAuthProvider);
     final isAuthenticated = authState.isAuthenticated;
@@ -186,20 +222,21 @@ class ReservationFormNotifier extends StateNotifier<ReservationFormState>{
     final needsClientInfo = !isAuthenticated ||
         userData == null ||
         (userData.name?.isEmpty ?? true) ||
-        userData.email.isEmpty ||
-        (userData.phone?.isEmpty ?? true);
+        userData.email.isEmpty;
 
     final validationInputs = <FormzInput>[
       Name.dirty(state.vehiclePlate.value),
       ReservationDate.dirty(state.date.value),
       ReservationTime.dirty(state.time.value),
+      ReservationTime.dirty(state.endTimeEstimated.value),
+      Messages.dirty(state.customerNotes.value),
+      Messages.dirty(state.mechanicNotes.value),
     ];
 
     if (needsClientInfo) {
       validationInputs.addAll([
         Name.dirty(state.clientName.value),
         Email.dirty(state.clientEmail.value),
-        Phone.dirty(state.clientPhone.value),
       ]);
     }
 
@@ -207,6 +244,9 @@ class ReservationFormNotifier extends StateNotifier<ReservationFormState>{
       vehiclePlate: Name.dirty(state.vehiclePlate.value),
       date: ReservationDate.dirty(state.date.value),
       time: ReservationTime.dirty(state.time.value),
+      endTimeEstimated: ReservationTime.dirty(state.endTimeEstimated.value),
+      customerNotes: Messages.dirty(state.customerNotes.value),
+      mechanicNotes: Messages.dirty(state.mechanicNotes.value),
       clientName: Name.dirty(state.clientName.value),
       clientEmail: Email.dirty(state.clientEmail.value),
       clientPhone: Phone.dirty(state.clientPhone.value),
@@ -229,8 +269,9 @@ class ReservationFormState {
   final Name vehiclePlate;
   final ReservationDate date;
   final ReservationTime time;
-  final String endTimeEstimated;
-  final String customerNotes;
+  final ReservationTime endTimeEstimated;
+  final Messages customerNotes;
+  final Messages mechanicNotes;
   final bool reminder;
   final int statusId;
   final int? clientId;
@@ -239,6 +280,7 @@ class ReservationFormState {
   final Email clientEmail;
   final Phone clientPhone;
   final List<String> timeOptions;
+  final String? errorMessage;
 
   ReservationFormState({
     this.isPosting      = false,
@@ -247,8 +289,9 @@ class ReservationFormState {
     this.vehiclePlate   = const Name.pure(),
     this.date           = minValidDate,
     this.time           = minValidTime,
-    this.endTimeEstimated = '',
-    this.customerNotes  = '',
+    this.endTimeEstimated = const ReservationTime.pure(),
+    this.customerNotes  = const Messages.pure(),
+    this.mechanicNotes  = const Messages.pure(),
     this.reminder       = true,
     this.statusId       = 1,
     this.clientId,
@@ -256,7 +299,8 @@ class ReservationFormState {
     this.clientName     = const Name.pure(),
     this.clientEmail    = const Email.pure(),
     this.clientPhone    = const Phone.pure(),
-    this.timeOptions    = const []
+    this.timeOptions    = const [],
+    this.errorMessage,
   });
 
   ReservationFormState copyWith({
@@ -266,8 +310,9 @@ class ReservationFormState {
     Name? vehiclePlate,
     ReservationDate? date,
     ReservationTime? time,
-    String? endTimeEstimated,
-    String? customerNotes,
+    ReservationTime? endTimeEstimated,
+    Messages? customerNotes,
+    Messages? mechanicNotes,
     bool? reminder,
     int? statusId,
     int? clientId,
@@ -276,6 +321,7 @@ class ReservationFormState {
     Email? clientEmail,
     Phone? clientPhone,
     List<String>? timeOptions,
+    String? errorMessage,
   }) => ReservationFormState(
     isPosting: isPosting ?? this.isPosting,
     isFormPosted: isFormPosted ?? this.isFormPosted,
@@ -285,6 +331,7 @@ class ReservationFormState {
     time: time ?? this.time,
     endTimeEstimated: endTimeEstimated ?? this.endTimeEstimated,
     customerNotes: customerNotes ?? this.customerNotes,
+    mechanicNotes: mechanicNotes ?? this.mechanicNotes,
     reminder: reminder ?? this.reminder,
     statusId: statusId ?? this.statusId,
     clientId: clientId ?? this.clientId,
@@ -293,6 +340,7 @@ class ReservationFormState {
     clientEmail: clientEmail ?? this.clientEmail,
     clientPhone: clientPhone ?? this.clientPhone,
     timeOptions: timeOptions ?? this.timeOptions,
+    errorMessage: errorMessage ?? this.errorMessage,
   );
 
   @override
@@ -307,6 +355,7 @@ class ReservationFormState {
         time: $time
         endTimeEstimated: $endTimeEstimated
         customerNotes: $customerNotes
+        mechanicNotes: $mechanicNotes
         reminder: $reminder
         statusId: $statusId
         clientId: $clientId
@@ -315,6 +364,7 @@ class ReservationFormState {
         clientEmail: $clientEmail
         clientPhone: $clientPhone
         timeOptions: $timeOptions
+        errorMessage: $errorMessage
       ''';
   }
 

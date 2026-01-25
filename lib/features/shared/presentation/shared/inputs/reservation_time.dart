@@ -11,7 +11,7 @@ class ReservationTime extends FormzInput<String, ReservationTimeError> {
   );
 
   // Call super.pure to represent an unmodified form input.
-  ReservationTime.pure() : super.pure('');
+  const ReservationTime.pure() : super.pure('');
 
   // Call super.dirty to represent a modified form input.
   const ReservationTime.dirty(String value) : super.dirty(value);

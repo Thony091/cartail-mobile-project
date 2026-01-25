@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:portafolio_project/features/auth/presentation/providers/better_auth_provider.dart';
 
 import '../../../features/product/domain/entities/product.dart';
 import '/../../config/config.dart';
@@ -18,7 +19,8 @@ class ProductDetailPage extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
 
-    final authState = ref.watch( authProvider );
+    final authState = ref.watch(betterAuthProvider);
+    final isAdmin = authState.session!.user.isAdmin;
     final productState = ref.watch( productProvider(productId) );
     final color = AppTheme().getTheme().colorScheme;
 
@@ -33,9 +35,9 @@ class ProductDetailPage extends ConsumerWidget {
           ? const FullScreenLoader()
           : _ProductDetailBodyPage( product: productState.product! ),
       
-        floatingActionButton:  ( authState.authStatus != AuthStatus.authenticated)
+        floatingActionButton:  ( !authState.isAuthenticated)
           ? null 
-          : (authState.userData!.isAdmin) 
+          : (isAdmin) 
             ? 
               FloatingActionButton.extended(
                 label: const Text('Guardar Producto'),

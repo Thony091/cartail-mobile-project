@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart' hide FilterChip;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:portafolio_project/features/auth/presentation/providers/better_auth_provider.dart';
 
 import '../user/domain/entities/user_role.dart';
-import '../auth/presentation/providers/auth_provider.dart';
 import '../../presentation/pages/auth/modern_scaffold_with_drawer.dart';
 import '../ticket/presentation/pages/widgets/ticket_widgets.dart';
 
@@ -22,8 +22,8 @@ class UserHistoryPageState extends ConsumerState<UserHistoryPage> {
 
   @override
   Widget build(BuildContext context) {
-    final authState = ref.watch(authProvider);
-    final userRole = authState.userRole;
+    final authState = ref.watch(betterAuthProvider);
+    final userRole = authState.session!.user.role;
 
     return ModernScaffoldWithDrawer(
       title: _getTitleForRole(userRole),

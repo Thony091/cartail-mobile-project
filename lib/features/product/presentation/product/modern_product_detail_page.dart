@@ -2,6 +2,7 @@ import 'package:animate_do/animate_do.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:portafolio_project/features/auth/presentation/providers/better_auth_provider.dart';
 
 import 'package:portafolio_project/features/product/presentation/product/modern_product_detail_widgets.dart';
 
@@ -86,8 +87,8 @@ class ModernProductDetailPageState
 
   @override
   Widget build(BuildContext context) {
-    final authState = ref.watch(authProvider);
-    final isAdmin = authState.userData?.isAdmin ?? false;
+    final authState = ref.watch(betterAuthProvider);
+    final isAdmin = authState.session!.user.isAdmin;
     // final isAdmin = true; // Simular admin
     final isNewProduct = widget.productId == 'new';
     final stock = int.tryParse(_stockController.text) ?? 0;

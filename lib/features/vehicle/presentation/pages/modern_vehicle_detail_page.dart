@@ -2,9 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:portafolio_project/features/auth/presentation/providers/better_auth_provider.dart';
 
 import '../../../../presentation/pages/auth/modern_scaffold_with_drawer.dart';
-import '../../../auth/presentation/providers/auth_provider.dart';
 import '../../../shared/presentation/shared/widgets/modern_button.dart';
 import '../../../shared/presentation/shared/widgets/modern_input_field.dart';
 import '../../domain/entities/vehicle.dart';
@@ -36,8 +36,8 @@ class ModernVehicleDetailPageState extends ConsumerState<ModernVehicleDetailPage
 
   @override
   Widget build(BuildContext context) {
-    final authState = ref.watch(authProvider);
-    final isAdmin = authState.userData?.isAdmin ?? false;
+    final authState = ref.watch(betterAuthProvider);
+    final isAdmin = authState.session!.user.isAdmin;
 
     if (!isAdmin) {
       return const ModernScaffoldWithDrawer(

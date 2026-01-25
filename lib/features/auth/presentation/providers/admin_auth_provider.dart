@@ -188,7 +188,9 @@ class AdminImpersonationState {
 class AdminUsersListNotifier extends StateNotifier<AdminUsersListState> {
   final AdminAuthDatasource _datasource;
 
-  AdminUsersListNotifier(this._datasource) : super(const AdminUsersListState());
+  AdminUsersListNotifier(this._datasource) : super(const AdminUsersListState()){
+    loadUsers();
+  }
 
   /// Carga usuarios con filtros opcionales.
   Future<void> loadUsers({
@@ -202,7 +204,10 @@ class AdminUsersListNotifier extends StateNotifier<AdminUsersListState> {
     String? filterValue,
   }) async {
     try {
-      state = state.copyWith(isLoading: true, errorMessage: null);
+      state = state.copyWith(
+        isLoading: true, 
+        errorMessage: null
+      );
 
       final response = await _datasource.listUsers(
         searchValue: searchValue,

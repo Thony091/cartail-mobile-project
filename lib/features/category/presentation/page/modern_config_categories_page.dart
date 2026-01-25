@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:portafolio_project/features/auth/auth.dart';
 
 import '../../../../presentation/pages/auth/modern_scaffold_with_drawer.dart';
-import '../../../auth/presentation/providers/auth_provider.dart';
 import '../../../shared/presentation/shared/widgets/modern_button.dart';
 import '../../../shared/presentation/shared/widgets/modern_floating_action_button.dart';
 import '../../../shared/presentation/shared/widgets/modern_input_field.dart';
@@ -26,8 +26,8 @@ class ModernConfigCategoriesPageState
 
   @override
   Widget build(BuildContext context) {
-    final authState = ref.watch(authProvider);
-    final isAdmin = authState.userData?.isAdmin ?? false;
+    final authState = ref.watch(betterAuthProvider);
+    final isAdmin = authState.session!.user.isAdmin;
 
     if (!isAdmin) {
       return const ModernScaffoldWithDrawer(

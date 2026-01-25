@@ -1,5 +1,8 @@
 import 'dart:io';
+import 'dart:ui';
 
+import 'package:firebase_crashlytics/firebase_crashlytics.dart';
+import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -17,11 +20,29 @@ void main() async {
     const Duration(milliseconds:1000),
     () => HttpOverrides.global = MyHttpOverrides()
   );
-
+  
+  // Background FCM 
+  FirebaseMessaging.onBackgroundMessage(
+    firebaseMessagingBackgroundHandler,
+  );
   /// Initialize Firebase
   await FirebaseService.init();
 
-  /// Initialize Encryption Service (for sensitive data)
+  // Captura errores de Flutter (UI / framework)
+  FlutterError.onError =
+      FirebaseCrashlytics.instance.recordFlutterFatalError;
+
+  // Captura errores async que no pasan por FlutterError
+  PlatformDispatcher.instance.onError = (error, stack) {
+    FirebaseCrashlytics.instance.recordError(
+      error,
+      stack,
+      fatal: true,
+    );
+    return true;
+  };
+
+  /// Initialize Encryption Service (for sensitive data) - Servicios locales
   final encryptionService = EncryptionService();
   await encryptionService.init();
 
@@ -29,9 +50,7 @@ void main() async {
   final isarService = IsarService();
   await isarService.init();
 
-  runApp(
-    const ProviderScope(child: MainApp())
-  );
+  runApp(const ProviderScope(child: MainApp()));
 }
 
 class MainApp extends ConsumerWidget {

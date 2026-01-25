@@ -2,6 +2,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:portafolio_project/features/auth/presentation/providers/better_auth_provider.dart';
 // import 'package:go_router/go_router.dart';
 
 import '../../presentation_container.dart';
@@ -34,7 +35,7 @@ class _EditProfileBodyPage extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
 
     final textStyles = Theme.of(context).textTheme;
-    final authState = ref.watch( authProvider ).userData!;
+    final authState = ref.watch(betterAuthProvider).session!.user;
     final upForm = ref.watch( updateFormProvider );
 
     return Padding(
@@ -67,24 +68,24 @@ class _EditProfileBodyPage extends ConsumerWidget {
             ),
             const SizedBox( height: 20 ),
         
-            CustomProfileField( 
+            const CustomProfileField( 
               readOnly: true,
               obscureText: true,
               isTopField: true,
               isBottomField: true,
               label: 'Contraseña',
-              initialValue: authState.password,
+              initialValue: '**********',
             ),
             const SizedBox( height: 20 ),
         
             CustomProfileField( 
-              initialValue: authState.nombre,
+              initialValue: (authState.name == null) 
+                ? '' 
+                : authState.name!,
               isTopField: true,
               isBottomField: true,
               label: 'Nombre',
               onChanged: ref.read( updateFormProvider.notifier ).onNameChange,
-              // keyboardType: const TextInputType.numberWithOptions(decimal: true),
-              // initialValue: authState.nombre,
               errorMessage: upForm.isFormPosted
                 ? upForm.name.errorMessage
                 : null,
@@ -92,7 +93,9 @@ class _EditProfileBodyPage extends ConsumerWidget {
             const SizedBox( height: 20 ),
 
             CustomProfileField(
-              initialValue: authState.rut.isEmpty ? '' : authState.rut,
+              initialValue: authState.rut == null
+                ? ''
+                : authState.rut!,
               isTopField: true,
               isBottomField: true,
               label: 'Rut',
@@ -101,7 +104,8 @@ class _EditProfileBodyPage extends ConsumerWidget {
             const SizedBox( height: 20 ),
 
             CustomProfileField(
-              hint: authState.fechaNacimiento.isEmpty ? 'Escribir Fecha de Nacimiento' : authState.fechaNacimiento, 
+              hint: authState.birthday
+                ?? 'Elegir Fecha de Nacimiento',
               isTopField: true,
               isBottomField: true,
               label: 'Fecha de Nacimiento',
@@ -110,13 +114,13 @@ class _EditProfileBodyPage extends ConsumerWidget {
             const SizedBox( height: 20 ),
         
             CustomProfileField( 
-              initialValue: authState.telefono.isEmpty ? '' : authState.telefono,
+              initialValue: authState.phone == null
+                ? '' 
+                : authState.phone!,
               isTopField: true,
               isBottomField: true,
               label: 'Numero de Telefono',
               onChanged: ref.read( updateFormProvider.notifier ).onPhoneChange,
-              // keyboardType: const TextInputType.numberWithOptions(decimal: true),
-              // initialValue: authState.nombre,
               errorMessage: upForm.isFormPosted
                 ? upForm.phone.errorMessage
                 : null,
@@ -124,13 +128,12 @@ class _EditProfileBodyPage extends ConsumerWidget {
             const SizedBox( height: 20 ),
 
             CustomProfileField(
-              hint: authState.bio.isEmpty ? 'Escribir biografia' : authState.bio,
+              hint: authState.bio ?? 'Escribir biografia',
               maxLines: 4,
               isTopField: true,
               isBottomField: true,
               label: 'Biografia',
               onChanged: ref.read( updateFormProvider.notifier ).onBioChange,
-              // keyboardType: const TextInputType.numberWithOptions(decimal: true),
             ),
 
             const SizedBox( height: 30 ),
@@ -148,7 +151,8 @@ class _EditProfileBodyPage extends ConsumerWidget {
                   : ref.read( updateFormProvider.notifier )
                     .onUpdateFormSubmit()
                     .then((value) {
-                      if( value == true ) {
+                      if( value ) {
+                        if (!context.mounted) return;
                         context.push('/profile-user');
                         showDialog(
                           context: context, 
@@ -156,6 +160,7 @@ class _EditProfileBodyPage extends ConsumerWidget {
                         );
                       }
                       else {
+                        if (!context.mounted) return;
                         showDialog(
                           context: context, 
                           builder: (context) => const PopUpMensajeFinalWidget(text: 'El Perfil no se ha Actualizado. Intente de Nuevo!'),

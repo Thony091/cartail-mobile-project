@@ -1,10 +1,9 @@
 import 'package:animate_do/animate_do.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:go_router/go_router.dart';
+import 'package:portafolio_project/features/auth/presentation/providers/better_auth_provider.dart';
 
 import 'package:portafolio_project/features/realized_work/presentation/pages/modern_work_detail_widgets.dart';
-import '../../../auth/presentation/providers/auth_provider.dart';
 import '../../../../presentation/pages/auth/modern_scaffold_with_drawer.dart';
 import '../providers/work_provider.dart';
 
@@ -23,7 +22,7 @@ class ModernWorkDetailPageState extends ConsumerState<ModernWorkDetailPage> {
 
   @override
   Widget build(BuildContext context) {
-    final authState = ref.watch(authProvider);
+    final authState = ref.watch(betterAuthProvider);
     final workState = ref.watch(workProvider(widget.workId));
     final work = workState.work;
 
@@ -42,7 +41,7 @@ class ModernWorkDetailPageState extends ConsumerState<ModernWorkDetailPage> {
     }
 
     final workNotifier = ref.read(workProvider(widget.workId).notifier);
-    final isAdmin = authState.userData?.isAdmin ?? false;
+    final isAdmin = authState.session!.user.isAdmin;
     final isNewWork = widget.workId == 'new';
     final isEditMode = workState.isEditMode;
 

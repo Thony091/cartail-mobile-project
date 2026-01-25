@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import 'package:portafolio_project/features/auth/presentation/providers/auth_provider.dart';
 import 'package:portafolio_project/features/auth/presentation/providers/better_auth_provider.dart';
 import 'package:portafolio_project/features/shared/presentation/shared/widgets/modern_button.dart';
 

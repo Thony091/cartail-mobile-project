@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_staggered_grid_view/flutter_staggered_grid_view.dart';
 import 'package:go_router/go_router.dart';
+import 'package:portafolio_project/features/auth/presentation/providers/better_auth_provider.dart';
 
 import '../../../config/config.dart';
 import '../../presentation_container.dart';
@@ -17,16 +18,16 @@ class OurWorksPage extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
 
     final scaffoldKey = GlobalKey<ScaffoldState>();
-    final authState   = ref.watch( authProvider );
+    final authState = ref.watch(betterAuthProvider);
     final workState = ref.watch( worksProvider );
     final text  = AppTheme().getTheme().textTheme;
     // final color = AppTheme().getTheme().colorScheme;
 
     return Scaffold(
       appBar: AppBar(
-        title: Text( authState.authStatus != AuthStatus.authenticated
+        title: Text( authState.isAdmin
           ? "Nuestros Trabajos" 
-          :( !authState.userData!.isAdmin )
+          :( !authState.isAdmin )
             ? "Nuestros Trabajos" 
             : "Trabajos disponibles",
           style: text.titleLarge,
@@ -37,7 +38,7 @@ class OurWorksPage extends ConsumerWidget {
       ),
       body:  BackgroundImageWidget(
         opacity: 0.35, 
-        child: ( authState.authStatus != AuthStatus.authenticated)
+        child: ( authState.isAuthenticated)
           ? workState.works.isEmpty 
             ? FadeInRight(
                 child: Center(
@@ -48,7 +49,7 @@ class OurWorksPage extends ConsumerWidget {
                 )
               )
             : const _OurWorksBodyPage()
-          : ( authState.userData!.isAdmin )
+          : ( authState.isAdmin )
             ? workState.works.isEmpty 
               ? FadeInRight(
                   child: Center(
@@ -70,9 +71,9 @@ class OurWorksPage extends ConsumerWidget {
                 )
               : const _OurWorksBodyPage(),
       ),
-      floatingActionButton: ( authState.authStatus != AuthStatus.authenticated)
+      floatingActionButton: ( !authState.isAuthenticated)
         ? null 
-        : ( authState.userData!.isAdmin ) 
+        : ( authState.isAdmin ) 
           ? FloatingActionButton.extended(
               label: const Text('Crear Trabajo'),
               icon: const Icon( Icons.add ),

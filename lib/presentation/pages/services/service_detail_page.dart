@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:portafolio_project/features/auth/presentation/providers/better_auth_provider.dart';
 
 import '../../../config/config.dart';
 import '../../../features/services/domain/entities/services.dart';
@@ -25,7 +26,7 @@ class ServiceDetailPage extends ConsumerWidget{
   @override
   Widget build(BuildContext context, WidgetRef ref) {
 
-    final authState = ref.watch( authProvider );
+    final authState = ref.watch(betterAuthProvider);
     final serviceState = ref.watch( serviceProvider( serviceId ) );
     final color = AppTheme().getTheme().colorScheme;
     
@@ -41,9 +42,9 @@ class ServiceDetailPage extends ConsumerWidget{
         body: serviceState.isLoading
           ? const FullScreenLoader()
           : BackgroundImageWidget(opacity: 0.1, child: _ServiceDetailBodyPage( service: serviceState.service! )),
-        floatingActionButton:  ( authState.authStatus != AuthStatus.authenticated)
+        floatingActionButton:  ( !authState.isAuthenticated)
           ? null 
-          : (authState.userData!.isAdmin) 
+          : (authState.isAdmin) 
             ? 
               FloatingActionButton.extended(
                 label: const Text('Guardar'),
@@ -54,6 +55,7 @@ class ServiceDetailPage extends ConsumerWidget{
                     serviceFormProvider( serviceState.service! ).notifier
                   ).onFormSubmit()
                   .then((value) {
+                    if (!context.mounted) return;
                     if ( !value ) return;
                     showSnackbar(context);
                     context.push('/services');

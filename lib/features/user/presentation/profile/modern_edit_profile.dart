@@ -79,34 +79,6 @@ class ModernEditProfilePageState extends ConsumerState<ModernEditProfilePage> {
     }
   }
 
-  void _handleRegister() async {
-    if (_formKey.currentState?.validate() ?? false) {
-      setState(() {
-        _isLoading = true;
-      });
-
-      // Simular registro
-      await Future.delayed(const Duration(seconds: 2));
-
-      setState(() {
-        _isLoading = false;
-      });
-
-      // Mostrar éxito y navegar
-      if (mounted) {
-        _showSuccessDialog();
-      }
-    }
-  }
-
-  void _showSuccessDialog() {
-    showDialog(
-      context: context,
-      barrierDismissible: false,
-      builder: (context) => const SuccesUpdateDialog(),
-    );
-  }
-
   @override
   Widget build(BuildContext context) {
     return ModernScaffoldWithDrawer(

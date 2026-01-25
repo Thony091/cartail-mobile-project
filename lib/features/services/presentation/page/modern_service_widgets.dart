@@ -49,6 +49,8 @@ String getServiceCategory(Services service) {
 class ServiceHeaderSection extends StatelessWidget {
   final List<String> categories;
   final String selectedCategory;
+  final int totalServices;
+  final int activeServices;
   final ValueChanged<String> onSearchChanged;
   final ValueChanged<String> onCategorySelected;
 
@@ -56,6 +58,8 @@ class ServiceHeaderSection extends StatelessWidget {
     super.key,
     required this.categories,
     required this.selectedCategory,
+    required this.totalServices,
+    required this.activeServices,
     required this.onSearchChanged,
     required this.onCategorySelected,
   });
@@ -69,11 +73,11 @@ class ServiceHeaderSection extends StatelessWidget {
         children: [
           // Quick Stats
           FadeInDown(
-            child: const Row(
+            child: Row(
               children: [
                 Expanded(
                   child: StatCardWidget(
-                    value: '24',
+                    value: totalServices.toString(),
                     label: 'Servicios',
                     icon: Icons.build,
                     color: Color(0xFF3498db),
@@ -82,8 +86,8 @@ class ServiceHeaderSection extends StatelessWidget {
                 SizedBox(width: 16),
                 Expanded(
                   child: StatCardWidget(
-                    value: '156',
-                    label: 'Completados',
+                    value: activeServices.toString(),
+                    label: 'Activos',
                     icon: Icons.check_circle,
                     color: Color(0xFF27ae60),
                   ),

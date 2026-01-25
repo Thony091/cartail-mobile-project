@@ -1,16 +1,20 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:portafolio_project/features/auth/auth.dart';
 
 import '../../data/datasources/message_datasource_impl.dart';
 import '../../data/repositories/message_repository_impl.dart';
 import '../../domain/entities/message.dart';
 import '../../domain/repositories/message_repository.dart';
 import '../../../user/data/errors/auth_errors.dart';
-import '../../../../presentation/presentation_container.dart';
 
 final messagesProvider = StateNotifierProvider<MessagesNotifier, MessagesState>((ref) {
 
-  final messageRepository = MessageRepositoryImpl( MessageDatasourceImpl(accessToken: ref.watch( authProvider ).token) );
+  final messageRepository = MessageRepositoryImpl( 
+    MessageDatasourceImpl(
+      accessToken: ref.watch( betterAuthProvider ).token ?? ''
+    )
+  );
 
   return MessagesNotifier(
     messageRepository: messageRepository,

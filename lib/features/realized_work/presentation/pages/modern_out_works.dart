@@ -1,11 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:portafolio_project/features/auth/presentation/providers/better_auth_provider.dart';
 
 import '../../../shared/presentation/shared/widgets/widgets.dart';
 import '../../../../presentation/pages/auth/modern_scaffold_with_drawer.dart';
 import 'modern_out_works_widgets.dart';
 import '../providers/works_provider.dart';
-import '../../../auth/presentation/providers/auth_provider.dart';
 import '../../domain/entities/works.dart';
 
 class ModernOurWorksPage extends ConsumerStatefulWidget {
@@ -36,12 +36,12 @@ class ModernOurWorksPageState extends ConsumerState<ModernOurWorksPage>
   @override
   Widget build(BuildContext context) {
     final worksState = ref.watch(worksProvider);
-    final authState = ref.watch(authProvider);
-    final bool isAdmin = authState.userData?.isAdmin ?? false;
+    final authState = ref.watch(betterAuthProvider);
+    final isAdmin = authState.session?.user.isAdmin;
     final List<Works> works = worksState.works;
 
     return ModernScaffoldWithDrawer(
-      title: isAdmin ? 'Gestión de Trabajos' : 'Nuestros Trabajos',
+      title: (isAdmin != null && isAdmin) ? 'Gestión de Trabajos' : 'Nuestros Trabajos',
       body: Container(
         decoration: BoxDecoration(
           gradient: LinearGradient(
@@ -62,7 +62,7 @@ class ModernOurWorksPageState extends ConsumerState<ModernOurWorksPage>
                 children: [
                   WorksGrid(
                     works: works,
-                    isAdmin: isAdmin,
+                    isAdmin: isAdmin != null && isAdmin,
                     onWorkTap: _showWorkDetail,
                     onRefresh: _refreshWorks,
                     onDeleteConfirmation: _showDeleteWorkConfirmation,
@@ -71,7 +71,7 @@ class ModernOurWorksPageState extends ConsumerState<ModernOurWorksPage>
                     works: works
                         .where((w) => getWorkCategory(w) == 'Detailing')
                         .toList(),
-                    isAdmin: isAdmin,
+                    isAdmin: isAdmin != null && isAdmin,
                     onWorkTap: _showWorkDetail,
                     onRefresh: _refreshWorks,
                     onDeleteConfirmation: _showDeleteWorkConfirmation,
@@ -80,7 +80,7 @@ class ModernOurWorksPageState extends ConsumerState<ModernOurWorksPage>
                     works: works
                         .where((w) => getWorkCategory(w) == 'Restauración')
                         .toList(),
-                    isAdmin: isAdmin,
+                    isAdmin: isAdmin != null && isAdmin,
                     onWorkTap: _showWorkDetail,
                     onRefresh: _refreshWorks,
                     onDeleteConfirmation: _showDeleteWorkConfirmation,
@@ -91,7 +91,7 @@ class ModernOurWorksPageState extends ConsumerState<ModernOurWorksPage>
           ],
         ),
       ),
-      floatingActionButton: isAdmin
+      floatingActionButton: isAdmin != null && isAdmin
           ? ModernFloatingActionButton(
               icon: Icons.add_a_photo,
               tooltip: 'Agregar Trabajo',

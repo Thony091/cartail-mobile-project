@@ -1,5 +1,7 @@
 import 'package:flutter/widgets.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:portafolio_project/config/constants/secure_storage_keys.dart';
+import 'package:portafolio_project/config/services/secure_storage_service.dart';
 import '../../../user/domain/entities/user_role.dart';
 import '../../data/datasources/better_auth_datasource.dart';
 import '../../data/datasources/better_auth_datasource_impl.dart';
@@ -7,6 +9,8 @@ import '../../data/repositories/better_auth_repository_impl.dart';
 import '../../domain/entities/auth_session.dart';
 import '../../domain/entities/auth_user.dart';
 import '../../../../config/services/auth_service.dart';
+import '../../../../config/services/error_handler_service.dart';
+import '../../domain/errors/auth_exceptions.dart';
 import '../../domain/repositories/auth_repository.dart';
 
 // ============================================================
@@ -157,6 +161,17 @@ class BetterAuthNotifier extends StateNotifier<BetterAuthState> {
   bool _isChecking = false;
   static const int _maxSessionRetries = 3;
 
+  /// Instancia centralizada de FlutterSecureStorage
+  final _secureStorage = SecureStorageService.instance;
+
+  String _readableError(Object error) {
+    if (error is AuthException) {
+      return error.message;
+    }
+    // Para otros errores, usar el servicio centralizado
+    return ErrorHandlerService.readableError(error);
+  }
+
   BetterAuthNotifier({
     required AuthRepository repository,
     required AuthService authService,
@@ -187,6 +202,10 @@ class BetterAuthNotifier extends StateNotifier<BetterAuthState> {
         state = state.copyWith(
           status: BetterAuthStatus.authenticated,
           session: session,
+        );
+        await _secureStorage.write(
+          key: secureStorageAccessTokenKey,
+          value: session.token,
         );
       } else {
         // No hay sesión válida en el servidor
@@ -252,7 +271,7 @@ class BetterAuthNotifier extends StateNotifier<BetterAuthState> {
     } catch (e) {
       state = state.copyWith(
         status: BetterAuthStatus.error,
-        errorMessage: e.toString(),
+        errorMessage: _readableError(e),
       );
       rethrow;
     }
@@ -293,7 +312,7 @@ class BetterAuthNotifier extends StateNotifier<BetterAuthState> {
     } catch (e) {
       state = state.copyWith(
         status: BetterAuthStatus.error,
-        errorMessage: e.toString(),
+        errorMessage: _readableError(e),
       );
       rethrow;
     }
@@ -320,7 +339,7 @@ class BetterAuthNotifier extends StateNotifier<BetterAuthState> {
     } catch (e) {
       state = state.copyWith(
         status: BetterAuthStatus.error,
-        errorMessage: e.toString(),
+        errorMessage: _readableError(e),
       );
       rethrow;
     }
@@ -360,7 +379,7 @@ class BetterAuthNotifier extends StateNotifier<BetterAuthState> {
     } catch (e) {
       state = state.copyWith(
         status: BetterAuthStatus.error,
-        errorMessage: e.toString(),
+        errorMessage: _readableError(e),
       );
       rethrow;
     }
@@ -379,7 +398,7 @@ class BetterAuthNotifier extends StateNotifier<BetterAuthState> {
     } catch (e) {
       state = state.copyWith(
         status: BetterAuthStatus.error,
-        errorMessage: e.toString(),
+        errorMessage: _readableError(e),
       );
       rethrow;
     }
@@ -395,7 +414,7 @@ class BetterAuthNotifier extends StateNotifier<BetterAuthState> {
     } catch (e) {
       state = state.copyWith(
         status: BetterAuthStatus.error,
-        errorMessage: e.toString(),
+        errorMessage: _readableError(e),
       );
       rethrow;
     }

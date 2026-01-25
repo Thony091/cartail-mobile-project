@@ -3,7 +3,7 @@ import 'package:formz/formz.dart';
 
 import '../../domain/entities/services.dart';
 import '../../../../presentation/presentation_container.dart';
-import '../../../category/presentation/providers/categories_provider.dart';
+import '../../../../config/services/error_handler_service.dart';
 
 final serviceFormProvider = StateNotifierProvider.autoDispose.family<ServiceFormNotifier, ServiceFormState, Services>(
   (ref, services) {
@@ -146,6 +146,7 @@ class ServiceFormNotifier extends StateNotifier<ServiceFormState>{
   setIsLoading( bool isLoading ) {
     state = state.copyWith(
       isLoading: isLoading,
+      errorMessage: '',
     );
   }
 
@@ -161,10 +162,19 @@ class ServiceFormNotifier extends StateNotifier<ServiceFormState>{
   }
 
   Future<bool> onFormSubmit() async {
+    // Limpiar error previo
+    state = state.copyWith(errorMessage: '');
+
     setIsLoading(true);
     _tochedEverything();
-    if ( !state.isFormValid ) return false;
-    if ( onSubmitCallback == null ) return false;
+    if ( !state.isFormValid ) {
+      setIsLoading(false);
+      return false;
+    }
+    if ( onSubmitCallback == null ) {
+      setIsLoading(false);
+      return false;
+    }
 
     final serviceSimilar = {
       'id': ( state.id == 'new' ) ? null : state.id,
@@ -187,11 +197,14 @@ class ServiceFormNotifier extends StateNotifier<ServiceFormState>{
     }
 
     try {
-      return await onSubmitCallback!(serviceSimilar).then((value) {
-        setIsLoading(false);
-        return value;
-      });
+      final result = await onSubmitCallback!(serviceSimilar);
+      setIsLoading(false);
+      return result;
     } catch (e) {
+      state = state.copyWith(
+        isLoading: false,
+        errorMessage: ErrorHandlerService.readableError(e),
+      );
       return false;
     }
   }
@@ -211,6 +224,7 @@ class ServiceFormState{
   final bool requiresReservation;
   final String selectedCategory;
   final int? categoryId;
+  final String? errorMessage;
 
   ServiceFormState({
     this.isLoading = false,
@@ -226,6 +240,7 @@ class ServiceFormState{
     this.requiresReservation = false,
     this.selectedCategory = 'Detailing',
     this.categoryId,
+    this.errorMessage,
   });
 
   ServiceFormState copyWith({
@@ -242,6 +257,7 @@ class ServiceFormState{
     bool? requiresReservation,
     String? selectedCategory,
     int? categoryId,
+    String? errorMessage,
   }) => ServiceFormState(
     isLoading: isLoading ?? this.isLoading,
     id: id ?? this.id,
@@ -256,6 +272,7 @@ class ServiceFormState{
     requiresReservation: requiresReservation ?? this.requiresReservation,
     selectedCategory: selectedCategory ?? this.selectedCategory,
     categoryId: categoryId ?? this.categoryId,
+    errorMessage: errorMessage ?? this.errorMessage,
   );
 
   @override
@@ -275,6 +292,7 @@ class ServiceFormState{
         requiresReservation: $requiresReservation,
         selectedCategory: $selectedCategory,
         categoryId: $categoryId,
+        errorMessage: $errorMessage,
     ''';
   }
 

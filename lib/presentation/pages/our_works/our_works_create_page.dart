@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:portafolio_project/features/auth/presentation/providers/better_auth_provider.dart';
 
 import '../../../config/config.dart';
 import '../../../features/realized_work/domain/entities/works.dart';
@@ -17,7 +18,7 @@ class WorkCreatePage extends ConsumerWidget{
   @override
   Widget build(BuildContext context, WidgetRef ref) {
 
-    final authState = ref.watch( authProvider );
+    final authState = ref.watch(betterAuthProvider);
     final workState = ref.watch( workProvider( workId ) );
     final color = AppTheme().getTheme().colorScheme;
     
@@ -31,12 +32,12 @@ class WorkCreatePage extends ConsumerWidget{
         body: workState.isLoading
           ? const FullScreenLoader()
           : _WorkDetailBodyPage( work: workState.work! ),
-        floatingActionButton:  ( authState.authStatus != AuthStatus.authenticated)
+        floatingActionButton:  !authState.isAuthenticated
           ? null 
-          : (authState.userData!.isAdmin) 
+          : (authState.session!.user.isAdmin) 
             ? 
               FloatingActionButton.extended(
-                label: const Text('Guardar Servicio'),
+                label: const Text('Guardar Trabajo'),
                 icon: const Icon( Icons.save_as_outlined ),
                 onPressed: () {
                   // context.push('/product/new');

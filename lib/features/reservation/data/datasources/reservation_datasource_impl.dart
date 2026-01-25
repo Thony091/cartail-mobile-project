@@ -125,6 +125,7 @@ class ReservationDatasourceImpl extends ReservationDatasource {
 
   String _normalizeDate(String value) {
     if (value.isEmpty) return value;
+    if (value.contains('T')) return value;
     if (value.length >= 10) return value.substring(0, 10);
     return value;
   }

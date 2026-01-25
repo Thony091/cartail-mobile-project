@@ -2,6 +2,7 @@ import 'package:animate_do/animate_do.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:portafolio_project/features/auth/presentation/providers/better_auth_provider.dart';
 import 'package:portafolio_project/features/shared/presentation/shared/widgets/custom_product_field.dart';
 
 import '../../../config/config.dart';
@@ -69,6 +70,96 @@ class _ReservationFormBody extends ConsumerWidget {
 
   const _ReservationFormBody();
 
+  /// Obtiene el primer mensaje de error de validación del formulario
+  String? _getFirstValidationError(dynamic state, bool needsClientInfo) {
+    // Orden de prioridad de validación
+    if (state.vehiclePlate.errorMessage != null) {
+      return state.vehiclePlate.errorMessage;
+    }
+    if (needsClientInfo) {
+      if (state.clientName.errorMessage != null) {
+        return state.clientName.errorMessage;
+      }
+      if (state.clientEmail.errorMessage != null) {
+        return state.clientEmail.errorMessage;
+      }
+      if (state.clientPhone.errorMessage != null) {
+        return state.clientPhone.errorMessage;
+      }
+    }
+    if (state.serviceId.isEmpty) {
+      return 'Debes seleccionar un servicio';
+    }
+    if (state.date.errorMessage != null) {
+      return state.date.errorMessage;
+    }
+    if (state.time.errorMessage != null) {
+      return state.time.errorMessage;
+    }
+    return null;
+  }
+
+  /// Muestra un mensaje de error usando SnackBar
+  void _showErrorSnackBar(BuildContext context, String message) {
+    if (!context.mounted) return;
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(message),
+        backgroundColor: Colors.red,
+        behavior: SnackBarBehavior.floating,
+        margin: const EdgeInsets.all(16),
+      ),
+    );
+  }
+
+  /// Muestra un mensaje de éxito usando SnackBar
+  void _showSuccessSnackBar(BuildContext context, String message) {
+    if (!context.mounted) return;
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(message),
+        backgroundColor: Colors.green,
+        behavior: SnackBarBehavior.floating,
+        margin: const EdgeInsets.all(16),
+      ),
+    );
+  }
+
+  /// Maneja el envío del formulario
+  Future<void> _handleFormSubmit(
+    BuildContext context,
+    WidgetRef ref,
+    bool needsClientInfo,
+  ) async {
+    final notifier = ref.read(reservationFormProvider.notifier);
+
+    try {
+      final success = await notifier.onFormSubmit();
+
+      if (!context.mounted) return;
+
+      if (success) {
+        _showSuccessSnackBar(context, 'Reserva realizada con éxito');
+        await Future.delayed(const Duration(milliseconds: 800));
+        if (context.mounted) {
+          context.push('/');
+        }
+      } else {
+        // Leer el estado actualizado después del submit
+        final currentState = ref.read(reservationFormProvider);
+        final errorMessage = _getFirstValidationError(currentState, needsClientInfo);
+        _showErrorSnackBar(context, errorMessage ?? 'Error al realizar la reserva');
+      }
+    } catch (e) {
+      // Manejo de errores de red o servidor
+      if (!context.mounted) return;
+      _showErrorSnackBar(
+        context,
+        'Error de conexión. Por favor, intenta nuevamente.',
+      );
+    }
+  }
+
   Future<void> _selectDate( BuildContext context, WidgetRef ref ) async {
     DateTime now = DateTime.now();
     // Asegurarnos de que la fecha inicial sea un día de lunes a sábado
@@ -135,14 +226,14 @@ class _ReservationFormBody extends ConsumerWidget {
     final servicios =  ref.watch( servicesProvider);
     final size = MediaQuery.of(context).size;
     final state = ref.watch(reservationFormProvider);
-    final authState = ref.watch(authProvider);
-    final isAuthenticated = authState.authStatus == AuthStatus.authenticated;
-    final userData = authState.userData;
+    final authState = ref.watch(betterAuthProvider);
+    final isAuthenticated = authState.isAuthenticated;
+    final userData = authState.session?.user;
     final needsClientInfo = !isAuthenticated ||
         userData == null ||
-        userData.nombre.isEmpty ||
+        userData.name!.isEmpty ||
         userData.email.isEmpty ||
-        userData.telefono.isEmpty;
+        userData.phone!.isEmpty;
 
     return SingleChildScrollView(
       keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag ,
@@ -274,9 +365,7 @@ class _ReservationFormBody extends ConsumerWidget {
                             if (state.serviceId.isNotEmpty) {
                               _selectDate(context, ref);
                             } else {
-                              ScaffoldMessenger.of(context).showSnackBar(
-                                const SnackBar(content: Text('Primero selecciona el tipo de servicio'))
-                              );
+                              _showErrorSnackBar(context, 'Primero selecciona el tipo de servicio');
                             }
                           },
                         ),
@@ -294,9 +383,7 @@ class _ReservationFormBody extends ConsumerWidget {
                             if (state.date.value.isNotEmpty) {
                               _selectTime(context, ref);
                             } else {
-                              ScaffoldMessenger.of(context).showSnackBar(
-                                const SnackBar(content: Text('Primero selecciona una fecha'))
-                              );
+                              _showErrorSnackBar(context, 'Primero selecciona una fecha');
                             }
                           },
                           onChanged: (value) {
@@ -318,44 +405,9 @@ class _ReservationFormBody extends ConsumerWidget {
                         icon: Icons.calendar_month_outlined,
                         buttonColor: Colors.blueAccent.shade400,
                   
-                        onPressed: () {
-                          ref.read(reservationFormProvider.notifier).onFormSubmit().then(
-                            (value) {
-                              if (value) {
-                                ScaffoldMessenger.of(context).showSnackBar(
-                                  const SnackBar(
-                                    content: Text("Reserva realizada con éxito"),
-                                    backgroundColor: Colors.green,
-                                  )
-                                );
-                                context.push('/');
-                              } else {
-                                ScaffoldMessenger.of(context).showSnackBar(
-                                  SnackBar(
-                                    content: Text( 
-                                      state.date.errorMessage != null 
-                                        ? state.date.errorMessage.toString()
-                                        : ( state.time.errorMessage != null ) 
-                                          ? state.time.errorMessage.toString()
-                                          : ( state.vehiclePlate.errorMessage != null ) 
-                                            ? state.vehiclePlate.errorMessage.toString()
-                                          : ( needsClientInfo && state.clientName.errorMessage != null )
-                                            ? state.clientName.errorMessage.toString()
-                                            : ( needsClientInfo && state.clientEmail.errorMessage != null )
-                                              ? state.clientEmail.errorMessage.toString()
-                                              : ( needsClientInfo && state.clientPhone.errorMessage != null )
-                                                  ? state.clientPhone.errorMessage.toString()
-                                                  : "Error al realizar la reserva"
-                                    ),
-                                    backgroundColor: Colors.red,
-                                  )
-                                );
-                              }
-                            
-                            }
-                          );
-                          // ref.read(goRouterProvider).go('/reservations');
-                        },
+                        onPressed: state.isPosting
+                          ? null
+                          : () => _handleFormSubmit(context, ref, needsClientInfo),
                       ),
                       const SizedBox(height: 20.0),
                       

@@ -52,7 +52,7 @@ class DefaultFirebaseOptions {
     messagingSenderId: '217586613826',
     projectId: 'portfolioproject-57fd8',
     authDomain: 'portfolioproject-57fd8.firebaseapp.com',
-    storageBucket: 'portfolioproject-57fd8.appspot.com',
+    storageBucket: 'portfolioproject-57fd8.firebasestorage.app',
     measurementId: 'G-WDR59DR8QT',
   );
 
@@ -61,7 +61,7 @@ class DefaultFirebaseOptions {
     appId: '1:217586613826:android:75f9d653aa749cd8a2f7db',
     messagingSenderId: '217586613826',
     projectId: 'portfolioproject-57fd8',
-    storageBucket: 'portfolioproject-57fd8.appspot.com',
+    storageBucket: 'portfolioproject-57fd8.firebasestorage.app',
   );
 
   static const FirebaseOptions ios = FirebaseOptions(
@@ -69,7 +69,8 @@ class DefaultFirebaseOptions {
     appId: '1:217586613826:ios:7852a2a857f88500a2f7db',
     messagingSenderId: '217586613826',
     projectId: 'portfolioproject-57fd8',
-    storageBucket: 'portfolioproject-57fd8.appspot.com',
+    storageBucket: 'portfolioproject-57fd8.firebasestorage.app',
     iosBundleId: 'com.duoc.portfolioProject',
   );
+
 }

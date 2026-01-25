@@ -1,16 +1,19 @@
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:portafolio_project/features/auth/auth.dart';
 
 import '../../data/datasources/reservation_datasource_impl.dart';
 import '../../data/repositories/reservation_repository_impl.dart';
 import '../../domain/entities/reservation.dart';
 import '../../domain/repositories/reservation_repository.dart';
-import '../../../../presentation/presentation_container.dart';
-
 
 final reservationProvider = StateNotifierProvider<ReservationNotifier, ReservartionState>((ref) {
 
-  final reservationRepository = ReservationRepositoryImpl( ReservationDatasourceImpl(accessToken: ref.watch( authProvider ).token) );
+  final reservationRepository = ReservationRepositoryImpl( 
+    ReservationDatasourceImpl(
+      accessToken: ref.watch( betterAuthProvider ).token ?? ''
+    ) 
+  );
 
   return ReservationNotifier(
     reservationRepository: reservationRepository
@@ -57,7 +60,8 @@ class ReservationNotifier extends StateNotifier<ReservartionState>{
     try {
       
       final reservation = await reservationRepository.createUpdateReservation( 
-        reservationSimilar );
+        reservationSimilar 
+      );
       
       state = state.copyWith(
         reservations: [...state.reservations, reservation],

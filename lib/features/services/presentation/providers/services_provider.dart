@@ -25,30 +25,22 @@ class ServicesNotifier extends StateNotifier<ServicesState>{
   }
   
   Future<bool> createOrUpdateService( Map<String, dynamic> serviceSimilar) async {
+    final service = await servicesRepository.createUpdateService(serviceSimilar);
+    final isServiceInList = state.services.any((element) => element.id == service.id);
 
-    try {
-      
-      final service = await servicesRepository.createUpdateService(serviceSimilar);
-      final isServiceInList = state.services.any((element) => element.id == service.id);
-
-      if ( !isServiceInList){
-        state = state.copyWith(
-          services: [...state.services, service]
-        );
-        return true;
-      } 
-
+    if ( !isServiceInList){
       state = state.copyWith(
-        services: state.services.map(
-          (element) => ( element.id == service.id ) ? service : element
-        ).toList()
+        services: [...state.services, service]
       );
       return true;
-      
-    } catch (e) {
-      return false;
     }
 
+    state = state.copyWith(
+      services: state.services.map(
+        (element) => ( element.id == service.id ) ? service : element
+      ).toList()
+    );
+    return true;
   }
 
   Future<bool> deleteService( String id ) async {

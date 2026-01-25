@@ -43,7 +43,6 @@ class ModernSideMenuState extends ConsumerState<ModernSideMenu>
   @override
   Widget build(BuildContext context) {
     final authState = ref.watch(betterAuthProvider);
-    // final authStatus = ref.watch(authProvider).authStatus;
 
     return AnimatedBuilder(
       animation: _animation,

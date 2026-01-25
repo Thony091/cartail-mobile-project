@@ -4,6 +4,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:portafolio_project/features/auth/presentation/providers/better_auth_provider.dart';
 
 import '../../../config/config.dart';
 import '../../presentation_container.dart';
@@ -41,7 +42,7 @@ class _ConfigUserBodyPage extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     
-    final authState = ref.watch( authProvider ).userData!;
+    final authState = ref.watch(betterAuthProvider).session?.user;
     final color = AppTheme().getTheme().colorScheme;
     final size = MediaQuery.of(context).size;
 
@@ -89,21 +90,22 @@ class _ConfigUserBodyPage extends ConsumerWidget {
               isTopField: true,
               label: 'Nombre',
               keyboardType: const TextInputType.numberWithOptions(decimal: true),
-              initialValue: authState.nombre,
+              initialValue: authState?.name ?? 'No Name',
             ),
             CustomProfileField( 
               readOnly: true,
-              // isBottomField: true,
               label: 'Email',
               keyboardType: const TextInputType.numberWithOptions(decimal: true),
-              initialValue: authState.email,
+              initialValue: authState?.email ?? 'No Email',
             ),
             CustomProfileField( 
               readOnly: true,
-              isBottomField: !authState.isAdmin ? true : false,
+              isBottomField: !authState!.isAdmin 
+                ? true 
+                : false,
               label: 'Telefono',
               keyboardType: const TextInputType.numberWithOptions(decimal: true),
-              initialValue: authState.telefono,
+              initialValue: authState.phone ?? 'No Phone',
             ),
             if(authState.isAdmin)
               const CustomProfileField( 
@@ -120,7 +122,7 @@ class _ConfigUserBodyPage extends ConsumerWidget {
               isBottomField: true,
               label: 'Biografia',
               keyboardType: TextInputType.multiline,
-              initialValue: authState.bio.isEmpty ? 'No hay biografia' : authState.bio,
+              initialValue: authState.bio ?? 'No hay biografia',
             ),
             
             const SizedBox(height: 30,),
@@ -138,14 +140,6 @@ class _ConfigUserBodyPage extends ConsumerWidget {
                     child: const Text('Editar'),
                   ),
                 ),
-                // const SizedBox(height: 40,),
-                // ElevatedButton(
-                //   onPressed: () {
-                //     context.push('/');
-                //   },
-                //   child: const Text('Go Home!'),
-                // ),
-
               ],
             )
           ],

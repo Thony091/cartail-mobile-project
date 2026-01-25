@@ -4,8 +4,10 @@ import 'package:dio/dio.dart';
 import 'package:dio_cookie_manager/dio_cookie_manager.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:path_provider/path_provider.dart';
+import 'package:portafolio_project/config/constants/constants.dart';
+import 'package:portafolio_project/config/constants/secure_storage_keys.dart';
+import 'package:portafolio_project/config/services/secure_storage_service.dart';
 
 /// Provider para el servicio de autenticación
 final authServiceProvider = Provider<AuthService>((ref) {
@@ -23,9 +25,9 @@ class AuthService {
   bool _isInitialized = false;
 
   /// URL base de la API de Better Auth
-  static const String _baseUrl = 'https://agendashop.fabersoft.cl';
+  static final String _baseUrl = Enviroment.baseUrl;
   // static const String _baseUrl = 'https://agendashop.instatunnel.my';
-  static const String _originHeader = 'https://agendashop.fabersoft.cl';
+  // static const String _originHeader = 'https://agendashop.fabersoft.cl';
 
   /// Keys para almacenamiento seguro de tokens
   static const String _tokenKey = 'better_auth_token';
@@ -33,13 +35,8 @@ class AuthService {
   static const String _userIdKey = 'better_auth_user_id';
   static const String _accountIdKey = 'better_auth_account_id';
 
-  /// Instancia de FlutterSecureStorage para almacenamiento seguro
-  final FlutterSecureStorage _secureStorage = const FlutterSecureStorage(
-    aOptions: AndroidOptions(),
-    iOptions: IOSOptions(
-      accessibility: KeychainAccessibility.first_unlock_this_device,
-    ),
-  );
+  /// Instancia de FlutterSecureStorage para almacenamiento seguro (centralizada)
+  final _secureStorage = SecureStorageService.instance;
 
   /// Token actual en memoria (para acceso rápido)
   String? _currentToken;
@@ -56,7 +53,7 @@ class AuthService {
       BaseOptions(
         baseUrl: _baseUrl,
         contentType: 'application/json',
-        headers: {'Origin': _originHeader},
+        // headers: {'Origin': _originHeader},
         connectTimeout: const Duration(seconds: 30),
         receiveTimeout: const Duration(seconds: 30),
         validateStatus: (status) {
@@ -223,14 +220,19 @@ class AuthService {
     bool? rememberMe,
   }) async {
     final dio = await client;
+    final fcmToken = await _secureStorage.read(key: secureStorageFcmTokenKey);
+    final requestBody = <String, dynamic>{
+      'email': email,
+      'password': password,
+      'callbackURL': callbackURL,
+      'rememberMe': rememberMe ?? true,
+    };
+    if (fcmToken != null) {
+      requestBody['fcmToken'] = fcmToken;
+    }
     final response = await dio.post(
-      '/api/auth/sign-in/email',
-      data: {
-        'email': email,
-        'password': password,
-        'callbackURL': callbackURL,
-        'rememberMe': rememberMe ?? true,
-      },
+      '/auth/sign-in/email',
+      data: requestBody,
     );
 
     // Si el login es exitoso, guardar el token automáticamente
@@ -243,6 +245,11 @@ class AuthService {
         await _saveTokens(
           token: token,
           userId: user?['id'] as String?,
+        );
+
+        await _secureStorage.write(
+          key: secureStorageAccessTokenKey,
+          value: token,
         );
       }
     }
@@ -286,7 +293,7 @@ class AuthService {
   }) async {
     final dio = await client;
     final response = await dio.post(
-      '/api/auth/sign-up/email',
+      '/auth/sign-up/email',
       data: {
         'name': name,
         'email': email,
@@ -323,7 +330,7 @@ class AuthService {
   Future<Response> signOut() async {
     final dio = await client;
     final response = await dio.post(
-      '/api/auth/sign-out',
+      '/auth/sign-out',
       data: {},
       options: _authOptions(),
     );
@@ -370,7 +377,7 @@ class AuthService {
   Future<Response> getSession() async {
     final dio = await client;
     return dio.get(
-      '/api/auth/get-session',
+      '/auth/get-session',
       options: _authOptions(),
     );
   }
@@ -395,7 +402,7 @@ class AuthService {
   }) async {
     final dio = await client;
     return dio.get(
-      '/api/auth/verify-email',
+      '/auth/verify-email',
       queryParameters: {
         'token': token,
         'callbackURL': callbackURL ?? '',
@@ -418,7 +425,7 @@ class AuthService {
   }) async {
     final dio = await client;
     return dio.post(
-      '/api/auth/send-verification-email',
+      '/auth/send-verification-email',
       data: {
         'email': email,
         'callbackURL': callbackURL ?? '',
@@ -441,7 +448,7 @@ class AuthService {
   }) async {
     final dio = await client;
     return dio.post(
-      '/api/auth/request-password-reset',
+      '/auth/request-password-reset',
       data: {
         'email': email,
         'redirectTo': redirectTo,
@@ -464,7 +471,7 @@ class AuthService {
   }) async {
     final dio = await client;
     return dio.post(
-      '/api/auth/reset-password',
+      '/auth/reset-password',
       data: {
         'newPassword': newPassword,
         'token': token,
@@ -487,7 +494,7 @@ class AuthService {
   }) async {
     final dio = await client;
     return dio.get(
-      '/api/auth/reset-password/$token',
+      '/auth/reset-password/$token',
       queryParameters: {'callbackURL': callbackURL ?? ''},
       options: _authOptions(),
     );
@@ -515,7 +522,7 @@ class AuthService {
   }) async {
     final dio = await client;
     return dio.post(
-      '/api/auth/change-password',
+      '/auth/change-password',
       data: {
         'newPassword': newPassword,
         'currentPassword': currentPassword,
@@ -546,7 +553,7 @@ class AuthService {
   }) async {
     final dio = await client;
     return dio.post(
-      '/api/auth/change-email',
+      '/auth/change-email',
       data: {
         'newEmail': newEmail,
         'callbackURL': callbackURL,
@@ -569,7 +576,7 @@ class AuthService {
   }) async {
     final dio = await client;
     return dio.post(
-      '/api/auth/update-user',
+      '/auth/update-user',
       data: {
         'name': name ?? '',
         'image': image,
@@ -595,7 +602,7 @@ class AuthService {
   }) async {
     final dio = await client;
     final response = await dio.post(
-      '/api/auth/delete-user',
+      '/auth/delete-user',
       data: {
         'callbackURL': callbackURL ?? '',
         'password': password ?? '',
@@ -633,7 +640,7 @@ class AuthService {
   Future<Response> accountInfo() async {
     final dio = await client;
     return dio.get(
-      '/api/auth/account-info',
+      '/auth/account-info',
       options: _authOptions(),
     );
   }
@@ -663,7 +670,7 @@ class AuthService {
   Future<Response> listSessions() async {
     final dio = await client;
     return dio.get(
-      '/api/auth/list-sessions',
+      '/auth/list-sessions',
       options: _authOptions(),
     );
   }
@@ -678,7 +685,7 @@ class AuthService {
   Future<Response> revokeSession({required String token}) async {
     final dio = await client;
     return dio.post(
-      '/api/auth/revoke-session',
+      '/auth/revoke-session',
       data: {'token': token},
       options: _authOptions(),
     );
@@ -693,7 +700,7 @@ class AuthService {
   Future<Response> revokeSessions() async {
     final dio = await client;
     final response = await dio.post(
-      '/api/auth/revoke-sessions',
+      '/auth/revoke-sessions',
       data: {},
       options: _authOptions(),
     );
@@ -714,7 +721,7 @@ class AuthService {
   Future<Response> revokeOtherSessions() async {
     final dio = await client;
     return dio.post(
-      '/api/auth/revoke-other-sessions',
+      '/auth/revoke-other-sessions',
       data: {},
       options: _authOptions(),
     );
@@ -751,7 +758,7 @@ class AuthService {
   }) async {
     final dio = await client;
     final response = await dio.post(
-      '/api/auth/refresh-token',
+      '/auth/refresh-token',
       data: {
         'providerId': providerId ?? 'credential',
         'accountId': accountId ?? _currentAccountId,
@@ -790,7 +797,7 @@ class AuthService {
   }) async {
     final dio = await client;
     return dio.post(
-      '/api/auth/get-access-token',
+      '/auth/get-access-token',
       data: {
         'providerId': providerId ?? '',
         'accountId': accountId,
@@ -837,7 +844,7 @@ class AuthService {
   }) async {
     final dio = await client;
     final response = await dio.post(
-      '/api/auth/sign-in/social',
+      '/auth/sign-in/social',
       data: {
         'provider': provider,
         'idToken': idToken ?? {'token': ''},
@@ -894,7 +901,7 @@ class AuthService {
   }) async {
     final dio = await client;
     return dio.post(
-      '/api/auth/link-social',
+      '/auth/link-social',
       data: {
         'provider': provider,
         'idToken': idToken ?? {'token': '', 'nonce': null},
@@ -929,7 +936,7 @@ class AuthService {
   Future<Response> listAccounts() async {
     final dio = await client;
     return dio.get(
-      '/api/auth/list-accounts',
+      '/auth/list-accounts',
       options: _authOptions(),
     );
   }
@@ -948,7 +955,7 @@ class AuthService {
   }) async {
     final dio = await client;
     return dio.post(
-      '/api/auth/unlink-account',
+      '/auth/unlink-account',
       data: {
         'providerId': providerId,
         'accountId': accountId,
@@ -976,7 +983,7 @@ class AuthService {
   }) async {
     final dio = await client;
     return dio.post(
-      '/api/auth/admin/set-role',
+      '/auth/admin/set-role',
       data: {
         'userId': userId,
         'role': role,
@@ -996,7 +1003,7 @@ class AuthService {
   Future<Response> adminGetUser({required String id}) async {
     final dio = await client;
     return dio.get(
-      '/api/auth/admin/get-user',
+      '/auth/admin/get-user',
       queryParameters: {'id': id},
       options: _authOptions(),
     );
@@ -1023,7 +1030,7 @@ class AuthService {
   }) async {
     final dio = await client;
     return dio.post(
-      '/api/auth/admin/create-user',
+      '/auth/admin/create-user',
       data: {
         'email': email,
         'password': password,
@@ -1050,7 +1057,7 @@ class AuthService {
   }) async {
     final dio = await client;
     return dio.post(
-      '/api/auth/admin/update-user',
+      '/auth/admin/update-user',
       data: {
         'userId': userId,
         'data': data,
@@ -1099,7 +1106,7 @@ class AuthService {
   }) async {
     final dio = await client;
     return dio.get(
-      '/api/auth/admin/list-users',
+      '/auth/admin/list-users',
       queryParameters: {
         if (searchValue != null) 'searchValue': searchValue,
         if (searchField != null) 'searchField': searchField,
@@ -1127,7 +1134,7 @@ class AuthService {
   Future<Response> adminListUserSessions({required String userId}) async {
     final dio = await client;
     return dio.post(
-      '/api/auth/admin/list-user-sessions',
+      '/auth/admin/list-user-sessions',
       data: {'userId': userId},
       options: _authOptions(),
     );
@@ -1150,7 +1157,7 @@ class AuthService {
   }) async {
     final dio = await client;
     return dio.post(
-      '/api/auth/admin/ban-user',
+      '/auth/admin/ban-user',
       data: {
         'userId': userId,
         'banReason': banReason,
@@ -1171,7 +1178,7 @@ class AuthService {
   Future<Response> adminUnbanUser({required String userId}) async {
     final dio = await client;
     return dio.post(
-      '/api/auth/admin/unban-user',
+      '/auth/admin/unban-user',
       data: {'userId': userId},
       options: _authOptions(),
     );
@@ -1189,7 +1196,7 @@ class AuthService {
   Future<Response> adminImpersonateUser({required String userId}) async {
     final dio = await client;
     final response = await dio.post(
-      '/api/auth/admin/impersonate-user',
+      '/auth/admin/impersonate-user',
       data: {'userId': userId},
       options: _authOptions(),
     );
@@ -1220,7 +1227,7 @@ class AuthService {
   Future<Response> adminStopImpersonating() async {
     final dio = await client;
     return dio.post(
-      '/api/auth/admin/stop-impersonating',
+      '/auth/admin/stop-impersonating',
       options: _authOptions(),
     );
   }
@@ -1238,7 +1245,7 @@ class AuthService {
   }) async {
     final dio = await client;
     return dio.post(
-      '/api/auth/admin/revoke-user-session',
+      '/auth/admin/revoke-user-session',
       data: {'sessionToken': sessionToken},
       options: _authOptions(),
     );
@@ -1255,7 +1262,7 @@ class AuthService {
   Future<Response> adminRevokeUserSessions({required String userId}) async {
     final dio = await client;
     return dio.post(
-      '/api/auth/admin/revoke-user-sessions',
+      '/auth/admin/revoke-user-sessions',
       data: {'userId': userId},
       options: _authOptions(),
     );
@@ -1276,7 +1283,7 @@ class AuthService {
   }) async {
     final dio = await client;
     return dio.post(
-      '/api/auth/admin/set-user-password',
+      '/auth/admin/set-user-password',
       data: {
         'userId': userId,
         'newPassword': newPassword,
@@ -1298,7 +1305,7 @@ class AuthService {
   }) async {
     final dio = await client;
     return dio.post(
-      '/api/auth/admin/has-permission',
+      '/auth/admin/has-permission',
       data: {'permissions': permissions},
       options: _authOptions(),
     );
@@ -1316,7 +1323,7 @@ class AuthService {
   /// Respuesta exitosa (200): { "ok": true }
   Future<Response> healthCheck() async {
     final dio = await client;
-    return dio.get('/api/auth/ok');
+    return dio.get('/auth/ok');
   }
 
   /// Obtiene el último error del servicio de auth.
@@ -1326,7 +1333,7 @@ class AuthService {
   /// Respuesta exitosa (200): "string" (mensaje de error)
   Future<Response> getError() async {
     final dio = await client;
-    return dio.get('/api/auth/error');
+    return dio.get('/auth/error');
   }
 
   /// Limpia todas las cookies almacenadas.
@@ -1345,11 +1352,13 @@ class AuthService {
       return Options(
         headers: {
           'Authorization': 'Bearer $_currentToken',
-          'Origin': _originHeader,
+          // 'Origin': _originHeader,
         },
       );
     }
-    return Options(headers: {'Origin': _originHeader});
+    return Options(
+      headers: {/*'Origin': _originHeader*/}
+    );
   }
 
   /// Intenta refrescar el token automáticamente.

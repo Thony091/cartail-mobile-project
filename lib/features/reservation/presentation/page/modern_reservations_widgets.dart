@@ -1,11 +1,11 @@
 import 'package:animate_do/animate_do.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:portafolio_project/features/auth/presentation/providers/better_auth_provider.dart';
 
 import '../../../shared/presentation/shared/widgets/modern_button.dart';
 import '../../../shared/presentation/shared/widgets/modern_card.dart';
 import '../../../shared/presentation/shared/widgets/modern_input_field.dart';
-import '../../../auth/presentation/providers/auth_provider.dart';
 import '../providers/reservation_form_provider.dart';
 
 class ServiceOption {
@@ -85,14 +85,12 @@ class ReservationForm extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final formState = ref.watch(reservationFormProvider);
     final formNotifier = ref.read(reservationFormProvider.notifier);
-    final authState = ref.watch(authProvider);
-    final isAuthenticated = authState.authStatus == AuthStatus.authenticated;
-    final userData = authState.userData;
+    final authState = ref.watch(betterAuthProvider);
+    final isAuthenticated = authState.isAuthenticated;
+    final userData = authState.session?.user;
     final needsClientInfo = !isAuthenticated ||
-        userData == null ||
-        userData.nombre.isEmpty ||
-        userData.email.isEmpty ||
-        userData.telefono.isEmpty;
+        userData?.name == null ||
+        userData?.email == null;
     final selectedService = formState.serviceId.isNotEmpty
         ? formState.serviceId
         : null;
@@ -118,7 +116,7 @@ class ReservationForm extends ConsumerWidget {
 
               // Patente
               ModernInputField(
-                label: 'Patente del Vehículo',
+                label: 'Patente del Vehículo (obligatorio)',
                 hint: 'ABCD12',
                 prefixIcon: const Icon(Icons.directions_car_outlined),
                 errorMessage: formState.vehiclePlate.errorMessage,
@@ -129,7 +127,7 @@ class ReservationForm extends ConsumerWidget {
 
               if (needsClientInfo) ...[
                 ModernInputField(
-                  label: 'Nombre del Cliente',
+                  label: 'Nombre del Cliente (obligatorio)',
                   hint: 'Ingresa tu nombre',
                   prefixIcon: const Icon(Icons.person_outline),
                   errorMessage: formState.clientName.errorMessage,
@@ -137,7 +135,7 @@ class ReservationForm extends ConsumerWidget {
                 ),
                 const SizedBox(height: 16),
                 ModernInputField(
-                  label: 'Correo Electrónico',
+                  label: 'Correo Electrónico (obligatorio)',
                   hint: 'ejemplo@correo.com',
                   keyboardType: TextInputType.emailAddress,
                   prefixIcon: const Icon(Icons.email_outlined),
@@ -146,11 +144,10 @@ class ReservationForm extends ConsumerWidget {
                 ),
                 const SizedBox(height: 16),
                 ModernInputField(
-                  label: 'Teléfono',
+                  label: 'Teléfono (opcional)',
                   hint: '+56 9 1234 5678',
                   keyboardType: TextInputType.phone,
                   prefixIcon: const Icon(Icons.phone_outlined),
-                  errorMessage: formState.clientPhone.errorMessage,
                   onChanged: formNotifier.onClientPhoneChange,
                 ),
                 const SizedBox(height: 16),
@@ -158,7 +155,7 @@ class ReservationForm extends ConsumerWidget {
 
               // Servicio
               const Text(
-                'Selecciona el Servicio',
+                'Selecciona el Servicio (obligatorio)',
                 style: TextStyle(
                   fontSize: 16,
                   fontWeight: FontWeight.w600,
@@ -220,7 +217,7 @@ class ReservationForm extends ConsumerWidget {
 
               // Fecha
               const Text(
-                'Selecciona la Fecha',
+                'Selecciona la Fecha (obligatorio)',
                 style: TextStyle(
                   fontSize: 16,
                   fontWeight: FontWeight.w600,
@@ -247,7 +244,7 @@ class ReservationForm extends ConsumerWidget {
                       const SizedBox(width: 16),
                       Text(
                         selectedDate != null
-                            ? '${selectedDate!.day}/${selectedDate!.month}/${selectedDate!.year}'
+                            ? '${selectedDate.day}/${selectedDate.month}/${selectedDate.year}'
                             : 'Selecciona una fecha',
                         style: TextStyle(
                           fontSize: 16,
@@ -260,12 +257,24 @@ class ReservationForm extends ConsumerWidget {
                   ),
                 ),
               ),
+              if (formState.isFormPosted && formState.date.errorMessage != null)
+                Padding(
+                  padding: const EdgeInsets.only(top: 8, left: 12),
+                  child: Text(
+                    formState.date.errorMessage!,
+                    style: const TextStyle(
+                      color: Color(0xFFe74c3c),
+                      fontSize: 12,
+                      fontWeight: FontWeight.w500,
+                    ),
+                  ),
+                ),
 
               const SizedBox(height: 16),
 
               // Hora
               const Text(
-                'Selecciona la Hora',
+                'Selecciona la Hora (obligatorio)',
                 style: TextStyle(
                   fontSize: 16,
                   fontWeight: FontWeight.w600,
@@ -293,7 +302,7 @@ class ReservationForm extends ConsumerWidget {
                       const SizedBox(width: 16),
                       Text(
                         selectedTime != null
-                            ? selectedTime!.format(context)
+                            ? selectedTime.format(context)
                             : 'Selecciona una hora',
                         style: TextStyle(
                           fontSize: 16,
@@ -306,12 +315,24 @@ class ReservationForm extends ConsumerWidget {
                   ),
                 ),
               ),
+              if (formState.isFormPosted && formState.time.errorMessage != null)
+                Padding(
+                  padding: const EdgeInsets.only(top: 8, left: 12),
+                  child: Text(
+                    formState.time.errorMessage!,
+                    style: const TextStyle(
+                      color: Color(0xFFe74c3c),
+                      fontSize: 12,
+                      fontWeight: FontWeight.w500,
+                    ),
+                  ),
+                ),
 
               const SizedBox(height: 16),
 
               // Hora fin estimada
               const Text(
-                'Hora Fin Estimada (opcional)',
+                'Hora Fin Estimada (obligatorio)',
                 style: TextStyle(
                   fontSize: 16,
                   fontWeight: FontWeight.w600,
@@ -323,6 +344,8 @@ class ReservationForm extends ConsumerWidget {
                 label: 'Hora fin estimada',
                 hint: '18:30',
                 prefixIcon: const Icon(Icons.schedule),
+                keyboardType: TextInputType.datetime,
+                errorMessage: formState.endTimeEstimated.errorMessage,
                 onChanged: formNotifier.onEndTimeEstimatedChange,
               ),
 
@@ -330,18 +353,30 @@ class ReservationForm extends ConsumerWidget {
 
               // Notas cliente
               ModernInputField(
-                label: 'Notas para el mecánico (opcional)',
+                label: 'Notas del Cliente (obligatorio)',
                 hint: 'Describe cualquier detalle importante...',
                 maxLines: 4,
                 prefixIcon: const Icon(Icons.sticky_note_2_outlined),
+                errorMessage: formState.customerNotes.errorMessage,
                 onChanged: formNotifier.onCustomerNotesChange,
+              ),
+
+              const SizedBox(height: 12),
+
+              ModernInputField(
+                label: 'Notas del Mecánico (obligatorio)',
+                hint: 'Si no aplica, escribe \"Sin notas\"',
+                maxLines: 4,
+                prefixIcon: const Icon(Icons.build_outlined),
+                errorMessage: formState.mechanicNotes.errorMessage,
+                onChanged: formNotifier.onMechanicNotesChange,
               ),
 
               const SizedBox(height: 12),
 
               SwitchListTile.adaptive(
                 value: formState.reminder,
-                title: const Text('Recordatorio activado'),
+                title: const Text('Recordatorio activado (obligatorio)'),
                 onChanged: formNotifier.onReminderChange,
               ),
 

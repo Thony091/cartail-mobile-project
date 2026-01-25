@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
+import 'package:portafolio_project/features/auth/presentation/providers/better_auth_provider.dart';
 import 'package:portafolio_project/features/shared/presentation/providers/providers.dart';
 import 'package:portafolio_project/features/shared/presentation/shared/widgets/custom_product_field.dart';
 import 'package:portafolio_project/features/shared/presentation/shared/widgets/custom_text.dart';
@@ -267,7 +268,7 @@ class _ContactUsForm extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
 
     final messageForm = ref.watch( messageFormProvider );
-    final authState = ref.watch( authProvider );
+    final authState = ref.watch(betterAuthProvider);
 
     return FadeInRight(
       child: Container(
@@ -303,8 +304,8 @@ class _ContactUsForm extends ConsumerWidget {
                   isBottomField: true,
                   isTopField: true,
                   label: 'Nombre',
-                  initialValue: authState.authStatus == AuthStatus.authenticated
-                    ? authState.userData!.nombre
+                  initialValue: authState.isAuthenticated
+                    ? authState.session!.user.name! 
                     : '',
                   // obscureText: true,
                   onChanged: ref.read( messageFormProvider.notifier ).onNameChange,
@@ -316,8 +317,8 @@ class _ContactUsForm extends ConsumerWidget {
                 CustomProductField(
                   isBottomField: true,
                   isTopField: true,
-                  initialValue: authState.authStatus == AuthStatus.authenticated
-                    ? authState.userData!.email
+                  initialValue: authState.isAuthenticated
+                    ? authState.session!.user.email
                     : '',
                   label: 'Correo Electrónico',
                   // obscureText: true,

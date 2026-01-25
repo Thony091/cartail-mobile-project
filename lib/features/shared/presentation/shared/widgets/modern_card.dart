@@ -29,13 +29,13 @@ class ModernCard extends StatelessWidget {
             color: Colors.white,
             borderRadius: BorderRadius.circular(20),
             border: Border.all(
-              color: const Color(0xFF34495e).withOpacity(0.1),
+              color: const Color(0xFF34495e).withValues(alpha: .1),
               width: 1,
             ),
             boxShadow: elevated
                 ? [
                     BoxShadow(
-                      color: Colors.black.withOpacity(0.08),
+                      color: Colors.black.withValues(alpha: .08),
                       blurRadius: 30,
                       offset: const Offset(0, 8),
                     ),
@@ -46,7 +46,7 @@ class ModernCard extends StatelessWidget {
             borderRadius: BorderRadius.circular(20),
             onTap: onTap,
             child: Padding(
-              padding: padding ?? const EdgeInsets.all(24),
+              padding: padding ?? const EdgeInsets.all(15),
               child: child,
             ),
           ),

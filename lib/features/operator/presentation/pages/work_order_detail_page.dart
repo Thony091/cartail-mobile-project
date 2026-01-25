@@ -24,12 +24,16 @@ class _WorkOrderDetailPageState extends ConsumerState<WorkOrderDetailPage>
 
   // TODO: Reemplazar con datos del provider
   late WorkOrder _order;
+  late List<ChecklistItem> _phaseChecklist;
+  final List<String> _checkedChecklistIds = [];
+  final TextEditingController _notesController = TextEditingController();
 
   @override
   void initState() {
     super.initState();
     _tabController = TabController(length: 4, vsync: this);
     _loadOrder();
+    _initChecklist();
   }
 
   void _loadOrder() {
@@ -37,9 +41,19 @@ class _WorkOrderDetailPageState extends ConsumerState<WorkOrderDetailPage>
     _order = _getMockOrder();
   }
 
+  void _initChecklist() {
+    _phaseChecklist = _buildChecklistForPhase(_order.currentPhase);
+    _checkedChecklistIds
+      ..clear()
+      ..addAll(
+        _phaseChecklist.where((item) => item.isChecked).map((item) => item.id),
+      );
+  }
+
   @override
   void dispose() {
     _tabController.dispose();
+    _notesController.dispose();
     super.dispose();
   }
 
@@ -74,8 +88,18 @@ class _WorkOrderDetailPageState extends ConsumerState<WorkOrderDetailPage>
               children: [
                 _DetailsTab(order: _order),
                 _TimelineTab(order: _order),
-                _ChecklistTab(order: _order),
-                _NotesTab(order: _order),
+                _ChecklistTab(
+                  checklist: _phaseChecklist,
+                  title: _getChecklistTitle(_order.currentPhase),
+                  isCompleted: _isChecklistCompleted,
+                  onToggle: _handleChecklistToggle,
+                ),
+                _NotesTab(
+                  order: _order,
+                  checklistNotes: _selectedChecklistNotes,
+                  checklistTitle: _getChecklistTitle(_order.currentPhase),
+                  notesController: _notesController,
+                ),
               ],
             ),
           ),
@@ -203,6 +227,9 @@ class _WorkOrderDetailPageState extends ConsumerState<WorkOrderDetailPage>
   }
 
   Widget _buildBottomActions() {
+    final canAdvance = _order.currentPhase == WorkPhase.pendingReception
+        ? _isChecklistCompleted
+        : _order.canAdvance;
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
@@ -219,7 +246,7 @@ class _WorkOrderDetailPageState extends ConsumerState<WorkOrderDetailPage>
         child: PhaseActionButton(
           currentPhase: _order.currentPhase,
           nextPhase: _order.nextPhase,
-          canAdvance: _order.canAdvance,
+          canAdvance: canAdvance,
           isLoading: _isLoading,
           onAdvance: _handleAdvancePhase,
         ),
@@ -230,6 +257,7 @@ class _WorkOrderDetailPageState extends ConsumerState<WorkOrderDetailPage>
   void _handleAdvancePhase() async {
     final nextPhase = _order.nextPhase;
     if (nextPhase == null) return;
+    final notesToSend = _buildAdvanceNotes();
 
     // Confirmar accion
     final confirmed = await showDialog<bool>(
@@ -237,8 +265,39 @@ class _WorkOrderDetailPageState extends ConsumerState<WorkOrderDetailPage>
       builder: (context) => AlertDialog(
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
         title: const Text('Confirmar Accion'),
-        content: Text(
-          'Estas a punto de cambiar el estado a "${nextPhase.displayName}". ¿Deseas continuar?',
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              'Estas a punto de cambiar el estado a "${nextPhase.displayName}". ¿Deseas continuar?',
+            ),
+            if (notesToSend.isNotEmpty) ...[
+              const SizedBox(height: 16),
+              const Text(
+                'Notas que se enviaran',
+                style: TextStyle(fontWeight: FontWeight.w600),
+              ),
+              const SizedBox(height: 8),
+              Container(
+                width: double.infinity,
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: const Color(0xFFf8fafc),
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(color: const Color(0xFFe2e8f0)),
+                ),
+                child: Text(
+                  notesToSend,
+                  style: const TextStyle(
+                    fontSize: 12,
+                    color: Color(0xFF2c3e50),
+                    height: 1.4,
+                  ),
+                ),
+              ),
+            ],
+          ],
         ),
         actions: [
           TextButton(
@@ -260,7 +319,7 @@ class _WorkOrderDetailPageState extends ConsumerState<WorkOrderDetailPage>
 
     setState(() => _isLoading = true);
 
-    // TODO: Implementar cambio de fase real
+    // TODO: Implementar cambio de fase real con notesToSend
     await Future.delayed(const Duration(seconds: 1));
 
     setState(() => _isLoading = false);
@@ -273,6 +332,145 @@ class _WorkOrderDetailPageState extends ConsumerState<WorkOrderDetailPage>
         ),
       );
     }
+  }
+
+  List<ChecklistItem> _buildChecklistForPhase(WorkPhase phase) {
+    switch (phase) {
+      case WorkPhase.pendingReception:
+      case WorkPhase.received:
+        return _order.receptionChecklist;
+      case WorkPhase.diagnosis:
+        return const [
+          ChecklistItem(
+            id: 'diagnosis-1',
+            label: 'Revision visual inicial',
+            description: 'Revision visual inicial',
+            category: 'diagnosis',
+          ),
+          ChecklistItem(
+            id: 'diagnosis-2',
+            label: 'Lectura de codigos/errores',
+            description: 'Lectura de codigos/errores',
+            category: 'diagnosis',
+          ),
+          ChecklistItem(
+            id: 'diagnosis-3',
+            label: 'Pruebas funcionales basicas',
+            description: 'Pruebas funcionales basicas',
+            category: 'diagnosis',
+          ),
+        ];
+      case WorkPhase.inProgress:
+        return const [
+          ChecklistItem(
+            id: 'inprogress-1',
+            label: 'Herramientas principales listas',
+            description: 'Herramientas principales listas',
+            category: 'execution',
+          ),
+          ChecklistItem(
+            id: 'inprogress-2',
+            label: 'Materiales generales confirmados',
+            description: 'Materiales generales confirmados',
+            category: 'execution',
+          ),
+          ChecklistItem(
+            id: 'inprogress-3',
+            label: 'Area de trabajo asegurada',
+            description: 'Area de trabajo asegurada',
+            category: 'execution',
+          ),
+        ];
+      case WorkPhase.qualityCheck:
+        return const [
+          ChecklistItem(
+            id: 'qc-1',
+            label: 'Pruebas finales completadas',
+            description: 'Pruebas finales completadas',
+            category: 'quality',
+          ),
+          ChecklistItem(
+            id: 'qc-2',
+            label: 'Limpieza y orden del area',
+            description: 'Limpieza y orden del area',
+            category: 'quality',
+          ),
+        ];
+      case WorkPhase.completed:
+      case WorkPhase.delivered:
+      case WorkPhase.waitingParts:
+      case WorkPhase.cancelled:
+        return const [];
+    }
+  }
+
+  String _getChecklistTitle(WorkPhase phase) {
+    switch (phase) {
+      case WorkPhase.pendingReception:
+      case WorkPhase.received:
+        return 'Checklist de Recepcion';
+      case WorkPhase.diagnosis:
+        return 'Checklist de Diagnostico';
+      case WorkPhase.inProgress:
+        return 'Checklist de Trabajo';
+      case WorkPhase.qualityCheck:
+        return 'Checklist de Calidad';
+      case WorkPhase.waitingParts:
+        return 'Checklist de Repuestos';
+      case WorkPhase.completed:
+      case WorkPhase.delivered:
+      case WorkPhase.cancelled:
+        return 'Checklist';
+    }
+  }
+
+  void _handleChecklistToggle(ChecklistItem item, bool isChecked) {
+    final index = _phaseChecklist.indexWhere((current) => current.id == item.id);
+    if (index == -1) return;
+    setState(() {
+      _phaseChecklist[index] = item.copyWith(isChecked: isChecked);
+      if (isChecked) {
+        if (!_checkedChecklistIds.contains(item.id)) {
+          _checkedChecklistIds.add(item.id);
+        }
+      } else {
+        _checkedChecklistIds.remove(item.id);
+      }
+    });
+  }
+
+  bool get _isChecklistCompleted {
+    final requiredItems =
+        _phaseChecklist.where((item) => item.isRequired).toList();
+    if (requiredItems.isEmpty) {
+      return _phaseChecklist.isNotEmpty ? _checkedChecklistIds.isNotEmpty : true;
+    }
+    return requiredItems.every((item) => item.isChecked);
+  }
+
+  List<String> get _selectedChecklistNotes {
+    return _checkedChecklistIds.map((id) {
+      final item = _phaseChecklist.firstWhere((element) => element.id == id);
+      return item.label.isNotEmpty ? item.label : item.description;
+    }).toList();
+  }
+
+  String _buildAdvanceNotes() {
+    final buffer = StringBuffer();
+    if (_selectedChecklistNotes.isNotEmpty) {
+      buffer.writeln('${_getChecklistTitle(_order.currentPhase)}:');
+      for (final note in _selectedChecklistNotes) {
+        buffer.writeln('- $note');
+      }
+    }
+    final userNotes = _notesController.text.trim();
+    if (userNotes.isNotEmpty) {
+      if (buffer.isNotEmpty) {
+        buffer.writeln();
+      }
+      buffer.writeln(userNotes);
+    }
+    return buffer.toString().trim();
   }
 
   void _showOptionsMenu() {
@@ -939,9 +1137,17 @@ class _TimelineTab extends StatelessWidget {
 
 // Tab de Checklist
 class _ChecklistTab extends StatelessWidget {
-  final WorkOrder order;
+  final List<ChecklistItem> checklist;
+  final String title;
+  final bool isCompleted;
+  final void Function(ChecklistItem item, bool isChecked) onToggle;
 
-  const _ChecklistTab({required this.order});
+  const _ChecklistTab({
+    required this.checklist,
+    required this.title,
+    required this.isCompleted,
+    required this.onToggle,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -954,8 +1160,8 @@ class _ChecklistTab extends StatelessWidget {
             children: [
               const Icon(Icons.checklist, color: Color(0xFF3498db)),
               const SizedBox(width: 8),
-              const Text(
-                'Checklist de Recepcion',
+              Text(
+                title,
                 style: TextStyle(
                   fontSize: 18,
                   fontWeight: FontWeight.w700,
@@ -963,7 +1169,7 @@ class _ChecklistTab extends StatelessWidget {
                 ),
               ),
               const Spacer(),
-              if (order.receptionCompleted)
+              if (isCompleted)
                 Container(
                   padding:
                       const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
@@ -994,8 +1200,11 @@ class _ChecklistTab extends StatelessWidget {
             ],
           ),
           const SizedBox(height: 20),
-          ...order.receptionChecklist.map(
-            (item) => _ChecklistItemWidget(item: item),
+          ...checklist.map(
+            (item) => _ChecklistItemWidget(
+              item: item,
+              onChanged: (value) => onToggle(item, value ?? false),
+            ),
           ),
           const SizedBox(height: 100),
         ],
@@ -1006,8 +1215,9 @@ class _ChecklistTab extends StatelessWidget {
 
 class _ChecklistItemWidget extends StatelessWidget {
   final ChecklistItem item;
+  final ValueChanged<bool?> onChanged;
 
-  const _ChecklistItemWidget({required this.item});
+  const _ChecklistItemWidget({required this.item, required this.onChanged});
 
   @override
   Widget build(BuildContext context) {
@@ -1025,11 +1235,11 @@ class _ChecklistItemWidget extends StatelessWidget {
       ),
       child: Row(
         children: [
-          Icon(
-            item.isChecked ? Icons.check_circle : Icons.radio_button_unchecked,
-            color: item.isChecked
-                ? const Color(0xFF27ae60)
-                : const Color(0xFF95a5a6),
+          Checkbox(
+            value: item.isChecked,
+            onChanged: onChanged,
+            activeColor: const Color(0xFF27ae60),
+            checkColor: Colors.white,
           ),
           const SizedBox(width: 12),
           Expanded(
@@ -1037,7 +1247,7 @@ class _ChecklistItemWidget extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  item.description,
+                  item.label.isNotEmpty ? item.label : item.description,
                   style: const TextStyle(
                     fontSize: 14,
                     fontWeight: FontWeight.w500,
@@ -1067,8 +1277,16 @@ class _ChecklistItemWidget extends StatelessWidget {
 // Tab de Notas
 class _NotesTab extends StatelessWidget {
   final WorkOrder order;
+  final List<String> checklistNotes;
+  final String checklistTitle;
+  final TextEditingController notesController;
 
-  const _NotesTab({required this.order});
+  const _NotesTab({
+    required this.order,
+    required this.checklistNotes,
+    required this.checklistTitle,
+    required this.notesController,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -1077,6 +1295,97 @@ class _NotesTab extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
+          ModernCard(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Row(
+                  children: [
+                    Icon(Icons.assignment_outlined, color: Color(0xFF3498db)),
+                    SizedBox(width: 8),
+                    Text(
+                      'Notas para actualizar estado',
+                      style: TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.w700,
+                        color: Color(0xFF2c3e50),
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 12),
+                Text(
+                  checklistTitle,
+                  style: const TextStyle(
+                    fontSize: 12,
+                    fontWeight: FontWeight.w600,
+                    color: Color(0xFF95a5a6),
+                  ),
+                ),
+                const SizedBox(height: 8),
+                if (checklistNotes.isEmpty)
+                  const Text(
+                    'Marca elementos del checklist para agregarlos a las notas.',
+                    style: TextStyle(
+                      fontSize: 13,
+                      color: Color(0xFF7f8c8d),
+                    ),
+                  )
+                else
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: checklistNotes
+                        .map(
+                          (note) => Padding(
+                            padding: const EdgeInsets.only(bottom: 6),
+                            child: Row(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                const Icon(
+                                  Icons.check_circle,
+                                  size: 16,
+                                  color: Color(0xFF27ae60),
+                                ),
+                                const SizedBox(width: 6),
+                                Expanded(
+                                  child: Text(
+                                    note,
+                                    style: const TextStyle(
+                                      fontSize: 13,
+                                      color: Color(0xFF2c3e50),
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        )
+                        .toList(),
+                  ),
+                const SizedBox(height: 16),
+                TextField(
+                  controller: notesController,
+                  minLines: 3,
+                  maxLines: 6,
+                  decoration: InputDecoration(
+                    hintText: 'Notas adicionales (opcional)',
+                    filled: true,
+                    fillColor: const Color(0xFFf8fafc),
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(12),
+                      borderSide: const BorderSide(color: Color(0xFFe2e8f0)),
+                    ),
+                    enabledBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(12),
+                      borderSide: const BorderSide(color: Color(0xFFe2e8f0)),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+
+          const SizedBox(height: 20),
           // Notas del operador
           _NoteSection(
             title: 'Notas del Operario',

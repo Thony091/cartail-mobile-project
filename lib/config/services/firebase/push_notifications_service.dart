@@ -1,90 +1,137 @@
+import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
+import 'package:portafolio_project/config/constants/secure_storage_keys.dart';
+import 'package:portafolio_project/config/services/secure_storage_service.dart';
+import 'package:portafolio_project/firebase_options.dart';
 
 class PushNotificationsService {
+  static final FirebaseMessaging _messaging =
+      FirebaseMessaging.instance;
 
-  static FirebaseMessaging messaging = FirebaseMessaging.instance; // Para saber todo del proyecto con respecto a firebase
-  static FlutterLocalNotificationsPlugin flutterLocalNotification = FlutterLocalNotificationsPlugin();
-  static String? token;
+  static final FlutterLocalNotificationsPlugin
+      _localNotifications = FlutterLocalNotificationsPlugin();
 
-  static Future initNotifications () async {
+  static final _secureStorage = SecureStorageService.instance;
 
-    await messaging.requestPermission();
+  static String? fcmToken;
 
-    final token = await FirebaseMessaging.instance.getToken();
-    // ignore: avoid_print
-    print('FCM-token: $token');
+  // 🔹 Canal Android (obligatorio)
+  static const AndroidNotificationChannel _androidChannel =
+      AndroidNotificationChannel(
+    'default_channel',
+    'Default Notifications',
+    description: 'Canal principal',
+    importance: Importance.high,
+  );
 
-    FirebaseMessaging.onBackgroundMessage(_backgroundHandler);
-    FirebaseMessaging.onMessage.listen(_onMessageHandler);
-    FirebaseMessaging.onMessageOpenedApp.listen(_onMessageOpenApp);
+  static Future<void> init() async {
+    final initialMessage =
+    await FirebaseMessaging.instance.getInitialMessage();
 
-    const AndroidInitializationSettings androidInitializationSettings =       
-      AndroidInitializationSettings('@mipmap/ic_launcher');
+    if (initialMessage != null) {
+      _onMessageOpenedApp(initialMessage);
+    }
+    // 🔹 Permisos
+    await _messaging.requestPermission(
+      alert: true,
+      badge: true,
+      sound: true,
+    );
+    await FirebaseMessaging.instance
+        .setForegroundNotificationPresentationOptions(
+      alert: true,
+      badge: true,
+      sound: true,
+    );
+    // 🔹 Token APNs (iOS necesita esto)
+    final apnsToken = await _messaging.getAPNSToken();
+    print('🍎 APNs Token: $apnsToken');
 
-    const DarwinInitializationSettings iosInitializationSettings = DarwinInitializationSettings();
+    // 🔹 Token inicial
+    final token = await _messaging.getToken();
+    await _persistFcmToken(token);
+    print('🔥 FCM Token: $token');
 
-    const InitializationSettings initializationSettings = InitializationSettings(
-      android: androidInitializationSettings,
-      iOS: iosInitializationSettings
+    // 🔹 Renovación de token
+    _messaging.onTokenRefresh.listen((newToken) async {
+      await _persistFcmToken(newToken);
+      print('🔄 Nuevo token: $newToken');
+    });
+
+    // 🔹 Local notifications
+    const initializationSettings = InitializationSettings(
+      android: AndroidInitializationSettings('@mipmap/ic_launcher'),
+      iOS: DarwinInitializationSettings(
+        requestAlertPermission: false,
+        requestBadgePermission: false,
+        requestSoundPermission: false,
+      ),
     );
 
-    await flutterLocalNotification.initialize(initializationSettings);
-    await _initLocalNotifications();
+    await _localNotifications.initialize(initializationSettings);
 
+    // 🔹 Android channel
+    await _localNotifications
+        .resolvePlatformSpecificImplementation<
+            AndroidFlutterLocalNotificationsPlugin>()
+        ?.createNotificationChannel(_androidChannel);
+
+    // 🔹 Listeners
+    FirebaseMessaging.onMessage.listen(_onMessage);
+    FirebaseMessaging.onMessageOpenedApp.listen(_onMessageOpenedApp);
   }
 
-
-  /// Mensajes en segundo plano 
-  static Future _backgroundHandler(RemoteMessage message) async{
-    print (' *** onBackgroundHandler ***');
-  }
-
-  // mensajes con la apicacion abierta
-  static Future _onMessageHandler(RemoteMessage message) async{
-    print('*** onMessageHandler ***');
-
-    const androidDetails = AndroidNotificationDetails(
-      'channelId', 
-      'channelName',
-      priority: Priority.high,
-      playSound: true,
-      enableVibration: true
-    );
-
-    const iOSDetails = DarwinNotificationDetails();
-
-    const generalNotificationDetail = NotificationDetails(
-      android: androidDetails,
-      iOS: iOSDetails,
-    );
-
+  // 🔹 Foreground
+  static Future<void> _onMessage(RemoteMessage message) async {
     final notification = message.notification;
+    if (notification == null) return;
 
-    await flutterLocalNotification.show(
+    await _localNotifications.show(
       notification.hashCode,
-      notification?.title ?? 'no-title',
-      notification?.body ?? 'no-body',
-      generalNotificationDetail,
+      notification.title,
+      notification.body,
+      const NotificationDetails(
+        android: AndroidNotificationDetails(
+          'default_channel',
+          'Default Notifications',
+          importance: Importance.high,
+          priority: Priority.high,
+        ),
+        iOS: DarwinNotificationDetails(),
+      ),
     );
   }
 
-  static Future _onMessageOpenApp(RemoteMessage message) async{
+  // 🔹 Tap en notificación
+  static Future<void> _onMessageOpenedApp(
+      RemoteMessage message,
+  ) async {
+    print('👉 Notificación tocada');
+    // Aquí navegas con go_router usando message.data
   }
 
-  /// Local Notifications
-  static _initLocalNotifications() async {
-    const AndroidInitializationSettings androidInitializationSettings =             
-      AndroidInitializationSettings('@mipmap/launcher_icon');
-
-    const DarwinInitializationSettings iosInitializationSettings = DarwinInitializationSettings();
-
-    const InitializationSettings initializationSettings = InitializationSettings(
-      android: androidInitializationSettings,
-      iOS: iosInitializationSettings,
+  static Future<void> _persistFcmToken(String? token) async {
+    fcmToken = token;
+    if (token == null) {
+      await _secureStorage.delete(key: secureStorageFcmTokenKey);
+      return;
+    }
+    await _secureStorage.write(
+      key: secureStorageFcmTokenKey,
+      value: token,
     );
-
-    await flutterLocalNotification.initialize( initializationSettings );
   }
+}
 
+@pragma('vm:entry-point')
+Future<void> firebaseMessagingBackgroundHandler(
+    RemoteMessage message,
+) async {
+  await Firebase.initializeApp(
+    options: DefaultFirebaseOptions.currentPlatform,
+  );
+
+  // Aquí solo lógica mínima (no UI)
+  print('📩 Background message: ${message.messageId}');
 }

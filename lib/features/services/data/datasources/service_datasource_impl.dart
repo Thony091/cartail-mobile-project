@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'dart:io';
 
 import 'package:dio/dio.dart';
+import 'package:flutter/cupertino.dart';
 
 import '../../../../config/config.dart';
 import '../../domain/entities/services.dart';
@@ -19,7 +20,7 @@ class ServicesDatasourceImpl extends ServicesDatasource {
           baseUrl: Enviroment.baseUrl,
           headers: {
             // 'x-api-key': 'ZvHNth6qgZ6LNnwtXwJX75Jk8YlXEZxX2AZvOFSW',
-            // 'Authorization': 'Bearer $accessToken',
+            'Authorization': 'Bearer $accessToken',
             'Content-Type': 'application/json',
           },
         ),
@@ -81,7 +82,9 @@ class ServicesDatasourceImpl extends ServicesDatasource {
       final response = await dio.request(
         url,
         data: serviceSimilar,
-        options: Options(method: method),
+        options: Options(
+          method: method,
+        ),
       );
       Services service = Services(
         id: '',
@@ -95,7 +98,7 @@ class ServicesDatasourceImpl extends ServicesDatasource {
         durationMinutes: 0,
         categoryId: null,
       );
-      if (response.statusCode == 200) {
+      if (response.statusCode == 200 || response.statusCode == 201) {
         var data = response.data;
         if (data is Map<String, dynamic> && data.containsKey('data')) {
           service = ServiceMapper.jsonToEntity(data['data']);
@@ -103,6 +106,7 @@ class ServicesDatasourceImpl extends ServicesDatasource {
       }
       return service;
     } catch (e) {
+    debugPrint('Error en createUpdateService: $e');
       throw Exception(e);
     }
   }

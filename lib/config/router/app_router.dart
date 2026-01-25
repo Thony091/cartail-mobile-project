@@ -1,5 +1,6 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:portafolio_project/config/services/firebase/analytics_service.dart';
 import 'package:portafolio_project/presentation/pages/auth/cart-shop/modern_cart_page.dart';
 import 'package:portafolio_project/presentation/pages/auth/modern_check_auth_status_screen.dart';
 import 'package:portafolio_project/features/reservation/presentation/page/modern_config_reservations_page.dart';
@@ -51,6 +52,9 @@ final goRouterProvider = Provider((ref) {
   final goRouterNotifier = ref.read(goRouterNotifierProvider);
 
   return GoRouter(
+    observers: [
+      AnalyticsService.observer,
+    ],
     initialLocation: '/splash',
     refreshListenable: goRouterNotifier,
     routes: [
@@ -400,6 +404,14 @@ final goRouterProvider = Provider((ref) {
             isGoingTo == '/reset-password') {
           return '/';
         }
+      }
+
+      // Si estamos en una ruta pública de auth y hay un error/deslogueo,
+      // no forceamos un redirect; el formulario debe quedarse donde está.
+      if (isGoingTo == '/login' ||
+          isGoingTo == '/register' ||
+          isGoingTo == '/reset-password') {
+        return null;
       }
 
       // Si el usuario acaba de hacer logout (notAuthenticated) y está en una ruta que requiere autenticación

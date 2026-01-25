@@ -2,6 +2,7 @@ import 'package:animate_do/animate_do.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:portafolio_project/features/auth/presentation/providers/admin_auth_provider.dart';
 import 'package:portafolio_project/features/home/views/components/components.dart';
 import 'package:portafolio_project/features/message/presentation/providers/messages_provider.dart';
 import 'package:portafolio_project/features/services/presentation/providers/services_provider.dart';
@@ -21,6 +22,7 @@ class AdminBodyHomeView extends ConsumerWidget {
     final reservationState = ref.watch( reservationProvider );
     final ticketState = ref.watch( ticketsProvider );
     final worksState = ref.watch( worksProvider );
+    final userListState = ref.watch( adminUsersListProvider.notifier );
 
     return Padding(
       padding: const EdgeInsets.all(20),
@@ -147,12 +149,12 @@ class AdminBodyHomeView extends ConsumerWidget {
                   ),
                 ),
                 const SizedBox(width: 16),
-                Expanded(
+                const Expanded(
                   child: StatCardWidget(
                     value: '0',
                     label: 'Operarios',
                     icon: Icons.people,
-                    color: const Color(0xFF16a085),
+                    color: Color(0xFF16a085),
                     modalType: DashboardModalType.operators,
                     isEnabled: false,
                   ),

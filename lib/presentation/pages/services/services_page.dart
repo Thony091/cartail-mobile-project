@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_staggered_grid_view/flutter_staggered_grid_view.dart';
 import 'package:go_router/go_router.dart';
+import 'package:portafolio_project/features/auth/presentation/providers/better_auth_provider.dart';
 
 import '../../../config/config.dart';
 import '../../presentation_container.dart';
@@ -18,15 +19,15 @@ class ServicesPage extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
 
     final servicesState = ref.watch(servicesProvider);
-    final authState     = ref.watch(authProvider);
+    final authState     = ref.watch(betterAuthProvider);
     final text          = AppTheme().getTheme().textTheme;
     // final color         = AppTheme().getTheme().colorScheme;
     
     return Scaffold(
       appBar: AppBar(
-        title: Text( authState.authStatus != AuthStatus.authenticated
+        title: Text( authState.isAuthenticated
           ? "Nuestros Servicios" 
-          :( !authState.userData!.isAdmin )
+          :( !authState.isAdmin )
             ? "Nuestros Servicios" 
             : "Servicios disponibles",
           style: text.titleLarge,
@@ -37,7 +38,7 @@ class ServicesPage extends ConsumerWidget {
       ),
       body: BackgroundImageWidget(
         opacity: 0.45,
-        child: ( authState.authStatus != AuthStatus.authenticated )
+        child: ( !authState.isAuthenticated )
           ? servicesState.services.isEmpty 
            ? FadeInRight(
                 child: Center(
@@ -48,7 +49,7 @@ class ServicesPage extends ConsumerWidget {
                 )
               )
             : const _ServiceBodyPage()
-          : ( !authState.userData!.isAdmin )
+          : ( !authState.isAdmin )
             ? servicesState.services.isEmpty 
               ? FadeInRight(
                   child: Center(
@@ -70,9 +71,9 @@ class ServicesPage extends ConsumerWidget {
                 )
               : const _ServiceAdminBodyPage()
       ),
-      floatingActionButton: ( authState.authStatus != AuthStatus.authenticated)
+      floatingActionButton: ( !authState.isAuthenticated )
         ? null 
-        : ( authState.userData!.isAdmin ) 
+        : ( authState.isAdmin ) 
           ? FloatingActionButton.extended(
               label: const Text( 'Crear Servicio' ),
               icon: const Icon( Icons.add ),

@@ -67,3 +67,5 @@ logs/
 # Otros
 # =====================
 node_modules/
+
+sentry.properties

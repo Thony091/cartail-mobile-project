@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart' hide FilterChip;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:portafolio_project/features/auth/presentation/providers/better_auth_provider.dart';
 import '../../../../presentation/pages/auth/modern_scaffold_with_drawer.dart';
 import 'widgets/ticket_widgets.dart';
 import '../../../state/presentation/providers/states_provider.dart';
@@ -25,8 +26,8 @@ class OperatorAssignedTicketsPageState
   @override
   Widget build(BuildContext context) {
     final ticketsState = ref.watch(ticketsProvider);
-    final authState = ref.watch(authProvider);
-    final operatorId = authState.userData?.uid ?? '';
+    final authState = ref.watch(betterAuthProvider);
+    final operatorId = authState.session!.user.id;
     final assignedTickets =
         ticketsState.tickets.where((ticket) => ticket.assignedToId == operatorId);
     final filteredTickets = _filterTickets(assignedTickets.toList());
@@ -60,7 +61,7 @@ class OperatorAssignedTicketsPageState
                 : OperatorTicketsList(
                     tickets: filteredTickets,
                     operatorId: operatorId,
-                    operatorName: authState.userData?.nombre ?? 'Operario',
+                    operatorName: authState.session!.user.name ?? 'Operario',
                   ),
           ),
         ],

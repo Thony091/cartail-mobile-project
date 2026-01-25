@@ -43,7 +43,9 @@ class GoRouterNotifier extends ChangeNotifier {
       case BetterAuthStatus.initial:
         return AuthStatus.checking;
       case BetterAuthStatus.loading:
-        return AuthStatus.checking;
+        // Durante loading (login/register), mantener el estado anterior
+        // para no causar redirecciones innecesarias
+        return _authStatus;
       case BetterAuthStatus.authenticated:
         return AuthStatus.authenticated;
       case BetterAuthStatus.unauthenticated:

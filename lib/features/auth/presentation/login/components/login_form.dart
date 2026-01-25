@@ -16,6 +16,7 @@ class LoginForm extends ConsumerStatefulWidget {
 
 class _LoginFormState extends ConsumerState<LoginForm> {
   late final ProviderSubscription<BetterAuthState> _authListener;
+  String? _lastShownErrorMessage;
 
   @override
   void initState() {
@@ -24,9 +25,13 @@ class _LoginFormState extends ConsumerState<LoginForm> {
     _authListener = ref.listenManual<BetterAuthState>(
       betterAuthProvider,
       (previous, next) {
+        if (next.isLoading) {
+          _lastShownErrorMessage = null;
+        }
         final errorMessage = next.errorMessage;
         if (errorMessage == null || errorMessage.isEmpty) return;
-        if (previous?.errorMessage == errorMessage) return;
+        if (_lastShownErrorMessage == errorMessage) return;
+        _lastShownErrorMessage = errorMessage;
         ScaffoldMessenger.of(context).hideCurrentSnackBar();
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text(errorMessage)),

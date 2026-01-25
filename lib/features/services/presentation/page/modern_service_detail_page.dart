@@ -1,11 +1,13 @@
 import 'package:animate_do/animate_do.dart';
+import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:portafolio_project/features/auth/presentation/providers/better_auth_provider.dart';
 
 import 'package:portafolio_project/features/services/presentation/page/modern_service_detail_widgets.dart';
-import '../../../auth/presentation/providers/auth_provider.dart';
 import '../../../../presentation/pages/auth/modern_scaffold_with_drawer.dart';
+import '../providers/service_form_provider.dart';
 import '../providers/service_provider.dart';
 
 class ModernServiceDetailPage extends ConsumerStatefulWidget {
@@ -24,7 +26,7 @@ class ModernServiceDetailPageState
 
   @override
   Widget build(BuildContext context) {
-    final authState = ref.watch(authProvider);
+    final authState = ref.watch(betterAuthProvider);
     final serviceState = ref.watch(serviceProvider(widget.serviceId));
 
     // Cuando el servicio se cargue, usar el serviceFormProvider
@@ -45,8 +47,18 @@ class ModernServiceDetailPageState
     }
 
     final serviceNotifier = ref.read(serviceProvider(widget.serviceId).notifier);
+    
+    ref.listen(serviceFormProvider(service), (previous, next) {
+      if (next.errorMessage != null && next.errorMessage!.isNotEmpty) {
+        if (previous?.errorMessage == next.errorMessage) return;
+        ScaffoldMessenger.of(context).hideCurrentSnackBar();
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(next.errorMessage!)),
+        );
+      }
+    });
 
-    final isAdmin = authState.userData?.isAdmin ?? false;
+    final isAdmin = authState.session?.user.isAdmin ?? false;
     final isNewService = widget.serviceId == 'new';
     final isEditMode = serviceState.isEditMode;
     return ModernScaffoldWithDrawer(
@@ -82,6 +94,8 @@ class ModernServiceDetailPageState
                 ),
               ),
               child: SingleChildScrollView(
+                keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
+                dragStartBehavior: DragStartBehavior.down,
                 physics: const BouncingScrollPhysics(),
                 padding: EdgeInsets.only(
                   left: 16,
@@ -165,7 +179,7 @@ class ModernServiceDetailPageState
                           children: [
                             if (isEditMode)
                               const Padding(
-                                padding: EdgeInsets.only(bottom: 12, left: 4),
+                                padding: EdgeInsets.only(bottom: 10, left: 4),
                                 child: Row(
                                   children: [
                                     Icon(

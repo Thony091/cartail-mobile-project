@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:portafolio_project/features/auth/presentation/providers/better_auth_provider.dart';
 // import 'package:animate_do/animate_do.dart'; removed unused
 // import 'package:portafolio_project/presentation/pages/auth/home/views/components/stat_card_widget.dart'; removed unused
 import 'package:portafolio_project/features/services/presentation/page/views/admin_services_list_widget.dart';
@@ -7,7 +8,6 @@ import 'package:portafolio_project/features/services/presentation/page/views/com
 import 'package:portafolio_project/features/services/presentation/page/views/user_service_list_widget.dart';
 import 'modern_service_widgets.dart'; // Add this import
 
-import '../../../auth/presentation/providers/auth_provider.dart';
 import '../providers/services_provider.dart';
 import '../../../shared/presentation/shared/widgets/widgets.dart';
 import '../../../../presentation/pages/auth/modern_scaffold_with_drawer.dart';
@@ -36,20 +36,26 @@ class ModernServicesPageState extends ConsumerState<ModernServicesPage> {
   @override
   Widget build(BuildContext context) {
     final servicesState = ref.watch(servicesProvider);
-    final authState = ref.watch(authProvider);
-    final isAdmin = authState.userData?.isAdmin ?? false;
+    final authState = ref.watch(betterAuthProvider);
+    final isAdmin = authState.session?.user.isAdmin;
+    final totalServices = servicesState.services.length;
+    final activeServices = servicesState.services
+        .where((service) => service.isActive)
+        .length;
 
     final List<Services> services = _filterServices(servicesState.services);
     // final bool isAdmin = false; // authState.userData?.isAdmin ?? false
 
     return ModernScaffoldWithDrawer(
-      title: isAdmin ? 'Gestión de Servicios' : 'Nuestros Servicios',
+      title: (isAdmin != null && isAdmin) 
+        ? 'Gestión de Servicios' 
+        : 'Nuestros Servicios',
       appBarActions: [
         IconButton(
           icon: const Icon(Icons.search, color: Colors.white),
           onPressed: _showSearchDialog,
         ),
-        if (isAdmin)
+        if (isAdmin != null && isAdmin)
           IconButton(
             icon: const Icon(Icons.filter_list, color: Colors.white),
             onPressed: _showFilterDialog,
@@ -75,6 +81,8 @@ class ModernServicesPageState extends ConsumerState<ModernServicesPage> {
                 child: ServiceHeaderSection(
                   categories: _categories,
                   selectedCategory: _selectedCategory,
+                  totalServices: totalServices,
+                  activeServices: activeServices,
                   onSearchChanged: (value) {
                     setState(() {
                       _searchQuery = value;
@@ -95,7 +103,7 @@ class ModernServicesPageState extends ConsumerState<ModernServicesPage> {
                 )
               else if (services.isEmpty)
                 const SliverFillRemaining(child: EmptyStateWidget())
-              else if (isAdmin)
+              else if (isAdmin != null && isAdmin)
                 AdminServiceListWidget(services: services)
               else
                 UserServiceListWidget(services: services),
@@ -103,7 +111,7 @@ class ModernServicesPageState extends ConsumerState<ModernServicesPage> {
           ),
         ),
       ),
-      floatingActionButton: isAdmin
+      floatingActionButton: isAdmin != null && isAdmin
           ? ModernFloatingActionButton(
               icon: Icons.add,
               tooltip: 'Agregar Servicio',

@@ -12,9 +12,14 @@ import '../providers/service_provider.dart';
 
 class ModernServiceDetailPage extends ConsumerStatefulWidget {
   final String serviceId;
+  final bool startInEditMode;
   static const name = 'ModernServiceDetailPage';
 
-  const ModernServiceDetailPage({super.key, required this.serviceId});
+  const ModernServiceDetailPage({
+    super.key,
+    required this.serviceId,
+    this.startInEditMode = false,
+  });
 
   @override
   ModernServiceDetailPageState createState() => ModernServiceDetailPageState();
@@ -23,6 +28,7 @@ class ModernServiceDetailPage extends ConsumerStatefulWidget {
 class ModernServiceDetailPageState
     extends ConsumerState<ModernServiceDetailPage> {
   final _formKey = GlobalKey<FormState>();
+  bool _didSetEditMode = false;
 
   @override
   Widget build(BuildContext context) {
@@ -61,6 +67,17 @@ class ModernServiceDetailPageState
     final isAdmin = authState.session?.user.isAdmin ?? false;
     final isNewService = widget.serviceId == 'new';
     final isEditMode = serviceState.isEditMode;
+
+    if (widget.startInEditMode &&
+        !_didSetEditMode &&
+        !serviceState.isLoading &&
+        !isNewService &&
+        !isEditMode) {
+      _didSetEditMode = true;
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        serviceNotifier.setEditMode(true);
+      });
+    }
     return ModernScaffoldWithDrawer(
       title: isNewService
           ? 'Crear Servicio'

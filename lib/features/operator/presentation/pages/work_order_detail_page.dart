@@ -2,8 +2,12 @@ import 'package:animate_do/animate_do.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import '../../domain/entities/work_order.dart';
-import '../widgets/work_phase_widgets.dart';
+import '../../../auth/presentation/providers/better_auth_provider.dart';
+import '../../../state/presentation/providers/states_provider.dart';
+import '../../../ticket/domain/entities/ticket.dart';
+import '../../../ticket/presentation/providers/tickets_provider.dart';
+import '../state/operator_checklist_controller.dart';
+import '../state/operator_ticket_controller.dart';
 import '../../../shared/presentation/shared/widgets/widgets.dart';
 
 class WorkOrderDetailPage extends ConsumerStatefulWidget {
@@ -21,33 +25,12 @@ class _WorkOrderDetailPageState extends ConsumerState<WorkOrderDetailPage>
     with SingleTickerProviderStateMixin {
   late TabController _tabController;
   bool _isLoading = false;
-
-  // TODO: Reemplazar con datos del provider
-  late WorkOrder _order;
-  late List<ChecklistItem> _phaseChecklist;
-  final List<String> _checkedChecklistIds = [];
   final TextEditingController _notesController = TextEditingController();
 
   @override
   void initState() {
     super.initState();
     _tabController = TabController(length: 4, vsync: this);
-    _loadOrder();
-    _initChecklist();
-  }
-
-  void _loadOrder() {
-    // Datos de ejemplo
-    _order = _getMockOrder();
-  }
-
-  void _initChecklist() {
-    _phaseChecklist = _buildChecklistForPhase(_order.currentPhase);
-    _checkedChecklistIds
-      ..clear()
-      ..addAll(
-        _phaseChecklist.where((item) => item.isChecked).map((item) => item.id),
-      );
   }
 
   @override
@@ -59,12 +42,45 @@ class _WorkOrderDetailPageState extends ConsumerState<WorkOrderDetailPage>
 
   @override
   Widget build(BuildContext context) {
+    final ticketsState = ref.watch(ticketsProvider);
+    Ticket? ticket;
+    for (final item in ticketsState.tickets) {
+      if (item.id == widget.orderId) {
+        ticket = item;
+        break;
+      }
+    }
+    final stateId = ticket?.stateId ?? 1;
+    final checklistState = ref.watch(operatorChecklistControllerProvider(stateId));
+    final checklistController =
+        ref.read(operatorChecklistControllerProvider(stateId).notifier);
+    final stateLabel = ref.watch(stateByIdProvider(stateId))?.name ?? 'Estado';
+    final nextStateId =
+        ref.read(operatorTicketControllerProvider).nextStateId(stateId);
+
+    if (ticketsState.isLoading) {
+      return const Scaffold(
+        backgroundColor: Color(0xFFf8fafc),
+        body: Center(child: CircularProgressIndicator()),
+      );
+    }
+
+    if (ticket == null) {
+      return Scaffold(
+        backgroundColor: const Color(0xFFf8fafc),
+        appBar: AppBar(
+          title: const Text('Ticket no encontrado'),
+        ),
+        body: const Center(child: Text('No se encontró el ticket solicitado.')),
+      );
+    }
+
     return Scaffold(
       backgroundColor: const Color(0xFFf8fafc),
       body: CustomScrollView(
         slivers: [
           // AppBar con info principal
-          _buildSliverAppBar(),
+          _buildSliverAppBar(ticket, stateLabel),
 
           // Contenido
           SliverToBoxAdapter(
@@ -72,7 +88,11 @@ class _WorkOrderDetailPageState extends ConsumerState<WorkOrderDetailPage>
               children: [
                 // Barra de progreso y fase actual
                 FadeInDown(
-                  child: _PhaseProgressSection(order: _order),
+                  child: _StatusProgressSection(
+                    ticket: ticket,
+                    stateLabel: stateLabel,
+                    progress: _progressForState(stateId),
+                  ),
                 ),
 
                 // Tabs de contenido
@@ -86,18 +106,21 @@ class _WorkOrderDetailPageState extends ConsumerState<WorkOrderDetailPage>
             child: TabBarView(
               controller: _tabController,
               children: [
-                _DetailsTab(order: _order),
-                _TimelineTab(order: _order),
+                _DetailsTab(ticket: ticket),
+                _TimelineTab(ticket: ticket),
                 _ChecklistTab(
-                  checklist: _phaseChecklist,
-                  title: _getChecklistTitle(_order.currentPhase),
-                  isCompleted: _isChecklistCompleted,
-                  onToggle: _handleChecklistToggle,
+                  checklist: checklistState.entries,
+                  title: checklistState.title,
+                  isCompleted: checklistState.requiredComplete,
+                  onToggle: (entry, isChecked) =>
+                      checklistController.toggle(entry.item.id, isChecked),
                 ),
                 _NotesTab(
-                  order: _order,
-                  checklistNotes: _selectedChecklistNotes,
-                  checklistTitle: _getChecklistTitle(_order.currentPhase),
+                  ticket: ticket,
+                  checklistNotes: checklistState.checkedEntriesInOrder
+                      .map((entry) => entry.item.label)
+                      .toList(),
+                  checklistTitle: checklistState.title,
                   notesController: _notesController,
                 ),
               ],
@@ -105,11 +128,19 @@ class _WorkOrderDetailPageState extends ConsumerState<WorkOrderDetailPage>
           ),
         ],
       ),
-      bottomNavigationBar: _buildBottomActions(),
+      bottomNavigationBar: _buildBottomActions(
+        ticket: ticket,
+        nextStateId: nextStateId,
+        checklistNotes: checklistState.checkedEntriesInOrder
+            .map((entry) => entry.item.label)
+            .toList(),
+        checklistTitle: checklistState.title,
+        nextStateLabel: ref.watch(stateByIdProvider(nextStateId ?? 0))?.name,
+      ),
     );
   }
 
-  Widget _buildSliverAppBar() {
+  Widget _buildSliverAppBar(Ticket ticket, String stateLabel) {
     return SliverAppBar(
       expandedHeight: 220,
       pinned: true,
@@ -157,7 +188,7 @@ class _WorkOrderDetailPageState extends ConsumerState<WorkOrderDetailPage>
                           borderRadius: BorderRadius.circular(8),
                         ),
                         child: Text(
-                          '#${_order.orderNumber}',
+                          'Ticket #${ticket.id}',
                           style: const TextStyle(
                             fontSize: 14,
                             fontWeight: FontWeight.w700,
@@ -167,12 +198,12 @@ class _WorkOrderDetailPageState extends ConsumerState<WorkOrderDetailPage>
                         ),
                       ),
                       const SizedBox(width: 8),
-                      WorkPriorityBadge(priority: _order.priority),
+                      _StatusBadge(label: stateLabel),
                     ],
                   ),
                   const SizedBox(height: 12),
                   Text(
-                    _order.title,
+                    ticket.title.isNotEmpty ? ticket.title : 'Trabajo asignado',
                     style: const TextStyle(
                       fontSize: 22,
                       fontWeight: FontWeight.w700,
@@ -185,13 +216,15 @@ class _WorkOrderDetailPageState extends ConsumerState<WorkOrderDetailPage>
                   Row(
                     children: [
                       const Icon(
-                        Icons.directions_car,
+                        Icons.person,
                         size: 16,
                         color: Colors.white70,
                       ),
                       const SizedBox(width: 6),
                       Text(
-                        '${_order.vehicle.fullName} - ${_order.vehicle.licensePlate}',
+                        ticket.userName.isNotEmpty
+                            ? ticket.userName
+                            : 'Cliente sin nombre',
                         style: const TextStyle(
                           fontSize: 14,
                           color: Colors.white70,
@@ -226,10 +259,13 @@ class _WorkOrderDetailPageState extends ConsumerState<WorkOrderDetailPage>
     );
   }
 
-  Widget _buildBottomActions() {
-    final canAdvance = _order.currentPhase == WorkPhase.pendingReception
-        ? _isChecklistCompleted
-        : _order.canAdvance;
+  Widget _buildBottomActions({
+    required Ticket ticket,
+    required int? nextStateId,
+    required List<String> checklistNotes,
+    required String checklistTitle,
+    required String? nextStateLabel,
+  }) {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
@@ -243,21 +279,60 @@ class _WorkOrderDetailPageState extends ConsumerState<WorkOrderDetailPage>
         ],
       ),
       child: SafeArea(
-        child: PhaseActionButton(
-          currentPhase: _order.currentPhase,
-          nextPhase: _order.nextPhase,
-          canAdvance: canAdvance,
-          isLoading: _isLoading,
-          onAdvance: _handleAdvancePhase,
+        child: SizedBox(
+          width: double.infinity,
+          child: ElevatedButton.icon(
+            onPressed: nextStateId == null || _isLoading
+                ? null
+                : () => _handleAdvancePhase(
+                      ticket: ticket,
+                      nextStateId: nextStateId,
+                      checklistNotes: checklistNotes,
+                      checklistTitle: checklistTitle,
+                      nextStateLabel: nextStateLabel ?? 'Siguiente estado',
+                    ),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: const Color(0xFF3498db),
+              foregroundColor: Colors.white,
+              padding: const EdgeInsets.symmetric(vertical: 14),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(12),
+              ),
+              disabledBackgroundColor: const Color(0xFFbdc3c7),
+            ),
+            icon: _isLoading
+                ? const SizedBox(
+                    width: 20,
+                    height: 20,
+                    child: CircularProgressIndicator(
+                      strokeWidth: 2,
+                      valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                    ),
+                  )
+                : const Icon(Icons.arrow_forward),
+            label: Text(
+              nextStateId == null
+                  ? 'Sin cambios disponibles'
+                  : 'Actualizar a ${nextStateLabel ?? 'Siguiente'}',
+              style: const TextStyle(
+                fontSize: 16,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+          ),
         ),
       ),
     );
   }
 
-  void _handleAdvancePhase() async {
-    final nextPhase = _order.nextPhase;
-    if (nextPhase == null) return;
-    final notesToSend = _buildAdvanceNotes();
+  void _handleAdvancePhase({
+    required Ticket ticket,
+    required int nextStateId,
+    required List<String> checklistNotes,
+    required String checklistTitle,
+    required String nextStateLabel,
+  }) async {
+    final notesToSend = _buildAdvanceNotes(checklistNotes, checklistTitle);
 
     // Confirmar accion
     final confirmed = await showDialog<bool>(
@@ -270,7 +345,7 @@ class _WorkOrderDetailPageState extends ConsumerState<WorkOrderDetailPage>
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
-              'Estas a punto de cambiar el estado a "${nextPhase.displayName}". ¿Deseas continuar?',
+              'Estas a punto de cambiar el estado a "$nextStateLabel". ¿Deseas continuar?',
             ),
             if (notesToSend.isNotEmpty) ...[
               const SizedBox(height: 16),
@@ -319,147 +394,42 @@ class _WorkOrderDetailPageState extends ConsumerState<WorkOrderDetailPage>
 
     setState(() => _isLoading = true);
 
-    // TODO: Implementar cambio de fase real con notesToSend
-    await Future.delayed(const Duration(seconds: 1));
+    final user = ref.read(currentUserProvider);
+    final operatorId = user?.id ?? '';
+    final operatorName = user?.name ?? user?.email ?? 'Operario';
+    final controller = ref.read(operatorTicketControllerProvider);
+    final ok = await controller.updateTicketWithNotes(
+      ticket: ticket,
+      nextStateId: nextStateId,
+      notes: notesToSend,
+      authorId: operatorId,
+      authorName: operatorName,
+    );
 
     setState(() => _isLoading = false);
 
-    if (mounted) {
+    if (mounted && ok) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text('Estado actualizado a ${nextPhase.displayName}'),
+          content: Text('Estado actualizado a $nextStateLabel'),
           backgroundColor: const Color(0xFF27ae60),
+        ),
+      );
+    } else if (mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('No se pudo actualizar el estado'),
+          backgroundColor: Color(0xFFe74c3c),
         ),
       );
     }
   }
 
-  List<ChecklistItem> _buildChecklistForPhase(WorkPhase phase) {
-    switch (phase) {
-      case WorkPhase.pendingReception:
-      case WorkPhase.received:
-        return _order.receptionChecklist;
-      case WorkPhase.diagnosis:
-        return const [
-          ChecklistItem(
-            id: 'diagnosis-1',
-            label: 'Revision visual inicial',
-            description: 'Revision visual inicial',
-            category: 'diagnosis',
-          ),
-          ChecklistItem(
-            id: 'diagnosis-2',
-            label: 'Lectura de codigos/errores',
-            description: 'Lectura de codigos/errores',
-            category: 'diagnosis',
-          ),
-          ChecklistItem(
-            id: 'diagnosis-3',
-            label: 'Pruebas funcionales basicas',
-            description: 'Pruebas funcionales basicas',
-            category: 'diagnosis',
-          ),
-        ];
-      case WorkPhase.inProgress:
-        return const [
-          ChecklistItem(
-            id: 'inprogress-1',
-            label: 'Herramientas principales listas',
-            description: 'Herramientas principales listas',
-            category: 'execution',
-          ),
-          ChecklistItem(
-            id: 'inprogress-2',
-            label: 'Materiales generales confirmados',
-            description: 'Materiales generales confirmados',
-            category: 'execution',
-          ),
-          ChecklistItem(
-            id: 'inprogress-3',
-            label: 'Area de trabajo asegurada',
-            description: 'Area de trabajo asegurada',
-            category: 'execution',
-          ),
-        ];
-      case WorkPhase.qualityCheck:
-        return const [
-          ChecklistItem(
-            id: 'qc-1',
-            label: 'Pruebas finales completadas',
-            description: 'Pruebas finales completadas',
-            category: 'quality',
-          ),
-          ChecklistItem(
-            id: 'qc-2',
-            label: 'Limpieza y orden del area',
-            description: 'Limpieza y orden del area',
-            category: 'quality',
-          ),
-        ];
-      case WorkPhase.completed:
-      case WorkPhase.delivered:
-      case WorkPhase.waitingParts:
-      case WorkPhase.cancelled:
-        return const [];
-    }
-  }
-
-  String _getChecklistTitle(WorkPhase phase) {
-    switch (phase) {
-      case WorkPhase.pendingReception:
-      case WorkPhase.received:
-        return 'Checklist de Recepcion';
-      case WorkPhase.diagnosis:
-        return 'Checklist de Diagnostico';
-      case WorkPhase.inProgress:
-        return 'Checklist de Trabajo';
-      case WorkPhase.qualityCheck:
-        return 'Checklist de Calidad';
-      case WorkPhase.waitingParts:
-        return 'Checklist de Repuestos';
-      case WorkPhase.completed:
-      case WorkPhase.delivered:
-      case WorkPhase.cancelled:
-        return 'Checklist';
-    }
-  }
-
-  void _handleChecklistToggle(ChecklistItem item, bool isChecked) {
-    final index = _phaseChecklist.indexWhere((current) => current.id == item.id);
-    if (index == -1) return;
-    setState(() {
-      _phaseChecklist[index] = item.copyWith(isChecked: isChecked);
-      if (isChecked) {
-        if (!_checkedChecklistIds.contains(item.id)) {
-          _checkedChecklistIds.add(item.id);
-        }
-      } else {
-        _checkedChecklistIds.remove(item.id);
-      }
-    });
-  }
-
-  bool get _isChecklistCompleted {
-    final requiredItems =
-        _phaseChecklist.where((item) => item.isRequired).toList();
-    if (requiredItems.isEmpty) {
-      return _phaseChecklist.isNotEmpty ? _checkedChecklistIds.isNotEmpty : true;
-    }
-    return requiredItems.every((item) => item.isChecked);
-  }
-
-  List<String> get _selectedChecklistNotes {
-    return _checkedChecklistIds.map((id) {
-      final item = _phaseChecklist.firstWhere((element) => element.id == id);
-      return item.label.isNotEmpty ? item.label : item.description;
-    }).toList();
-  }
-
-  String _buildAdvanceNotes() {
+  String _buildAdvanceNotes(List<String> checklistNotes, String title) {
     final buffer = StringBuffer();
-    if (_selectedChecklistNotes.isNotEmpty) {
-      buffer.writeln('${_getChecklistTitle(_order.currentPhase)}:');
-      for (final note in _selectedChecklistNotes) {
+    if (checklistNotes.isNotEmpty) {
+      buffer.writeln('$title:');
+      for (final note in checklistNotes) {
         buffer.writeln('- $note');
       }
     }
@@ -471,6 +441,15 @@ class _WorkOrderDetailPageState extends ConsumerState<WorkOrderDetailPage>
       buffer.writeln(userNotes);
     }
     return buffer.toString().trim();
+  }
+
+  double _progressForState(int stateId) {
+    final states = ref.read(statesProvider);
+    if (states.isEmpty) return 0;
+    final sorted = [...states]..sort((a, b) => a.id.compareTo(b.id));
+    final index = sorted.indexWhere((state) => state.id == stateId);
+    if (index == -1) return 0;
+    return (index + 1) / sorted.length;
   }
 
   void _showOptionsMenu() {
@@ -542,127 +521,55 @@ class _WorkOrderDetailPageState extends ConsumerState<WorkOrderDetailPage>
     );
   }
 
-  WorkOrder _getMockOrder() {
-    return WorkOrder(
-      id: widget.orderId,
-      ticketId: 'TKT-001',
-      orderNumber: '2024-0042',
-      clientId: 'client-001',
-      clientName: 'Juan Perez',
-      clientPhone: '+56 9 1234 5678',
-      clientEmail: 'juan.perez@email.com',
-      operatorId: 'op-001',
-      operatorName: 'Carlos Rodriguez',
-      workType: WorkType.cameraInstallation,
-      title: 'Instalacion de Camara de Retroceso',
-      description:
-          'Instalacion de camara de retroceso con pantalla integrada en espejo retrovisor. Incluye cableado y configuracion.',
-      services: [
-        'Camara HD Vision Nocturna',
-        'Espejo con Pantalla 4.3"',
-        'Cableado completo',
-        'Instalacion profesional',
-      ],
-      vehicle: const VehicleInfo(
-        brand: 'Toyota',
-        model: 'Corolla',
-        year: 2022,
-        licensePlate: 'ABCD-12',
-        color: 'Gris Metalico',
-        mileage: 35000,
+
+}
+
+class _StatusBadge extends StatelessWidget {
+  final String label;
+
+  const _StatusBadge({required this.label});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+      decoration: BoxDecoration(
+        color: Colors.white.withValues(alpha: 0.2),
+        borderRadius: BorderRadius.circular(8),
       ),
-      currentPhase: WorkPhase.inProgress,
-      priority: WorkPriority.normal,
-      phaseHistory: [
-        PhaseLog(
-          phase: WorkPhase.pendingReception,
-          timestamp: DateTime.now().subtract(const Duration(days: 2)),
-          operatorName: 'Sistema',
-          notes: 'Orden creada',
+      child: Text(
+        label,
+        style: const TextStyle(
+          fontSize: 12,
+          fontWeight: FontWeight.w600,
+          color: Colors.white,
         ),
-        PhaseLog(
-          phase: WorkPhase.received,
-          timestamp: DateTime.now().subtract(const Duration(days: 1, hours: 5)),
-          operatorName: 'Carlos Rodriguez',
-          notes: 'Vehiculo recibido en buen estado',
-        ),
-        PhaseLog(
-          phase: WorkPhase.diagnosis,
-          timestamp: DateTime.now().subtract(const Duration(days: 1, hours: 3)),
-          operatorName: 'Carlos Rodriguez',
-          notes: 'Revision de sistema electrico completada',
-        ),
-        PhaseLog(
-          phase: WorkPhase.inProgress,
-          timestamp: DateTime.now().subtract(const Duration(hours: 2)),
-          operatorName: 'Carlos Rodriguez',
-          notes: 'Iniciando instalacion',
-        ),
-      ],
-      receptionChecklist: [
-        const ChecklistItem(
-          id: '1',
-          label: 'Estado exterior del vehiculo',
-          description: 'Estado exterior del vehiculo',
-          category: 'exterior',
-          isRequired: true,
-          isChecked: true,
-          notes: 'Sin daños visibles',
-        ),
-        const ChecklistItem(
-          id: '2',
-          label: 'Nivel de combustible',
-          description: 'Nivel de combustible',
-          category: 'mechanical',
-          isRequired: true,
-          isChecked: true,
-          notes: '1/4 de tanque',
-        ),
-        const ChecklistItem(
-          id: '3',
-          label: 'Kilometraje verificado',
-          description: 'Kilometraje verificado',
-          category: 'mechanical',
-          isRequired: true,
-          isChecked: true,
-        ),
-        const ChecklistItem(
-          id: '4',
-          label: 'Objetos personales retirados',
-          description: 'Objetos personales retirados',
-          category: 'interior',
-          isChecked: true,
-        ),
-        const ChecklistItem(
-          id: '5',
-          label: 'Documentos del vehiculo',
-          description: 'Documentos del vehiculo',
-          category: 'documents',
-          isRequired: true,
-          isChecked: true,
-        ),
-      ],
-      receptionCompleted: true,
-      receptionDate: DateTime.now().subtract(const Duration(days: 1, hours: 5)),
-      receptionPhotos: [],
-      requiredParts: [
-        'Camara de retroceso HD',
-        'Espejo retrovisor con pantalla',
-        'Kit de cableado',
-      ],
-      receivedParts: [
-        'Camara de retroceso HD',
-        'Espejo retrovisor con pantalla',
-        'Kit de cableado',
-      ],
-      allPartsReceived: true,
-      createdAt: DateTime.now().subtract(const Duration(days: 2)),
-      scheduledDate: DateTime.now(),
-      startedAt: DateTime.now().subtract(const Duration(hours: 2)),
-      estimatedMinutes: 180,
-      estimatedCost: 150000,
+      ),
     );
   }
+}
+
+String? _metadataValue(Ticket ticket, List<String> keys) {
+  for (final key in keys) {
+    final value = ticket.metadata[key];
+    if (value != null && value.toString().trim().isNotEmpty) {
+      return value.toString();
+    }
+  }
+  return null;
+}
+
+List<String> _metadataList(Ticket ticket, List<String> keys) {
+  for (final key in keys) {
+    final value = ticket.metadata[key];
+    if (value is List) {
+      return value.map((item) => item.toString()).toList();
+    }
+    if (value is String && value.trim().isNotEmpty) {
+      return [value];
+    }
+  }
+  return const [];
 }
 
 class _OptionTile extends StatelessWidget {
@@ -697,53 +604,52 @@ class _OptionTile extends StatelessWidget {
 
 // Tab de Detalles
 class _DetailsTab extends StatelessWidget {
-  final WorkOrder order;
+  final Ticket ticket;
 
-  const _DetailsTab({required this.order});
+  const _DetailsTab({required this.ticket});
 
   @override
   Widget build(BuildContext context) {
+    final services = _metadataList(ticket, ['services', 'servicios']);
+    final parts = _metadataList(ticket, ['parts', 'repuestos', 'materiales']);
+    final estimatedCost =
+        _metadataValue(ticket, ['estimatedCost', 'cost', 'costo']);
     return SingleChildScrollView(
       padding: const EdgeInsets.all(20),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Vehiculo
-          FadeInUp(
-            child: VehicleInfoCard(vehicle: order.vehicle),
-          ),
-
-          const SizedBox(height: 20),
-
           // Cliente
           FadeInUp(
-            delay: const Duration(milliseconds: 100),
-            child: _ClientInfoCard(order: order),
+            child: _ClientInfoCard(ticket: ticket),
           ),
 
           const SizedBox(height: 20),
 
           // Servicios incluidos
-          FadeInUp(
-            delay: const Duration(milliseconds: 200),
-            child: _ServicesCard(services: order.services),
-          ),
+          if (services.isNotEmpty) ...[
+            FadeInUp(
+              delay: const Duration(milliseconds: 100),
+              child: _ServicesCard(services: services),
+            ),
+            const SizedBox(height: 20),
+          ],
 
-          const SizedBox(height: 20),
+          if (parts.isNotEmpty) ...[
+            FadeInUp(
+              delay: const Duration(milliseconds: 200),
+              child: _PartsCard(parts: parts),
+            ),
+            const SizedBox(height: 20),
+          ],
 
-          // Repuestos
-          FadeInUp(
-            delay: const Duration(milliseconds: 300),
-            child: _PartsCard(order: order),
-          ),
-
-          const SizedBox(height: 20),
-
-          // Costo estimado
-          FadeInUp(
-            delay: const Duration(milliseconds: 400),
-            child: _CostCard(order: order),
-          ),
+          if (estimatedCost != null) ...[
+            FadeInUp(
+              delay: const Duration(milliseconds: 300),
+              child: _CostCard(estimatedCost: estimatedCost),
+            ),
+            const SizedBox(height: 20),
+          ],
 
           const SizedBox(height: 100),
         ],
@@ -753,12 +659,14 @@ class _DetailsTab extends StatelessWidget {
 }
 
 class _ClientInfoCard extends StatelessWidget {
-  final WorkOrder order;
+  final Ticket ticket;
 
-  const _ClientInfoCard({required this.order});
+  const _ClientInfoCard({required this.ticket});
 
   @override
   Widget build(BuildContext context) {
+    final phone = _metadataValue(ticket, ['clientPhone', 'telefono', 'phone']);
+    final email = _metadataValue(ticket, ['clientEmail', 'email']);
     return ModernCard(
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -790,7 +698,9 @@ class _ClientInfoCard extends StatelessWidget {
                       ),
                     ),
                     Text(
-                      order.clientName,
+                      ticket.userName.isNotEmpty
+                          ? ticket.userName
+                          : 'Cliente sin nombre',
                       style: const TextStyle(
                         fontSize: 18,
                         fontWeight: FontWeight.w700,
@@ -805,18 +715,19 @@ class _ClientInfoCard extends StatelessWidget {
           const SizedBox(height: 16),
           const Divider(height: 1),
           const SizedBox(height: 16),
-          _ContactRow(
-            icon: Icons.phone,
-            label: 'Telefono',
-            value: order.clientPhone,
-            color: const Color(0xFF27ae60),
-          ),
-          if (order.clientEmail != null) ...[
+          if (phone != null)
+            _ContactRow(
+              icon: Icons.phone,
+              label: 'Telefono',
+              value: phone,
+              color: const Color(0xFF27ae60),
+            ),
+          if (email != null) ...[
             const SizedBox(height: 12),
             _ContactRow(
               icon: Icons.email,
               label: 'Email',
-              value: order.clientEmail!,
+              value: email,
               color: const Color(0xFF3498db),
             ),
           ],
@@ -933,9 +844,9 @@ class _ServicesCard extends StatelessWidget {
 }
 
 class _PartsCard extends StatelessWidget {
-  final WorkOrder order;
+  final List<String> parts;
 
-  const _PartsCard({required this.order});
+  const _PartsCard({required this.parts});
 
   @override
   Widget build(BuildContext context) {
@@ -961,48 +872,37 @@ class _PartsCard extends StatelessWidget {
                 padding:
                     const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                 decoration: BoxDecoration(
-                  color: order.allPartsReceived
-                      ? const Color(0xFF27ae60).withValues(alpha: 0.1)
-                      : const Color(0xFFe67e22).withValues(alpha: 0.1),
+                  color: const Color(0xFF3498db).withValues(alpha: 0.1),
                   borderRadius: BorderRadius.circular(8),
                 ),
                 child: Text(
-                  order.allPartsReceived ? 'Completo' : 'Pendiente',
-                  style: TextStyle(
+                  'General',
+                  style: const TextStyle(
                     fontSize: 12,
                     fontWeight: FontWeight.w600,
-                    color: order.allPartsReceived
-                        ? const Color(0xFF27ae60)
-                        : const Color(0xFFe67e22),
+                    color: Color(0xFF3498db),
                   ),
                 ),
               ),
             ],
           ),
           const SizedBox(height: 16),
-          ...order.requiredParts.map((part) {
-            final received = order.receivedParts.contains(part);
+          ...parts.map((part) {
             return Padding(
               padding: const EdgeInsets.only(bottom: 8),
               child: Row(
                 children: [
-                  Icon(
-                    received ? Icons.check_box : Icons.check_box_outline_blank,
+                  const Icon(
+                    Icons.check_box_outline_blank,
                     size: 20,
-                    color: received
-                        ? const Color(0xFF27ae60)
-                        : const Color(0xFF95a5a6),
+                    color: Color(0xFF95a5a6),
                   ),
                   const SizedBox(width: 8),
                   Text(
                     part,
-                    style: TextStyle(
+                    style: const TextStyle(
                       fontSize: 14,
-                      color: received
-                          ? const Color(0xFF2c3e50)
-                          : const Color(0xFF95a5a6),
-                      decoration:
-                          received ? null : TextDecoration.lineThrough,
+                      color: Color(0xFF2c3e50),
                     ),
                   ),
                 ],
@@ -1016,9 +916,9 @@ class _PartsCard extends StatelessWidget {
 }
 
 class _CostCard extends StatelessWidget {
-  final WorkOrder order;
+  final String estimatedCost;
 
-  const _CostCard({required this.order});
+  const _CostCard({required this.estimatedCost});
 
   @override
   Widget build(BuildContext context) {
@@ -1050,7 +950,7 @@ class _CostCard extends StatelessWidget {
                   ),
                 ),
                 Text(
-                  '\$${_formatPrice(order.estimatedCost)}',
+                  '\$${_formatPrice(estimatedCost)}',
                   style: const TextStyle(
                     fontSize: 24,
                     fontWeight: FontWeight.w700,
@@ -1060,56 +960,28 @@ class _CostCard extends StatelessWidget {
               ],
             ),
           ),
-          if (order.estimatedMinutes != null)
-            Column(
-              crossAxisAlignment: CrossAxisAlignment.end,
-              children: [
-                const Text(
-                  'Tiempo Est.',
-                  style: TextStyle(
-                    fontSize: 12,
-                    color: Color(0xFF95a5a6),
-                  ),
-                ),
-                Text(
-                  _formatDuration(order.estimatedMinutes!),
-                  style: const TextStyle(
-                    fontSize: 16,
-                    fontWeight: FontWeight.w600,
-                    color: Color(0xFF2c3e50),
-                  ),
-                ),
-              ],
-            ),
         ],
       ),
     );
   }
 
-  String _formatPrice(int price) {
-    return price.toString().replaceAllMapped(
+  String _formatPrice(String price) {
+    return price.replaceAllMapped(
           RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))'),
           (Match m) => '${m[1]}.',
         );
-  }
-
-  String _formatDuration(int minutes) {
-    if (minutes < 60) return '$minutes min';
-    final hours = minutes ~/ 60;
-    final mins = minutes % 60;
-    if (mins == 0) return '${hours}h';
-    return '${hours}h ${mins}m';
   }
 }
 
 // Tab de Timeline
 class _TimelineTab extends StatelessWidget {
-  final WorkOrder order;
+  final Ticket ticket;
 
-  const _TimelineTab({required this.order});
+  const _TimelineTab({required this.ticket});
 
   @override
   Widget build(BuildContext context) {
+    final history = ticket.metadata['history'];
     return SingleChildScrollView(
       padding: const EdgeInsets.all(20),
       child: Column(
@@ -1124,10 +996,66 @@ class _TimelineTab extends StatelessWidget {
             ),
           ),
           const SizedBox(height: 20),
-          WorkPhaseTimeline(
-            currentPhase: order.currentPhase,
-            phaseHistory: order.phaseHistory,
-          ),
+          if (history is List && history.isNotEmpty)
+            Column(
+              children: history.map((entry) {
+                if (entry is! Map<String, dynamic>) {
+                  return const SizedBox.shrink();
+                }
+                final label = entry['label']?.toString() ??
+                    entry['state']?.toString() ??
+                    'Estado';
+                final notes = entry['notes']?.toString() ?? '';
+                final timestamp = entry['createdAt']?.toString();
+                return Container(
+                  width: double.infinity,
+                  margin: const EdgeInsets.only(bottom: 12),
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(12),
+                    border: Border.all(color: const Color(0xFFe2e8f0)),
+                  ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        label,
+                        style: const TextStyle(
+                          fontWeight: FontWeight.w600,
+                          color: Color(0xFF2c3e50),
+                        ),
+                      ),
+                      if (notes.isNotEmpty) ...[
+                        const SizedBox(height: 6),
+                        Text(
+                          notes,
+                          style: const TextStyle(
+                            fontSize: 12,
+                            color: Color(0xFF7f8c8d),
+                          ),
+                        ),
+                      ],
+                      if (timestamp != null && timestamp.isNotEmpty) ...[
+                        const SizedBox(height: 6),
+                        Text(
+                          timestamp,
+                          style: const TextStyle(
+                            fontSize: 11,
+                            color: Color(0xFF95a5a6),
+                          ),
+                        ),
+                      ],
+                    ],
+                  ),
+                );
+              }).toList(),
+            )
+          else
+            const Text(
+              'Sin historial disponible.',
+              style: TextStyle(color: Color(0xFF7f8c8d)),
+            ),
           const SizedBox(height: 100),
         ],
       ),
@@ -1137,10 +1065,10 @@ class _TimelineTab extends StatelessWidget {
 
 // Tab de Checklist
 class _ChecklistTab extends StatelessWidget {
-  final List<ChecklistItem> checklist;
+  final List<OperatorChecklistEntry> checklist;
   final String title;
   final bool isCompleted;
-  final void Function(ChecklistItem item, bool isChecked) onToggle;
+  final void Function(OperatorChecklistEntry item, bool isChecked) onToggle;
 
   const _ChecklistTab({
     required this.checklist,
@@ -1214,7 +1142,7 @@ class _ChecklistTab extends StatelessWidget {
 }
 
 class _ChecklistItemWidget extends StatelessWidget {
-  final ChecklistItem item;
+  final OperatorChecklistEntry item;
   final ValueChanged<bool?> onChanged;
 
   const _ChecklistItemWidget({required this.item, required this.onChanged});
@@ -1247,18 +1175,18 @@ class _ChecklistItemWidget extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  item.label.isNotEmpty ? item.label : item.description,
+                  item.item.label,
                   style: const TextStyle(
                     fontSize: 14,
                     fontWeight: FontWeight.w500,
                     color: Color(0xFF2c3e50),
                   ),
                 ),
-                if (item.notes != null && item.notes!.isNotEmpty) ...[
+                if (item.item.isRequired) ...[
                   const SizedBox(height: 4),
-                  Text(
-                    item.notes!,
-                    style: const TextStyle(
+                  const Text(
+                    'Requerido',
+                    style: TextStyle(
                       fontSize: 12,
                       fontStyle: FontStyle.italic,
                       color: Color(0xFF7f8c8d),
@@ -1276,13 +1204,13 @@ class _ChecklistItemWidget extends StatelessWidget {
 
 // Tab de Notas
 class _NotesTab extends StatelessWidget {
-  final WorkOrder order;
+  final Ticket ticket;
   final List<String> checklistNotes;
   final String checklistTitle;
   final TextEditingController notesController;
 
   const _NotesTab({
-    required this.order,
+    required this.ticket,
     required this.checklistNotes,
     required this.checklistTitle,
     required this.notesController,
@@ -1390,7 +1318,8 @@ class _NotesTab extends StatelessWidget {
           _NoteSection(
             title: 'Notas del Operario',
             icon: Icons.engineering,
-            note: order.operatorNotes ?? 'Sin notas adicionales',
+            note: _metadataValue(ticket, ['operatorNotes', 'notes', 'operatorNote']) ??
+                'Sin notas adicionales',
             color: const Color(0xFF3498db),
           ),
 
@@ -1400,7 +1329,8 @@ class _NotesTab extends StatelessWidget {
           _NoteSection(
             title: 'Instrucciones del Cliente',
             icon: Icons.person,
-            note: order.clientNotes ?? 'Sin instrucciones especiales',
+            note: _metadataValue(ticket, ['clientNotes', 'clientNote']) ??
+                'Sin instrucciones especiales',
             color: const Color(0xFF27ae60),
           ),
 
@@ -1410,7 +1340,9 @@ class _NotesTab extends StatelessWidget {
           _NoteSection(
             title: 'Descripcion del Trabajo',
             icon: Icons.description,
-            note: order.description,
+            note: ticket.description.isNotEmpty
+                ? ticket.description
+                : 'Sin descripcion disponible',
             color: const Color(0xFF9b59b6),
           ),
 
@@ -1469,10 +1401,16 @@ class _NoteSection extends StatelessWidget {
   }
 }
 
-class _PhaseProgressSection extends StatelessWidget {
-  final WorkOrder order;
+class _StatusProgressSection extends StatelessWidget {
+  final Ticket ticket;
+  final String stateLabel;
+  final double progress;
 
-  const _PhaseProgressSection({required this.order});
+  const _StatusProgressSection({
+    required this.ticket,
+    required this.stateLabel,
+    required this.progress,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -1489,14 +1427,35 @@ class _PhaseProgressSection extends StatelessWidget {
           Row(
             children: [
               Expanded(
-                child: WorkProgressBar(
-                  progress: order.progressPercentage,
-                  currentPhase: order.currentPhase,
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'Estado actual: $stateLabel',
+                      style: const TextStyle(
+                        fontSize: 13,
+                        fontWeight: FontWeight.w600,
+                        color: Color(0xFF2c3e50),
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    ClipRRect(
+                      borderRadius: BorderRadius.circular(4),
+                      child: LinearProgressIndicator(
+                        value: progress,
+                        minHeight: 8,
+                        backgroundColor: const Color(0xFFe2e8f0),
+                        valueColor: const AlwaysStoppedAnimation<Color>(
+                          Color(0xFF3498db),
+                        ),
+                      ),
+                    ),
+                  ],
                 ),
               ),
             ],
           ),
-          if (order.startedAt != null) ...[
+          if (ticket.startDate.isNotEmpty) ...[
             const SizedBox(height: 12),
             Row(
               mainAxisAlignment: MainAxisAlignment.center,
@@ -1508,7 +1467,7 @@ class _PhaseProgressSection extends StatelessWidget {
                 ),
                 const SizedBox(width: 6),
                 Text(
-                  'Tiempo en trabajo: ${_formatElapsed(order.elapsedTime!)}',
+                  'Inicio: ${ticket.startDate}',
                   style: const TextStyle(
                     fontSize: 13,
                     color: Color(0xFF7f8c8d),
@@ -1520,12 +1479,5 @@ class _PhaseProgressSection extends StatelessWidget {
         ],
       ),
     );
-  }
-
-  String _formatElapsed(Duration duration) {
-    if (duration.inHours > 0) {
-      return '${duration.inHours}h ${duration.inMinutes % 60}m';
-    }
-    return '${duration.inMinutes}m';
   }
 }

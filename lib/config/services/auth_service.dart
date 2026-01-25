@@ -234,6 +234,8 @@ class AuthService {
       '/auth/sign-in/email',
       data: requestBody,
     );
+    // final newToken = response.headers.value('set-auth-jwt');
+    // final cookies = response.headers['set-cookie'];
 
     // Si el login es exitoso, guardar el token automáticamente
     if (response.statusCode == 200 && response.data != null) {
@@ -374,13 +376,35 @@ class AuthService {
   ///   }
   /// }
   /// ```
-  Future<Response> getSession() async {
-    final dio = await client;
-    return dio.get(
+Future<Response> getSession() async {
+  final dio = await client;
+
+  try {
+    final response = await dio.get(
       '/auth/get-session',
       options: _authOptions(),
     );
+
+    // Extraer el nuevo token del header personalizado
+    final newToken = response.headers.value('set-auth-jwt');
+
+    if (newToken != null && newToken.isNotEmpty) {
+      _currentToken = newToken;
+      await _secureStorage.write(key: jwtStorageAccessTokenKey, value: newToken);
+      debugPrint('🔐 Token actualizado desde header set-auth-jwt');
+    } else {
+      debugPrint('⚠️ Header set-auth-jwt no encontrado');
+    }
+
+    return response;
+  } on DioException catch (e) {
+    debugPrint('❌ Error al obtener sesión: ${e.response?.statusCode} ${e.message}');
+    rethrow;
+  } catch (e) {
+    debugPrint('❌ Error inesperado en getSession: $e');
+    rethrow;
   }
+}
 
   /// Verifica el email del usuario con un token enviado por correo.
   ///

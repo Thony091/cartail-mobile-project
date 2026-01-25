@@ -5,6 +5,8 @@ import 'package:dio/dio.dart';
 import 'package:flutter/cupertino.dart';
 
 import '../../../../config/config.dart';
+// import '../../../../config/constants/secure_storage_keys.dart';
+// import '../../../../config/services/secure_storage_service.dart';
 import '../../domain/entities/services.dart';
 import '../errors/service_errors.dart';
 import '../mappers/service_mapper.dart';
@@ -13,6 +15,7 @@ import 'services_datasources.dart';
 class ServicesDatasourceImpl extends ServicesDatasource {
   late final Dio dio;
   final String accessToken;
+  // final _secureStorage = SecureStorageService.instance;
 
   ServicesDatasourceImpl({required this.accessToken})
     : dio = Dio(
@@ -20,11 +23,34 @@ class ServicesDatasourceImpl extends ServicesDatasource {
           baseUrl: Enviroment.baseUrl,
           headers: {
             // 'x-api-key': 'ZvHNth6qgZ6LNnwtXwJX75Jk8YlXEZxX2AZvOFSW',
-            'Authorization': 'Bearer $accessToken',
+            // 'Authorization': 'Bearer $accessToken',
             'Content-Type': 'application/json',
           },
         ),
-      );
+      ) {
+    _attachAuthHeader();
+  }
+
+  void _attachAuthHeader() {
+    dio.interceptors.add(
+      InterceptorsWrapper(
+        onRequest: (options, handler) async {
+          // String? token = await _secureStorage.read(
+          //   key: jwtStorageAccessTokenKey,
+          // );
+          // if (token == null || token.isEmpty) {
+          String? token = accessToken.isNotEmpty ? accessToken : '';
+          // }
+          // if (token != null &&
+          //     token.isNotEmpty &&
+          //     !options.headers.containsKey('Authorization')) {
+            options.headers['Authorization'] = 'Bearer $token';
+          // }
+          return handler.next(options);
+        },
+      ),
+    );
+  }
 
   Future<String> _uploadFile(String path) async {
     try {
@@ -40,13 +66,11 @@ class ServicesDatasourceImpl extends ServicesDatasource {
   }
 
   Future<List<String>> _uploadPhotos(List<String> photos) async {
-    // final photosToUpload = photos.where((element) => element.contains('/') ).toList();
-    // final photosToIgnore = photos.where((element) => !element.contains('/') ).toList();
     final photosToConvert = photos
-        .where((element) => !element.startsWith('https'))
-        .toList();
-    final photosToIgnore = photos
-        .where((element) => element.startsWith('https'))
+        .where(
+          (element) =>
+              !element.startsWith('https') && !element.startsWith('http'),
+        )
         .toList();
     // Crear una serie de Futures de conversión de imágenes a Base64
     final List<Future<String>> conversionJobs = photosToConvert
@@ -54,8 +78,8 @@ class ServicesDatasourceImpl extends ServicesDatasource {
         .toList();
     // Esperar a que todas las conversiones se completen
     final convertedImages = await Future.wait(conversionJobs);
-    // Devolver las imágenes ignoradas seguidas de las imágenes convertidas a Base64
-    return [...photosToIgnore, ...convertedImages];
+    // Devolver solo las imágenes convertidas (locales)
+    return convertedImages;
   }
 
   @override
@@ -64,18 +88,21 @@ class ServicesDatasourceImpl extends ServicesDatasource {
   ) async {
     try {
       final String? serviceId = serviceSimilar['id'];
-      final String method = (serviceId == null) ? 'POST' : 'PUT';
+      final String method = (serviceId == null) ? 'POST' : 'PATCH';
       final String url = (serviceId == null)
           ? '/servicio'
           : '/servicio/$serviceId';
       serviceSimilar.remove('id');
 
       // Procesar las imágenes (convertir a Base64 si son locales)
-      if (serviceSimilar.containsKey('images') && serviceSimilar['images'] != null) {
+      if (serviceSimilar.containsKey('images') &&
+          serviceSimilar['images'] != null) {
         final images = serviceSimilar['images'] as List<String>;
         final convertedImages = await _uploadPhotos(images);
-        // El backend espera 'imagen' (singular) con la primera imagen
-        serviceSimilar['imagen'] = convertedImages.isNotEmpty ? convertedImages.first : '';
+        if (convertedImages.isNotEmpty) {
+          // El backend espera 'imagen' (singular) con la primera imagen
+          serviceSimilar['imagen'] = convertedImages.first;
+        }
         serviceSimilar.remove('images');
       }
 
@@ -99,14 +126,19 @@ class ServicesDatasourceImpl extends ServicesDatasource {
         categoryId: null,
       );
       if (response.statusCode == 200 || response.statusCode == 201) {
-        var data = response.data;
-        if (data is Map<String, dynamic> && data.containsKey('data')) {
-          service = ServiceMapper.jsonToEntity(data['data']);
+        final data = _extractData(response.data);
+        if (data is Map<String, dynamic>) {
+          service = ServiceMapper.jsonToEntity(data);
+        } else if (data is List && data.isNotEmpty) {
+          final first = data.first;
+          if (first is Map<String, dynamic>) {
+            service = ServiceMapper.jsonToEntity(first);
+          }
         }
       }
       return service;
     } catch (e) {
-    debugPrint('Error en createUpdateService: $e');
+      debugPrint('Error en createUpdateService: $e');
       throw Exception(e);
     }
   }

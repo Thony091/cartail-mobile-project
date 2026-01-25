@@ -11,7 +11,7 @@ final serviceFormProvider = StateNotifierProvider.autoDispose.family<ServiceForm
     final createUpdateCallback = ref.watch( servicesProvider.notifier ).createOrUpdateService;
 
     // Obtener la categoría inicial si el servicio tiene categoryId
-    String initialCategoryName = 'Detailing';
+    String initialCategoryName = '';
     if (services.categoryId != null) {
       final category = ref.read(categoryByIdProvider(services.categoryId!));
       if (category != null) {
@@ -32,6 +32,14 @@ class ServiceFormNotifier extends StateNotifier<ServiceFormState>{
 
   final Future<bool> Function( Map<String, dynamic> productSimilar )? onSubmitCallback;
   final Ref ref;
+  static final List<String> _imagePlaceholders = [
+    'no-image',
+    'no_image',
+    'placeholder',
+    'default',
+    'image_not_found',
+    'image-not-found',
+  ];
 
   ServiceFormNotifier({
     this.onSubmitCallback,
@@ -46,13 +54,23 @@ class ServiceFormNotifier extends StateNotifier<ServiceFormState>{
       maxPrice: Price.dirty( services.maxPrice ),
       isActive: services.isActive,
       description: Description.dirty(services.description),
-      images: services.images,
+      images: _sanitizeImages(services.images),
       durationMinutes: services.durationMinutes,
       requiresReservation: services.requiresReservation,
       selectedCategory: initialCategoryName,
       categoryId: services.categoryId,
     )
   );
+
+  static List<String> _sanitizeImages(List<String> images) {
+    return images
+        .where((image) => image.trim().isNotEmpty)
+        .where((image) {
+          final lower = image.toLowerCase();
+          return !_imagePlaceholders.any((token) => lower.contains(token));
+        })
+        .toList();
+  }
 
   onNameChange( String value ) {
     state = state.copyWith(
@@ -128,6 +146,7 @@ class ServiceFormNotifier extends StateNotifier<ServiceFormState>{
     state = state.copyWith(
       selectedCategory: categoryName,
       categoryId: category?.id,
+      categoryError: null,
     );
   }
 
@@ -139,7 +158,7 @@ class ServiceFormNotifier extends StateNotifier<ServiceFormState>{
 
   setImages( List<String> images ) {
     state = state.copyWith(
-      images: images,
+      images: _sanitizeImages(images),
     );
   }
 
@@ -163,12 +182,19 @@ class ServiceFormNotifier extends StateNotifier<ServiceFormState>{
 
   Future<bool> onFormSubmit() async {
     // Limpiar error previo
-    state = state.copyWith(errorMessage: '');
+    state = state.copyWith(errorMessage: '', categoryError: null);
 
     setIsLoading(true);
     _tochedEverything();
     if ( !state.isFormValid ) {
       setIsLoading(false);
+      return false;
+    }
+    if (state.categoryId == null || state.categoryId == 0) {
+      state = state.copyWith(
+        isLoading: false,
+        categoryError: 'Selecciona una categoría',
+      );
       return false;
     }
     if ( onSubmitCallback == null ) {
@@ -183,12 +209,20 @@ class ServiceFormNotifier extends StateNotifier<ServiceFormState>{
       'precio_min': state.minPrice.value,
       'precio_max': state.maxPrice.value,
       'activo': state.isActive,
-      'images': state.images,
       'requiere_reserva': state.requiresReservation,
     };
 
     if (state.durationMinutes != 0) {
       serviceSimilar['duracion_minutos'] = state.durationMinutes;
+    }
+
+    final images = _sanitizeImages(state.images)
+        .where(
+          (image) => !image.startsWith('http') && !image.startsWith('https'),
+        )
+        .toList();
+    if (images.isNotEmpty) {
+      serviceSimilar['images'] = images;
     }
 
     // Agregar id_categoria si está disponible
@@ -224,6 +258,7 @@ class ServiceFormState{
   final bool requiresReservation;
   final String selectedCategory;
   final int? categoryId;
+  final String? categoryError;
   final String? errorMessage;
 
   ServiceFormState({
@@ -238,8 +273,9 @@ class ServiceFormState{
     this.images       = const [],
     this.durationMinutes = 0,
     this.requiresReservation = false,
-    this.selectedCategory = 'Detailing',
+    this.selectedCategory = '',
     this.categoryId,
+    this.categoryError,
     this.errorMessage,
   });
 
@@ -257,6 +293,7 @@ class ServiceFormState{
     bool? requiresReservation,
     String? selectedCategory,
     int? categoryId,
+    String? categoryError,
     String? errorMessage,
   }) => ServiceFormState(
     isLoading: isLoading ?? this.isLoading,
@@ -272,6 +309,7 @@ class ServiceFormState{
     requiresReservation: requiresReservation ?? this.requiresReservation,
     selectedCategory: selectedCategory ?? this.selectedCategory,
     categoryId: categoryId ?? this.categoryId,
+    categoryError: categoryError ?? this.categoryError,
     errorMessage: errorMessage ?? this.errorMessage,
   );
 
@@ -292,6 +330,7 @@ class ServiceFormState{
         requiresReservation: $requiresReservation,
         selectedCategory: $selectedCategory,
         categoryId: $categoryId,
+        categoryError: $categoryError,
         errorMessage: $errorMessage,
     ''';
   }

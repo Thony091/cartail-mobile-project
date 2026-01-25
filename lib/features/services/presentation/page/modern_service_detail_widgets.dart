@@ -69,6 +69,9 @@ class ServiceImageGallery extends ConsumerWidget {
     final selectedImages = ref.watch(
       serviceFormProvider(service).select((state) => state.images),
     );
+    final displayImages = selectedImages
+        .where((image) => image.trim().isNotEmpty)
+        .toList();
     return ModernCard(
       child: Column(
         children: [
@@ -80,7 +83,7 @@ class ServiceImageGallery extends ConsumerWidget {
               borderRadius: const BorderRadius.vertical(
                 top: Radius.circular(20),
               ),
-              gradient: selectedImages.isEmpty
+              gradient: displayImages.isEmpty
                 ? LinearGradient(
                     begin: Alignment.topLeft,
                     end: Alignment.bottomRight,
@@ -91,7 +94,7 @@ class ServiceImageGallery extends ConsumerWidget {
                   )
                 : null,
             ),
-            child: selectedImages.isEmpty
+            child: displayImages.isEmpty
                 ? Column(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
@@ -183,7 +186,7 @@ class ServiceImageGallery extends ConsumerWidget {
                         borderRadius: const BorderRadius.vertical(
                           top: Radius.circular(20),
                         ),
-                        child: _buildImageWidget(selectedImages.first),
+                        child: _buildImageWidget(displayImages.first),
                       ),
                       // Overlay gradient para mejor lectura de los botones
                       if (isEditMode)
@@ -303,13 +306,13 @@ class ServiceImageGallery extends ConsumerWidget {
           ),
 
           // Miniaturas
-          if (selectedImages.length > 1)
+          if (displayImages.length > 1)
             Container(
               height: 80,
               padding: const EdgeInsets.all(12),
               child: ListView.builder(
                 scrollDirection: Axis.horizontal,
-                itemCount: selectedImages.length,
+                itemCount: displayImages.length,
                 itemBuilder: (context, index) {
                   return Container(
                     margin: const EdgeInsets.only(right: 8),
@@ -325,7 +328,7 @@ class ServiceImageGallery extends ConsumerWidget {
                     ),
                     child: ClipRRect(
                       borderRadius: BorderRadius.circular(10),
-                      child: _buildImageWidget(selectedImages[index]),
+                      child: _buildImageWidget(displayImages[index]),
                     ),
                   );
                 },
@@ -364,9 +367,11 @@ class ServiceBasicInfo extends ConsumerWidget {
             if (isEditMode)
               TextFormField(
                 onChanged: serviceFormNotifier.onNameChange,
+                initialValue: serviceForm.name.value.isEmpty
+                    ? null
+                    : serviceForm.name.value,
                 decoration: InputDecoration(
                   labelText: 'Nombre del Servicio',
-                  hintText: serviceForm.name.value,
                   border: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(12),
                   ),
@@ -482,10 +487,12 @@ class ServiceDescription extends ConsumerWidget {
               TextFormField(
                 onChanged: serviceFormNotifier.onDescriptionChange,
                 maxLines: 6,
+                initialValue: serviceForm.description.value.isEmpty
+                    ? null
+                    : serviceForm.description.value,
                 decoration: InputDecoration(
                   errorText: serviceForm.description.errorMessage,
                   labelText: 'Descripción del Servicio',
-                  hintText: serviceForm.description.value,
                   border: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(12),
                   ),
@@ -569,11 +576,17 @@ class ServiceDetailsSection extends ConsumerWidget {
                 children: [
                   Expanded(
                     child: TextFormField(
-                      onChanged: (value) => serviceFormNotifier.onMinPriceChange( int.parse(value) ),
+                      onChanged: (value) {
+                        final parsed = int.tryParse(value);
+                        if (parsed == null) return;
+                        serviceFormNotifier.onMinPriceChange(parsed);
+                      },
                       keyboardType: TextInputType.number,
+                      initialValue: serviceForm.minPrice.value == 0
+                          ? null
+                          : serviceForm.minPrice.value.toString(),
                       decoration: InputDecoration(
                         labelText: 'Precio Mínimo (CLP)',
-                        hintText: serviceForm.minPrice.value.toString(),
                         prefixIcon: const Icon(Icons.attach_money),
                         errorText: serviceForm.minPrice.errorMessage,
                         border: OutlineInputBorder(
@@ -592,11 +605,17 @@ class ServiceDetailsSection extends ConsumerWidget {
                   const SizedBox(width: 12),
                   Expanded(
                     child: TextFormField(
-                      onChanged: (value) => serviceFormNotifier.onMaxPriceChange( int.parse(value) ),
+                      onChanged: (value) {
+                        final parsed = int.tryParse(value);
+                        if (parsed == null) return;
+                        serviceFormNotifier.onMaxPriceChange(parsed);
+                      },
                       keyboardType: TextInputType.number,
+                      initialValue: serviceForm.maxPrice.value == 0
+                          ? null
+                          : serviceForm.maxPrice.value.toString(),
                       decoration: InputDecoration(
                         labelText: 'Precio Máximo (CLP)',
-                        hintText: serviceForm.maxPrice.value.toString(),
                         errorText: serviceForm.maxPrice.errorMessage,
                         prefixIcon: const Icon(Icons.attach_money),
                         border: OutlineInputBorder(
@@ -629,11 +648,21 @@ class ServiceDetailsSection extends ConsumerWidget {
             // Duración (opcional)
             if (isEditMode)
               TextFormField(
-                onChanged: (value) => serviceFormNotifier.onDurationChange( int.parse(value) ),
+                onChanged: (value) {
+                  if (value.trim().isEmpty) {
+                    serviceFormNotifier.onDurationChange(0);
+                    return;
+                  }
+                  final parsed = int.tryParse(value);
+                  if (parsed == null) return;
+                  serviceFormNotifier.onDurationChange(parsed);
+                },
                 keyboardType: TextInputType.number,
+                initialValue: serviceForm.durationMinutes == 0
+                    ? null
+                    : serviceForm.durationMinutes.toString(),
                 decoration: InputDecoration(
                   labelText: 'Duración (minutos) - Opcional',
-                  hintText: serviceForm.durationMinutes.toString(),
                   prefixIcon: const Icon(Icons.schedule),
                   border: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(12),
@@ -807,6 +836,7 @@ class CategorySelector extends ConsumerWidget {
     final categoriesState = ref.watch(categoriesProvider);
     final categories = ref.watch( activeCategoriesProvider );
     final selectedCategory = serviceForm.selectedCategory;
+    final categoryError = serviceForm.categoryError;
 
     return ModernCard(
       child: Padding(
@@ -839,34 +869,51 @@ class CategorySelector extends ConsumerWidget {
                   style: TextStyle(color: Colors.grey[600]),
                 )
               else
-                Wrap(
-                  spacing: 8,
-                  runSpacing: 8,
-                  children: categories.map((category) {
-                    final isSelected = selectedCategory == category.name;
-                    return FilterChip(
-                      label: Text(category.name),
-                      selected: isSelected,
-                      onSelected: (selected) {
-                        serviceFormNotifier.onCategoryChange(category.name);
-                      },
-                      backgroundColor: Colors.white,
-                      selectedColor: const Color(0xFF3498db).withValues(alpha: 0.2),
-                      labelStyle: TextStyle(
-                        color: isSelected
-                          ? const Color(0xFF3498db)
-                          : const Color(0xFF7f8c8d),
-                        fontWeight: isSelected
-                          ? FontWeight.w700
-                          : FontWeight.w500,
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Wrap(
+                      spacing: 8,
+                      runSpacing: 8,
+                      children: categories.map((category) {
+                        final isSelected = selectedCategory == category.name;
+                        return FilterChip(
+                          label: Text(category.name),
+                          selected: isSelected,
+                          onSelected: (selected) {
+                            serviceFormNotifier.onCategoryChange(category.name);
+                          },
+                          backgroundColor: Colors.white,
+                          selectedColor: const Color(0xFF3498db).withValues(alpha: 0.2),
+                          labelStyle: TextStyle(
+                            color: isSelected
+                              ? const Color(0xFF3498db)
+                              : const Color(0xFF7f8c8d),
+                            fontWeight: isSelected
+                              ? FontWeight.w700
+                              : FontWeight.w500,
+                          ),
+                          side: BorderSide(
+                            color: isSelected
+                              ? const Color(0xFF3498db)
+                              : Colors.grey[300]!,
+                          ),
+                        );
+                      }).toList(),
+                    ),
+                    if (categoryError != null)
+                      Padding(
+                        padding: const EdgeInsets.only(top: 8),
+                        child: Text(
+                          categoryError,
+                          style: const TextStyle(
+                            color: Color(0xFFE74C3C),
+                            fontSize: 12,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
                       ),
-                      side: BorderSide(
-                        color: isSelected
-                          ? const Color(0xFF3498db)
-                          : Colors.grey[300]!,
-                      ),
-                    );
-                  }).toList(),
+                  ],
                 )
             else
               Container(
@@ -882,7 +929,7 @@ class CategorySelector extends ConsumerWidget {
                   ),
                 ),
                 child: Text(
-                  selectedCategory,
+                  selectedCategory.isEmpty ? 'Sin categoría' : selectedCategory,
                   style: const TextStyle(
                     fontSize: 16,
                     fontWeight: FontWeight.w600,
@@ -926,7 +973,24 @@ class ServiceActionButtons extends ConsumerWidget {
             : Icons.save,
           onPressed: serviceForm.isLoading 
             ? null 
-            : () async => await serviceFormNotifier.onFormSubmit(),
+            : () async => await serviceFormNotifier.onFormSubmit().then( (success) async{
+                if (success) {
+                  await Future.delayed(const Duration(milliseconds: 350));
+                  if (!context.mounted) return;
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      content: Text(
+                        isNewService
+                          ? 'Servicio creado exitosamente'
+                          : 'Cambios guardados exitosamente',
+                      ),
+                      backgroundColor: const Color(0xFF27ae60),
+                      duration: const Duration(seconds: 2),
+                    ),
+                  );
+                  Navigator.of(context).pop();
+                }
+              }),
           isLoading: serviceForm.isLoading,
         ),
         if (!isNewService) ...[

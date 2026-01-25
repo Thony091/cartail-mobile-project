@@ -30,6 +30,7 @@ import '../../features/services/presentation/page/modern_service_page.dart';
 import '../../features/realized_work/presentation/pages/modern_work_detail_page.dart';
 import '../../features/ticket/presentation/pages/admin_all_tickets_page.dart';
 import '../../features/ticket/presentation/pages/operator_assigned_tickets_page.dart';
+import '../../features/admin/presentation/ticket_assignment/admin_ticket_assignment_page.dart';
 import '../../features/history/user_history_page.dart';
 import '../../features/operator/presentation/pages/operator_work_orders_page.dart';
 import '../../features/operator/presentation/pages/work_order_detail_page.dart';
@@ -135,6 +136,15 @@ final goRouterProvider = Provider((ref) {
         builder: (context, state) =>
             ModernServiceDetailPage(serviceId: state.params['id'] ?? 'no-id'),
       ),
+      //* Service Edit (Admin)
+      GoRoute(
+        path: '/service-edit/:id',
+        name: 'ModernServiceEditPage',
+        builder: (context, state) => ModernServiceDetailPage(
+          serviceId: state.params['id'] ?? 'no-id',
+          startInEditMode: true,
+        ),
+      ),
       //* Category Edit (Admin)
       GoRoute(
         path: '/category-edit/:id',
@@ -151,16 +161,6 @@ final goRouterProvider = Provider((ref) {
           vehicleId: state.params['id'] ?? 'no-id',
         ),
       ),
-      //* Service Edit
-      // GoRoute(
-      //   path: '/service-edit/:id',
-      //   name: ModernServiceDetailPage.name,
-      //   builder: (context, state) => ModernServiceDetailPage(
-      //   // name: ServiceEditPage.name,
-      //   // builder: (context, state) => ServiceEditPage(
-      //     serviceId: state.params['id'] ?? 'no-id'
-      //   ),
-      // ),
 
       //* Profile
       GoRoute(
@@ -349,6 +349,12 @@ final goRouterProvider = Provider((ref) {
         path: '/admin-all-tickets',
         name: AdminAllTicketsPage.name,
         builder: (context, state) => const AdminAllTicketsPage(),
+      ),
+      //* Admin - Ticket Assignment
+      GoRoute(
+        path: '/admin-assign-ticket',
+        name: AdminTicketAssignmentPage.name,
+        builder: (context, state) => const AdminTicketAssignmentPage(),
       ),
 
       //* Operator - Home

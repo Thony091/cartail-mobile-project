@@ -1,7 +1,7 @@
 name: portafolio_project
 description: "A new Flutter project."
 publish_to: 'none'
-version: 1.0.1+1
+version: 1.0.2+1
 
 environment:
   sdk: ^3.8.0
@@ -65,7 +65,7 @@ flutter_icons:
   android: true
   ios: true
   image_path: "assets/logo/DriveTail.png"
-  adaptive_icon_background: "#000000"
+  adaptive_icon_background: "#FFFFFF" # Aquí defines el fondo que te falta
   adaptive_icon_foreground: "assets/logo/logo-prime-no-bg.png"
   remove_alpha_ios: true
 

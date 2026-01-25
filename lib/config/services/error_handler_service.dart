@@ -47,6 +47,10 @@ class ErrorHandlerService {
         cleanMessage.contains('Payload too large')) {
       return 'La imagen es demasiado grande. Usa una imagen más pequeña.';
     }
+    if (cleanMessage.contains('PathNotFoundException') ||
+        cleanMessage.contains('Cannot open file')) {
+      return 'La imagen seleccionada no es válida. Elige otra imagen.';
+    }
     if (cleanMessage.contains('401') ||
         cleanMessage.contains('Unauthorized')) {
       return 'No tienes permiso para realizar esta acción.';

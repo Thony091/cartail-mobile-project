@@ -195,19 +195,22 @@ class AdminServicesList extends StatelessWidget {
     return SliverPadding(
       padding: const EdgeInsets.symmetric(horizontal: 20),
       sliver: SliverList(
-        delegate: SliverChildBuilderDelegate((context, index) {
-          final service = services[index];
-          return FadeInUp(
-            delay: Duration(milliseconds: index * 50),
-            child: ServiceAdminCard(
-              service: service,
-              onEdit: () => onEdit(service),
-              onDelete: () => onDelete(service),
-              onTap: () => onTap(service),
-              onShowOptions: () => onShowOptions(service),
-            ),
-          );
-        }, childCount: services.length),
+        delegate: SliverChildBuilderDelegate(
+          (context, index) {
+            final service = services[index];
+            return FadeInUp(
+              delay: Duration(milliseconds: index * 50),
+              child: ServiceAdminCard(
+                service: service,
+                onEdit: () => onEdit(service),
+                onDelete: () => onDelete(service),
+                onTap: () => onTap(service),
+                onShowOptions: () => onShowOptions(service),
+              ),
+            );
+          }, 
+          childCount: services.length
+        ),
       ),
     );
   }

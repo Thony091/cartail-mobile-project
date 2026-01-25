@@ -93,10 +93,8 @@ class ModernSideMenuState extends ConsumerState<ModernSideMenu>
                               onTap: () => context.go('/'),
                               // onTap: () => _navigateTo(context, '/'),
                             ),
-                            if (authState.isAuthenticated &&
-                                authState.isAdmin) ...[
-                              
-
+                            if (authState.isAuthenticated && authState.isAdmin) 
+                            ...[
                               MenuItemData(
                                 icon: Icons.group_outlined,
                                 activeIcon: Icons.group,
@@ -128,19 +126,17 @@ class ModernSideMenuState extends ConsumerState<ModernSideMenu>
                                 onTap: () => context.push('/admin-config-reservations'),
                               ),
                               MenuItemData(
+                                icon: Icons.assignment_outlined,
+                                activeIcon: Icons.assignment,
+                                title: "Asignar Tickets",
+                                onTap: () => context.push('/admin-assign-ticket'),
+                              ),
+                              MenuItemData(
                                 icon: Icons.receipt_long_outlined,
                                 activeIcon: Icons.receipt_long,
                                 title: "Gest. de Facturas",
                                 onTap: () => context.push('/staff-facturas'),
                               ),
-                              // MenuItemData(
-                              //   icon: Icons.store_mall_directory,
-                              //   activeIcon: Icons.store,
-                              //   title: "Gest. de Productos",
-                              //   onTap: () =>
-                              //       context.push('/admin-config-products'),
-                              //   // onTap: () => _navigateTo(context, '/our-works'),
-                              // ),
                               MenuItemData(
                                 icon: Icons.diamond_outlined,
                                 activeIcon: Icons.diamond,
@@ -156,12 +152,12 @@ class ModernSideMenuState extends ConsumerState<ModernSideMenu>
                             ] else if (authState.isAuthenticated &&
                                 authState.userRole == UserRole.operator) ...[
                                 // Operador ve opciones en sección CUENTA
-                                MenuItemData(
-                                  icon: Icons.home_work_outlined,
-                                  activeIcon: Icons.home_work,
-                                  title: "Mi Panel",
-                                  onTap: () => context.push('/operator/home'),
-                                ),
+                                // MenuItemData(
+                                //   icon: Icons.home_work_outlined,
+                                //   activeIcon: Icons.home_work,
+                                //   title: "Mi Panel",
+                                //   onTap: () => context.push('/operator/home'),
+                                // ),
                                 MenuItemData(
                                   icon: Icons.build_circle_outlined,
                                   activeIcon: Icons.build_circle,

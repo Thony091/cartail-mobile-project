@@ -26,6 +26,10 @@ class ServicesNotifier extends StateNotifier<ServicesState>{
   
   Future<bool> createOrUpdateService( Map<String, dynamic> serviceSimilar) async {
     final service = await servicesRepository.createUpdateService(serviceSimilar);
+    if (service.id.isEmpty) {
+      await getServices();
+      return true;
+    }
     final isServiceInList = state.services.any((element) => element.id == service.id);
 
     if ( !isServiceInList){

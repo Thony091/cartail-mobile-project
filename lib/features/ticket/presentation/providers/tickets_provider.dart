@@ -1,3 +1,6 @@
+import 'dart:async';
+
+import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../domain/entities/ticket.dart';
@@ -8,6 +11,11 @@ import '../../data/mappers/ticket_mapper.dart';
 final ticketsProvider = StateNotifierProvider<TicketsNotifier, TicketsState>((ref) {
   final ticketRepository = ref.watch(ticketsRepositoryProvider);
   return TicketsNotifier(ticketRepository: ticketRepository);
+});
+
+final ticketsFiltersProvider =
+    StateNotifierProvider<TicketsFiltersNotifier, TicketsFiltersState>((ref) {
+  return TicketsFiltersNotifier();
 });
 
 class TicketsNotifier extends StateNotifier<TicketsState> {
@@ -92,6 +100,22 @@ class TicketsNotifier extends StateNotifier<TicketsState> {
     return createOrUpdateTicket(payload);
   }
 
+  Future<bool> updateTicketPriority({
+    required Ticket ticket,
+    int? importanceId,
+    int? urgencyId,
+    int? stateId,
+  }) async {
+    final payload = _buildTicketPayload(
+      ticket.copyWith(
+        importanceId: importanceId ?? ticket.importanceId,
+        urgencyId: urgencyId ?? ticket.urgencyId,
+        stateId: stateId ?? ticket.stateId,
+      ),
+    );
+    return createOrUpdateTicket(payload);
+  }
+
   Future<bool> addTicketComment({
     required Ticket ticket,
     required String comment,
@@ -160,5 +184,107 @@ class TicketsState {
       tickets: tickets ?? this.tickets,
       isLoading: isLoading ?? this.isLoading,
       error: error ?? this.error,
+    );
+}
+
+class TicketsFiltersNotifier extends StateNotifier<TicketsFiltersState> {
+  Timer? _debounce;
+
+  TicketsFiltersNotifier() : super(TicketsFiltersState());
+
+  void startSearch() {
+    state = state.copyWith(isSearching: true);
+  }
+
+  void stopSearch() {
+    _debounce?.cancel();
+    state = state.copyWith(isSearching: false, searchQuery: '');
+  }
+
+  void setSearchQuery(String value) {
+    _debounce?.cancel();
+    _debounce = Timer(const Duration(milliseconds: 250), () {
+      state = state.copyWith(searchQuery: value);
+    });
+  }
+
+  void setFilterStatus(String value) {
+    state = state.copyWith(filterStatus: value);
+  }
+
+  void setFilterType(String value) {
+    state = state.copyWith(filterType: value);
+  }
+
+  void setStateFilter(int? value) {
+    state = state.copyWith(stateId: value);
+  }
+
+  void setImportanceFilter(int? value) {
+    state = state.copyWith(importanceId: value);
+  }
+
+  void setUrgencyFilter(int? value) {
+    state = state.copyWith(urgencyId: value);
+  }
+
+  void setServiceFilter(int? value) {
+    state = state.copyWith(serviceId: value);
+  }
+
+  void setDateRange(DateTimeRange? range) {
+    state = state.copyWith(dateRange: range);
+  }
+
+  @override
+  void dispose() {
+    _debounce?.cancel();
+    super.dispose();
+  }
+}
+
+class TicketsFiltersState {
+  final String searchQuery;
+  final String filterStatus;
+  final String filterType;
+  final bool isSearching;
+  final int? stateId;
+  final int? importanceId;
+  final int? urgencyId;
+  final int? serviceId;
+  final DateTimeRange? dateRange;
+
+  TicketsFiltersState({
+    this.searchQuery = '',
+    this.filterStatus = 'all',
+    this.filterType = 'all',
+    this.isSearching = false,
+    this.stateId,
+    this.importanceId,
+    this.urgencyId,
+    this.serviceId,
+    this.dateRange,
+  });
+
+  TicketsFiltersState copyWith({
+    String? searchQuery,
+    String? filterStatus,
+    String? filterType,
+    bool? isSearching,
+    int? stateId,
+    int? importanceId,
+    int? urgencyId,
+    int? serviceId,
+    DateTimeRange? dateRange,
+  }) => TicketsFiltersState(
+      searchQuery: searchQuery ?? this.searchQuery,
+      filterStatus: filterStatus ?? this.filterStatus,
+      filterType: filterType ?? this.filterType,
+      isSearching: isSearching ?? this.isSearching,
+      stateId: stateId ?? this.stateId,
+      importanceId: importanceId ?? this.importanceId,
+      urgencyId: urgencyId ?? this.urgencyId,
+      serviceId: serviceId ?? this.serviceId,
+      dateRange: dateRange ?? this.dateRange,
     );
 }

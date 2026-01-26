@@ -126,6 +126,12 @@ class ModernSideMenuState extends ConsumerState<ModernSideMenu>
                                 onTap: () => context.push('/admin-config-reservations'),
                               ),
                               MenuItemData(
+                                icon: Icons.event_available_outlined,
+                                activeIcon: Icons.event_available,
+                                title: "Crear Slots",
+                                onTap: () => context.push('/admin-create-slot'),
+                              ),
+                              MenuItemData(
                                 icon: Icons.assignment_outlined,
                                 activeIcon: Icons.assignment,
                                 title: "Asignar Tickets",

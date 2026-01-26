@@ -1,21 +1,19 @@
 class Slot {
   final int id;
-  final String serviceId;
-  final DateTime startTime;
-  final DateTime endTime;
-  final DateTime estimatedEndTime;
-  final String note;
-  final bool isActive;
-  final DateTime createdAt;
+  final String date;
+  final String startTime;
+  final String endTime;
+  final int serviceId;
+  final int? reservationId;
 
   Slot({
     required this.id,
-    required this.serviceId,
+    required this.date,
     required this.startTime,
     required this.endTime,
-    required this.estimatedEndTime,
-    required this.note,
-    required this.isActive,
-    required this.createdAt,
+    required this.serviceId,
+    this.reservationId,
   });
+
+  bool get isAvailable => reservationId == null || reservationId == 0;
 }

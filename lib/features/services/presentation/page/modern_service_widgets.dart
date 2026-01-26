@@ -53,6 +53,7 @@ class ServiceHeaderSection extends StatelessWidget {
   final int activeServices;
   final ValueChanged<String> onSearchChanged;
   final ValueChanged<String> onCategorySelected;
+  final bool showSearchBar;
 
   const ServiceHeaderSection({
     super.key,
@@ -62,6 +63,7 @@ class ServiceHeaderSection extends StatelessWidget {
     required this.activeServices,
     required this.onSearchChanged,
     required this.onCategorySelected,
+    this.showSearchBar = true,
   });
 
   @override
@@ -80,16 +82,16 @@ class ServiceHeaderSection extends StatelessWidget {
                     value: totalServices.toString(),
                     label: 'Servicios',
                     icon: Icons.build,
-                    color: Color(0xFF3498db),
+                    color: const Color(0xFF3498db),
                   ),
                 ),
-                SizedBox(width: 16),
+                const SizedBox(width: 16),
                 Expanded(
                   child: StatCardWidget(
                     value: activeServices.toString(),
                     label: 'Activos',
                     icon: Icons.check_circle,
-                    color: Color(0xFF27ae60),
+                    color: const Color(0xFF27ae60),
                   ),
                 ),
               ],
@@ -98,16 +100,18 @@ class ServiceHeaderSection extends StatelessWidget {
 
           const SizedBox(height: 24),
 
-          // Search Bar
-          FadeInLeft(
-            child: ModernInputField(
-              hint: 'Buscar servicios...',
-              prefixIcon: const Icon(Icons.search),
-              onChanged: onSearchChanged,
+          if (showSearchBar) ...[
+            // Search Bar
+            FadeInLeft(
+              child: ModernInputField(
+                hint: 'Buscar servicios...',
+                prefixIcon: const Icon(Icons.search),
+                onChanged: onSearchChanged,
+              ),
             ),
-          ),
 
-          const SizedBox(height: 16),
+            const SizedBox(height: 16),
+          ],
 
           // Category Filters
           FadeInRight(

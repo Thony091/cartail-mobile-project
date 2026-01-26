@@ -15,6 +15,7 @@ class Reservation{
   final int? statusId;
   final int? serviceId;
   final int? clientId;
+  final int? slotId;
 
   Reservation({
     required this.id,
@@ -32,5 +33,6 @@ class Reservation{
     this.statusId,
     this.serviceId,
     this.clientId,
+    this.slotId,
   });
 }

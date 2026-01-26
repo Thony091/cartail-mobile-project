@@ -2,82 +2,71 @@ import '../../domain/entities/slot.dart';
 
 class SlotModel {
   final int id;
-  final String serviceId;
-  final DateTime startTime;
-  final DateTime endTime;
-  final DateTime estimatedEndTime;
-  final String note;
-  final bool isActive;
-  final DateTime createdAt;
+  final String date;
+  final String startTime;
+  final String endTime;
+  final int serviceId;
+  final int? reservationId;
 
   SlotModel({
     required this.id,
-    required this.serviceId,
+    required this.date,
     required this.startTime,
     required this.endTime,
-    required this.estimatedEndTime,
-    required this.note,
-    required this.isActive,
-    required this.createdAt,
+    required this.serviceId,
+    this.reservationId,
   });
 
   factory SlotModel.fromJson(Map<String, dynamic> json) {
     return SlotModel(
-      id: json['id'] as int,
-      serviceId: json['id_service']?.toString() ?? '',
-      startTime: json['start_time'] != null
-        ? DateTime.parse(json['start_time'] as String)
-        : DateTime.now(),
-      endTime: json['end_time'] != null
-        ? DateTime.parse(json['end_time'] as String)
-        : DateTime.now(),
-      estimatedEndTime: json['estimated_end_time'] != null
-        ? DateTime.parse(json['estimated_end_time'] as String)
-        : DateTime.now(),
-      note: json['note'] as String? ?? '',
-      isActive: json['active'] as bool? ?? true,
-      createdAt: json['created_at'] != null
-        ? DateTime.parse(json['created_at'] as String)
-        : DateTime.now(),
+      id: _parseInt(json['id']) ?? 0,
+      date: json['fecha'] as String? ?? '',
+      startTime: json['horaInicio'] as String? ?? '',
+      endTime: json['horaFin'] as String? ?? '',
+      serviceId: _parseInt(json['idServicio']) ?? 0,
+      reservationId: _parseInt(json['idReserva']),
     );
   }
 
   Map<String, dynamic> toJson() {
     return {
       'id': id,
-      'id_service': serviceId,
-      'start_time': startTime.toIso8601String(),
-      'end_time': endTime.toIso8601String(),
-      'estimated_end_time': estimatedEndTime.toIso8601String(),
-      'note': note,
-      'active': isActive,
-      'created_at': createdAt.toIso8601String(),
+      'fecha': date,
+      'horaInicio': startTime,
+      'horaFin': endTime,
+      'idServicio': serviceId,
+      'idReserva': reservationId,
     };
   }
 
   Slot toEntity() {
     return Slot(
       id: id,
-      serviceId: serviceId,
+      date: date,
       startTime: startTime,
       endTime: endTime,
-      estimatedEndTime: estimatedEndTime,
-      note: note,
-      isActive: isActive,
-      createdAt: createdAt,
+      serviceId: serviceId,
+      reservationId: reservationId,
     );
   }
 
   factory SlotModel.fromEntity(Slot slot) {
     return SlotModel(
       id: slot.id,
-      serviceId: slot.serviceId,
+      date: slot.date,
       startTime: slot.startTime,
       endTime: slot.endTime,
-      estimatedEndTime: slot.estimatedEndTime,
-      note: slot.note,
-      isActive: slot.isActive,
-      createdAt: slot.createdAt,
+      serviceId: slot.serviceId,
+      reservationId: slot.reservationId,
     );
+  }
+
+  static int? _parseInt(dynamic value) {
+    if (value == null) return null;
+    try {
+      return int.parse(value.toString());
+    } catch (_) {
+      return null;
+    }
   }
 }

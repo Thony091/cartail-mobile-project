@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../domain/entities/works.dart';
@@ -9,6 +11,11 @@ final worksProvider = StateNotifierProvider<WorksNotifier,  WorksState>((ref) {
   final worksRepository = ref.watch( worksRepositoryProvider );
 
   return WorksNotifier(worksRepository: worksRepository);
+});
+
+final worksFiltersProvider =
+    StateNotifierProvider<WorksFiltersNotifier, WorksFiltersState>((ref) {
+  return WorksFiltersNotifier();
 });
 
 
@@ -112,4 +119,58 @@ class WorksState{
     );
   
 
+}
+
+class WorksFiltersNotifier extends StateNotifier<WorksFiltersState> {
+  Timer? _debounce;
+
+  WorksFiltersNotifier() : super(WorksFiltersState());
+
+  void startSearch() {
+    state = state.copyWith(isSearching: true);
+  }
+
+  void stopSearch() {
+    _debounce?.cancel();
+    state = state.copyWith(isSearching: false, searchQuery: '');
+  }
+
+  void setSearchQuery(String value) {
+    _debounce?.cancel();
+    _debounce = Timer(const Duration(milliseconds: 250), () {
+      state = state.copyWith(searchQuery: value);
+    });
+  }
+
+  void setCategory(String value) {
+    state = state.copyWith(selectedCategory: value);
+  }
+
+  @override
+  void dispose() {
+    _debounce?.cancel();
+    super.dispose();
+  }
+}
+
+class WorksFiltersState {
+  final String searchQuery;
+  final String selectedCategory;
+  final bool isSearching;
+
+  WorksFiltersState({
+    this.searchQuery = '',
+    this.selectedCategory = 'Todos',
+    this.isSearching = false,
+  });
+
+  WorksFiltersState copyWith({
+    String? searchQuery,
+    String? selectedCategory,
+    bool? isSearching,
+  }) => WorksFiltersState(
+      searchQuery: searchQuery ?? this.searchQuery,
+      selectedCategory: selectedCategory ?? this.selectedCategory,
+      isSearching: isSearching ?? this.isSearching,
+    );
 }

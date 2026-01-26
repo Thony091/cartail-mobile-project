@@ -31,6 +31,7 @@ import '../../features/realized_work/presentation/pages/modern_work_detail_page.
 import '../../features/ticket/presentation/pages/admin_all_tickets_page.dart';
 import '../../features/ticket/presentation/pages/operator_assigned_tickets_page.dart';
 import '../../features/admin/presentation/ticket_assignment/admin_ticket_assignment_page.dart';
+import '../../features/slot/presentation/pages/admin_slot_creation_page.dart';
 import '../../features/history/user_history_page.dart';
 import '../../features/operator/presentation/pages/operator_work_orders_page.dart';
 import '../../features/operator/presentation/pages/work_order_detail_page.dart';
@@ -355,6 +356,12 @@ final goRouterProvider = Provider((ref) {
         path: '/admin-assign-ticket',
         name: AdminTicketAssignmentPage.name,
         builder: (context, state) => const AdminTicketAssignmentPage(),
+      ),
+      //* Admin - Crear slot
+      GoRoute(
+        path: '/admin-create-slot',
+        name: AdminSlotCreationPage.name,
+        builder: (context, state) => const AdminSlotCreationPage(),
       ),
 
       //* Operator - Home

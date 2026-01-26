@@ -9,6 +9,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'config/config.dart';
 import 'config/services/storage/encryption_service.dart';
 import 'config/services/storage/isar_service.dart';
+import 'config/theme/theme_provider.dart';
 
 void main() async {
 
@@ -59,13 +60,19 @@ class MainApp extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
 
-    final appRouter = ref.watch( goRouterProvider );
+    final appRouter = ref.watch(goRouterProvider);
+    final themeMode = ref.watch(themeModeProvider);
+    final appTheme = ModernAppTheme();
 
-    return  MaterialApp.router(
+    return MaterialApp.router(
       routerConfig: appRouter,
       debugShowCheckedModeBanner: false,
-      // Implementación del ModernAppTheme centralizado
-      theme: ModernAppTheme().getTheme(),
+      // Tema claro
+      theme: appTheme.getTheme(),
+      // Tema oscuro
+      darkTheme: appTheme.getDarkTheme(),
+      // Modo de tema dinámico (light, dark, o system)
+      themeMode: themeMode,
       // Configuración del título de la app
       title: 'DriveTail - Detailing Center',
       // Builder para configuraciones adicionales
@@ -73,9 +80,9 @@ class MainApp extends ConsumerWidget {
         return MediaQuery(
           // Asegurar que el texto no se escale más allá de ciertos límites
           data: MediaQuery.of(context).copyWith(
-            textScaler: MediaQuery.of(context).textScaler.clamp( 
-              minScaleFactor: 0.8, 
-              maxScaleFactor: 1.2
+            textScaler: MediaQuery.of(context).textScaler.clamp(
+              minScaleFactor: 0.8,
+              maxScaleFactor: 1.2,
             ),
           ),
           child: child!,

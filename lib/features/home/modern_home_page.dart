@@ -36,10 +36,10 @@ class ModernHomePageState extends ConsumerState<ModernHomePage> {
             name: 'login_success',
             parameters: {
               'role': next.isAdmin
-                  ? 'admin'
-                  : next.isOperator
-                      ? 'operator'
-                      : 'user',
+                ? 'admin'
+                : next.isOperator
+                  ? 'operator'
+                  : 'user',
             },
           );
 
@@ -72,14 +72,16 @@ class ModernHomePageState extends ConsumerState<ModernHomePage> {
             ),
           ),
           child: SingleChildScrollView(
+            keyboardDismissBehavior: 
+              ScrollViewKeyboardDismissBehavior.onDrag,
             child: Column(
               children: [
                 if (authState.isAuthenticated)
                   authState.isAdmin
-                      ? const AdminBodyHomeView()
-                      : authState.isOperator
-                          ? const OperatorBodyHomeView()
-                          : const UserBodyHomeView()
+                    ? const AdminBodyHomeView()
+                    : authState.isOperator
+                      ? const OperatorBodyHomeView()
+                      : const UserBodyHomeView()
                 else
                   const UserBodyHomeView(),
               ],

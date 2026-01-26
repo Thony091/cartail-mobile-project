@@ -44,6 +44,7 @@ class RouteGuards {
     '/admin-config-services',
     '/admin-config-works',
     '/admin-config-reservations',
+    '/admin-create-slot',
     '/admin-all-tickets',
     '/admin-assign-ticket',
     '/admin-assign-ticket/',

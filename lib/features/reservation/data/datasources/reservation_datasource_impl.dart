@@ -110,16 +110,25 @@ class ReservationDatasourceImpl extends ReservationDatasource {
 
   Map<String, dynamic> _normalizeReservationPayload(Map<String, dynamic> data) {
     data['patenteVehiculo'] = (data['patenteVehiculo'] ?? '').toString().trim();
-    data['fecha'] = _normalizeDate(data['fecha']?.toString() ?? '');
-    data['horaInicio'] = _normalizeTime(data['horaInicio']?.toString() ?? '');
-    data['horaFinEstimada'] =
-        _normalizeTime(data['horaFinEstimada']?.toString() ?? '');
+    if (data.containsKey('fecha')) {
+      data['fecha'] = _normalizeDate(data['fecha']?.toString() ?? '');
+    }
+    if (data.containsKey('horaInicio')) {
+      data['horaInicio'] = _normalizeTime(data['horaInicio']?.toString() ?? '');
+    }
+    if (data.containsKey('horaFinEstimada')) {
+      data['horaFinEstimada'] =
+          _normalizeTime(data['horaFinEstimada']?.toString() ?? '');
+    }
     data['notasCliente'] = (data['notasCliente'] ?? '').toString();
     data['notasMecanico'] = (data['notasMecanico'] ?? '').toString();
     data['recordatorio'] = data['recordatorio'] ?? true;
     data['idEstado'] = _parseInt(data['idEstado'], defaultValue: 1);
     data['idServicio'] = _parseInt(data['idServicio'], defaultValue: 1);
     data['idCliente'] = _parseInt(data['idCliente'], defaultValue: 1);
+    if (data.containsKey('idSlot')) {
+      data['idSlot'] = _parseInt(data['idSlot'], defaultValue: 0);
+    }
     return data;
   }
 

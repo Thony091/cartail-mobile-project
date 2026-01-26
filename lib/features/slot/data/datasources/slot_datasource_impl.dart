@@ -16,8 +16,6 @@ class SlotDatasourceImpl extends SlotDatasource {
     BaseOptions(
       baseUrl: Enviroment.baseUrl,
       headers: {
-        'x-api-key': 'ZvHNth6qgZ6LNnwtXwJX75Jk8YlXEZxX2AZvOFSW',
-        'Authorization': 'Bearer $accessToken',
         'Content-Type': 'application/json',
       }
     )
@@ -49,20 +47,9 @@ class SlotDatasourceImpl extends SlotDatasource {
   @override
   Future<List<Slot>> getSlotsByService(String serviceId) async {
     try {
-      final response = await dio.get('/slot/service/$serviceId');
-      final List<Slot> slots = [];
-      if (response.statusCode == 200) {
-        var data = response.data;
-        if (data is Map<String, dynamic> && data.containsKey('data')) {
-          var slotsData = data['data'];
-          if (slotsData is List) {
-            for (final slot in slotsData) {
-              slots.add(SlotMapper.jsonToEntity(slot));
-            }
-          }
-        }
-      }
-      return slots;
+      final slots = await getSlots();
+      final serviceIdParsed = int.tryParse(serviceId);
+      return slots.where((slot) => slot.serviceId == serviceIdParsed).toList();
     } catch (e) {
       print('Error: $e');
       return [];
@@ -72,25 +59,11 @@ class SlotDatasourceImpl extends SlotDatasource {
   @override
   Future<List<Slot>> getAvailableSlots(DateTime date) async {
     try {
-      final response = await dio.get(
-        '/slot/available',
-        queryParameters: {
-          'date': date.toIso8601String(),
-        },
-      );
-      final List<Slot> slots = [];
-      if (response.statusCode == 200) {
-        var data = response.data;
-        if (data is Map<String, dynamic> && data.containsKey('data')) {
-          var slotsData = data['data'];
-          if (slotsData is List) {
-            for (final slot in slotsData) {
-              slots.add(SlotMapper.jsonToEntity(slot));
-            }
-          }
-        }
-      }
-      return slots;
+      final slots = await getSlots();
+      final dateKey = date.toIso8601String().substring(0, 10);
+      return slots
+          .where((slot) => slot.isAvailable && slot.date.startsWith(dateKey))
+          .toList();
     } catch (e) {
       print('Error: $e');
       return [];
@@ -103,13 +76,10 @@ class SlotDatasourceImpl extends SlotDatasource {
       final response = await dio.get('/slot/$id');
       Slot slot = Slot(
         id: 0,
-        serviceId: '',
-        startTime: DateTime.now(),
-        endTime: DateTime.now(),
-        estimatedEndTime: DateTime.now(),
-        note: '',
-        isActive: false,
-        createdAt: DateTime.now(),
+        date: '',
+        startTime: '',
+        endTime: '',
+        serviceId: 0,
       );
       if (response.statusCode == 200) {
         var data = response.data;
@@ -139,13 +109,10 @@ class SlotDatasourceImpl extends SlotDatasource {
 
       Slot newSlot = Slot(
         id: 0,
-        serviceId: '',
-        startTime: DateTime.now(),
-        endTime: DateTime.now(),
-        estimatedEndTime: DateTime.now(),
-        note: '',
-        isActive: false,
-        createdAt: DateTime.now(),
+        date: '',
+        startTime: '',
+        endTime: '',
+        serviceId: 0,
       );
       if (response.statusCode == 200 || response.statusCode == 201) {
         var data = response.data;
@@ -166,20 +133,17 @@ class SlotDatasourceImpl extends SlotDatasource {
       final int slotId = slotData['id'];
       slotData.remove('id');
 
-      final response = await dio.put(
+      final response = await dio.patch(
         '/slot/$slotId',
         data: slotData,
       );
 
       Slot updatedSlot = Slot(
         id: 0,
-        serviceId: '',
-        startTime: DateTime.now(),
-        endTime: DateTime.now(),
-        estimatedEndTime: DateTime.now(),
-        note: '',
-        isActive: false,
-        createdAt: DateTime.now(),
+        date: '',
+        startTime: '',
+        endTime: '',
+        serviceId: 0,
       );
       if (response.statusCode == 200) {
         var data = response.data;

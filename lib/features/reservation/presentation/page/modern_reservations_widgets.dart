@@ -95,7 +95,7 @@ class ReservationForm extends ConsumerWidget {
         ? formState.serviceId
         : null;
     final selectedDate = DateTime.tryParse(formState.date.value);
-    final selectedTime = _parseTime(formState.time.value);
+    final selectedSlotId = formState.selectedSlotId;
 
     return FadeInUp(
       child: ModernCard(
@@ -272,9 +272,9 @@ class ReservationForm extends ConsumerWidget {
 
               const SizedBox(height: 16),
 
-              // Hora
+              // Horarios disponibles
               const Text(
-                'Selecciona la Hora (obligatorio)',
+                'Selecciona un Horario (obligatorio)',
                 style: TextStyle(
                   fontSize: 16,
                   fontWeight: FontWeight.w600,
@@ -283,43 +283,62 @@ class ReservationForm extends ConsumerWidget {
               ),
               const SizedBox(height: 12),
 
-              InkWell(
-                onTap: () => _selectTime(
-                  context,
-                  formNotifier,
-                  selectedTime ?? TimeOfDay.now(),
-                ),
-                child: Container(
+              if (formState.isLoadingSlots)
+                const Padding(
+                  padding: EdgeInsets.symmetric(vertical: 8),
+                  child: Center(child: CircularProgressIndicator()),
+                )
+              else if (formState.availableSlots.isEmpty)
+                Container(
                   padding: const EdgeInsets.all(16),
                   decoration: BoxDecoration(
                     color: Colors.white,
                     borderRadius: BorderRadius.circular(12),
                     border: Border.all(color: const Color(0xFFe2e8f0)),
                   ),
-                  child: Row(
-                    children: [
-                      const Icon(Icons.access_time, color: Color(0xFF3498db)),
-                      const SizedBox(width: 16),
-                      Text(
-                        selectedTime != null
-                            ? selectedTime.format(context)
-                            : 'Selecciona una hora',
-                        style: TextStyle(
-                          fontSize: 16,
-                          color: selectedTime != null
-                              ? const Color(0xFF2c3e50)
-                              : const Color(0xFF7f8c8d),
-                        ),
+                  child: const Text(
+                    'No hay horarios disponibles para la fecha seleccionada.',
+                    style: TextStyle(color: Color(0xFF7f8c8d)),
+                  ),
+                )
+              else
+                Container(
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(12),
+                    border: Border.all(color: const Color(0xFFe2e8f0)),
+                  ),
+                  child: DropdownButtonFormField<int>(
+                    value: selectedSlotId,
+                    decoration: const InputDecoration(
+                      border: InputBorder.none,
+                      contentPadding: EdgeInsets.symmetric(
+                        horizontal: 16,
+                        vertical: 16,
                       ),
-                    ],
+                      hintText: 'Elige un horario',
+                    ),
+                    items: formState.availableSlots.map((slot) {
+                      return DropdownMenuItem(
+                        value: slot.id,
+                        child: Text('${slot.startTime} - ${slot.endTime}'),
+                      );
+                    }).toList(),
+                    onChanged: (value) {
+                      if (value == null) return;
+                      final slot = formState.availableSlots.firstWhere(
+                        (item) => item.id == value,
+                        orElse: () => formState.availableSlots.first,
+                      );
+                      formNotifier.onSlotSelected(slot);
+                    },
                   ),
                 ),
-              ),
-              if (formState.isFormPosted && formState.time.errorMessage != null)
+              if (formState.slotErrorMessage != null)
                 Padding(
                   padding: const EdgeInsets.only(top: 8, left: 12),
                   child: Text(
-                    formState.time.errorMessage!,
+                    formState.slotErrorMessage!,
                     style: const TextStyle(
                       color: Color(0xFFe74c3c),
                       fontSize: 12,
@@ -430,49 +449,6 @@ class ReservationForm extends ConsumerWidget {
     }
   }
 
-  Future<void> _selectTime(
-    BuildContext context,
-    ReservationFormNotifier formNotifier,
-    TimeOfDay initialTime,
-  ) async {
-    final TimeOfDay? picked = await showTimePicker(
-      context: context,
-      initialTime: initialTime,
-      builder: (context, child) {
-        return Theme(
-          data: Theme.of(context).copyWith(
-            colorScheme: const ColorScheme.light(
-              primary: Color(0xFF3498db),
-              onPrimary: Colors.white,
-              surface: Colors.white,
-              onSurface: Color(0xFF2c3e50),
-            ),
-          ),
-          child: child!,
-        );
-      },
-    );
-
-    if (picked != null) {
-      formNotifier.onReservationTime(_formatTime(picked));
-    }
-  }
-
-  String _formatTime(TimeOfDay time) {
-    final hour = time.hour.toString().padLeft(2, '0');
-    final minute = time.minute.toString().padLeft(2, '0');
-    return '$hour:$minute';
-  }
-
-  TimeOfDay? _parseTime(String value) {
-    if (value.isEmpty) return null;
-    final parts = value.split(':');
-    if (parts.length < 2) return null;
-    final hour = int.tryParse(parts[0]);
-    final minute = int.tryParse(parts[1]);
-    if (hour == null || minute == null) return null;
-    return TimeOfDay(hour: hour, minute: minute);
-  }
 }
 
 class ReservationInfoCard extends StatelessWidget {

@@ -1,5 +1,6 @@
 export 'email.dart';
 export 'password.dart';
+export 'confirm_password.dart';
 export 'birthday.dart';
 export 'name.dart';
 export 'phone.dart';

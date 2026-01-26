@@ -5,6 +5,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../shared/presentation/shared/widgets/modern_button.dart';
 import '../../../shared/presentation/shared/widgets/modern_card.dart';
 import '../../../shared/presentation/shared/widgets/modern_input_field.dart';
+import '../providers/change_password_form_provider.dart';
 
 class EditProfileAvatarSection extends StatelessWidget {
   final VoidCallback onChangeAvatar;
@@ -29,7 +30,7 @@ class EditProfileAvatarSection extends StatelessWidget {
                     borderRadius: BorderRadius.circular(50),
                     boxShadow: [
                       BoxShadow(
-                        color: const Color(0xFF3498db).withOpacity(0.3),
+                        color: const Color(0xFF3498db).withValues(alpha: 0.3),
                         blurRadius: 20,
                         offset: const Offset(0, 8),
                       ),
@@ -224,54 +225,238 @@ class AvatarSelectionSheet extends StatelessWidget {
   }
 }
 
-class ChangePasswordDialog extends ConsumerWidget {
+class ChangePasswordDialog extends ConsumerStatefulWidget {
   const ChangePasswordDialog({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    return AlertDialog(
-      title: const Text('Cambiar Contraseña'),
-      content: const Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          ModernInputField(
-            label: 'Contraseña Actual',
-            obscureText: true,
-            prefixIcon: Icon(Icons.lock_outline),
+  ConsumerState<ChangePasswordDialog> createState() =>
+      _ChangePasswordDialogState();
+}
+
+class _ChangePasswordDialogState extends ConsumerState<ChangePasswordDialog> {
+  late TextEditingController _currentPasswordController;
+  late TextEditingController _newPasswordController;
+  late TextEditingController _confirmPasswordController;
+
+  @override
+  void initState() {
+    super.initState();
+    _currentPasswordController = TextEditingController();
+    _newPasswordController = TextEditingController();
+    _confirmPasswordController = TextEditingController();
+  }
+
+  @override
+  void dispose() {
+    _currentPasswordController.dispose();
+    _newPasswordController.dispose();
+    _confirmPasswordController.dispose();
+    super.dispose();
+  }
+
+  Future<void> _handleSubmit() async {
+    final notifier = ref.read(changePasswordFormProvider.notifier);
+    final success = await notifier.onFormSubmit();
+
+    if (success && mounted) {
+      Navigator.of(context).pop();
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Contraseña cambiada correctamente'),
+          backgroundColor: Color(0xFF27ae60),
+        ),
+      );
+      // Reset form for next use
+      notifier.reset();
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final formState = ref.watch(changePasswordFormProvider);
+    final screenWidth = MediaQuery.of(context).size.width;
+
+    return FadeInUp(
+      delay: const Duration(milliseconds: 200),
+      child: Dialog(
+        insetPadding: const EdgeInsets.symmetric(horizontal: 20),
+        child: ConstrainedBox(
+          constraints: BoxConstraints(
+            maxWidth: screenWidth * 0.85,
           ),
-          SizedBox(height: 16),
-          ModernInputField(
-            label: 'Nueva Contraseña',
-            obscureText: true,
-            prefixIcon: Icon(Icons.lock),
+          child: SingleChildScrollView(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                // Header
+                Padding(
+                  padding: const EdgeInsets.all(20),
+                  child: Text(
+                    'Cambiar Contraseña',
+                    style: Theme.of(context).textTheme.headlineSmall,
+                  ),
+                ),
+                // Divider
+                const Divider(height: 1),
+                // Content
+                Padding(
+                  padding: const EdgeInsets.all(20),
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      // Current Password Field
+                      ModernInputField(
+                        label: 'Contraseña Actual',
+                        controller: _currentPasswordController,
+                        obscureText: formState.isObscureCurrentPassword,
+                        prefixIcon: const Icon(Icons.lock_outline),
+                        suffixIcon: IconButton(
+                          icon: Icon(
+                            formState.isObscureCurrentPassword
+                                ? Icons.visibility_off
+                                : Icons.visibility,
+                            color: const Color(0xFF7f8c8d),
+                          ),
+                          onPressed: () {
+                            ref
+                                .read(changePasswordFormProvider.notifier)
+                                .toggleCurrentPasswordVisibility();
+                          },
+                        ),
+                        errorMessage: formState.isFormPosted
+                            ? formState.currentPassword.errorMessage
+                            : null,
+                        onChanged: (value) {
+                          ref
+                              .read(changePasswordFormProvider.notifier)
+                              .onCurrentPasswordChange(value);
+                        },
+                      ),
+                      const SizedBox(height: 16),
+                      // New Password Field
+                      ModernInputField(
+                        label: 'Nueva Contraseña',
+                        controller: _newPasswordController,
+                        obscureText: formState.isObscureNewPassword,
+                        prefixIcon: const Icon(Icons.lock),
+                        suffixIcon: IconButton(
+                          icon: Icon(
+                            formState.isObscureNewPassword
+                                ? Icons.visibility_off
+                                : Icons.visibility,
+                            color: const Color(0xFF7f8c8d),
+                          ),
+                          onPressed: () {
+                            ref
+                                .read(changePasswordFormProvider.notifier)
+                                .toggleNewPasswordVisibility();
+                          },
+                        ),
+                        errorMessage: formState.isFormPosted
+                            ? formState.newPassword.errorMessage
+                            : null,
+                        onChanged: (value) {
+                          ref
+                              .read(changePasswordFormProvider.notifier)
+                              .onNewPasswordChange(value);
+                        },
+                      ),
+                      const SizedBox(height: 16),
+                      // Confirm Password Field
+                      ModernInputField(
+                        label: 'Confirmar Contraseña',
+                        controller: _confirmPasswordController,
+                        obscureText: formState.isObscureConfirmPassword,
+                        prefixIcon: const Icon(Icons.lock),
+                        suffixIcon: IconButton(
+                          icon: Icon(
+                            formState.isObscureConfirmPassword
+                                ? Icons.visibility_off
+                                : Icons.visibility,
+                            color: const Color(0xFF7f8c8d),
+                          ),
+                          onPressed: () {
+                            ref
+                                .read(changePasswordFormProvider.notifier)
+                                .toggleConfirmPasswordVisibility();
+                          },
+                        ),
+                        errorMessage: formState.isFormPosted
+                            ? formState.confirmPassword.errorMessage
+                            : null,
+                        onChanged: (value) {
+                          ref
+                              .read(changePasswordFormProvider.notifier)
+                              .onConfirmPasswordChange(value);
+                        },
+                      ),
+                      // Backend Error Message
+                      if (formState.errorMessage != null) ...[
+                        const SizedBox(height: 16),
+                        Container(
+                          padding: const EdgeInsets.all(12),
+                          decoration: BoxDecoration(
+                            color: const Color(0xFFe74c3c)
+                                .withValues(alpha: 0.1),
+                            borderRadius: BorderRadius.circular(8),
+                            border:
+                                Border.all(color: const Color(0xFFe74c3c)),
+                          ),
+                          child: Row(
+                            children: [
+                              const Icon(
+                                Icons.error_outline,
+                                color: Color(0xFFe74c3c),
+                                size: 20,
+                              ),
+                              const SizedBox(width: 12),
+                              Expanded(
+                                child: Text(
+                                  formState.errorMessage!,
+                                  style: const TextStyle(
+                                    color: Color(0xFFe74c3c),
+                                    fontSize: 14,
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ],
+                    ],
+                  ),
+                ),
+                // Divider
+                const Divider(height: 1),
+                // Actions
+                Padding(
+                  padding: const EdgeInsets.all(12),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.end,
+                    children: [
+                      TextButton(
+                        onPressed: formState.isPosting
+                            ? null
+                            : () => Navigator.of(context).pop(),
+                        child: const Text('Cancelar'),
+                      ),
+                      const SizedBox(width: 12),
+                      ModernButton(
+                        text: formState.isPosting ? 'Enviando...' : 'Cambiar',
+                        isLoading: formState.isPosting,
+                        onPressed: formState.isPosting ||
+                                !formState.isFormValid
+                            ? null
+                            : _handleSubmit,
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
           ),
-          SizedBox(height: 16),
-          ModernInputField(
-            label: 'Confirmar Contraseña',
-            obscureText: true,
-            prefixIcon: Icon(Icons.lock),
-          ),
-        ],
+        ),
       ),
-      actions: [
-        TextButton(
-          onPressed: () => Navigator.of(context).pop(),
-          child: const Text('Cancelar'),
-        ),
-        ModernButton(
-          text: 'Cambiar',
-          onPressed: () {
-            // Validar y cambiar contraseña
-            Navigator.of(context).pop();
-            ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(
-                content: Text('Contraseña cambiada correctamente'),
-                backgroundColor: Color(0xFF27ae60),
-              ),
-            );
-          },
-        ),
-      ],
     );
   }
 }
@@ -289,7 +474,7 @@ class SuccesUpdateDialog extends StatelessWidget {
             width: 80,
             height: 80,
             decoration: BoxDecoration(
-              color: const Color(0xFF27ae60).withOpacity(0.1),
+              color: const Color(0xFF27ae60).withValues(alpha: 0.1),
               borderRadius: BorderRadius.circular(40),
             ),
             child: const Icon(

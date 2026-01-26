@@ -32,6 +32,7 @@ class ReservationMapper {
       statusId: json['idEstado'] != null ? _parseInt(json['idEstado']) : null,
       serviceId: json['idServicio'] != null ? _parseInt(json['idServicio']) : null,
       clientId: json['idCliente'] != null ? _parseInt(json['idCliente']) : null,
+      slotId: json['idSlot'] != null ? _parseInt(json['idSlot']) : null,
     );
   }
 

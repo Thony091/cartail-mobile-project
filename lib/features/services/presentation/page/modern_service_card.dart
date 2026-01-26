@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../../../shared/presentation/shared/widgets/widgets.dart';
+import 'service_image_utils.dart';
 
 class ModernServiceCard extends StatelessWidget {
   final IconData icon;
@@ -22,20 +23,21 @@ class ModernServiceCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final imageUrl = firstValidNetworkImage(images);
     return ModernCard(
       onTap: onTap,
       padding: const EdgeInsets.all(20),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          if (images != null && images!.isNotEmpty)
+          if (imageUrl != null)
             ClipRRect(
               borderRadius: BorderRadius.circular(12),
               child: AspectRatio(
                 aspectRatio: 16 / 9,
                 child: FadeInImage(
                   placeholder: const AssetImage('assets/loaders/loader2.gif'),
-                  image: NetworkImage(images!.first),
+                  image: NetworkImage(imageUrl),
                   fit: BoxFit.cover,
                   fadeInDuration: const Duration(milliseconds: 300),
                 ),

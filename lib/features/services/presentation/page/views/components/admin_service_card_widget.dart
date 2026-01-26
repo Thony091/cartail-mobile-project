@@ -1,9 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:portafolio_project/features/services/domain/entities/services.dart';
-import '../../modern_service_widgets.dart';
-
 import 'package:portafolio_project/features/services/presentation/page/views/components/dismiss_background_widget.dart';
 import 'package:portafolio_project/features/shared/presentation/shared/widgets/modern_card.dart';
+
+import '../../modern_service_widgets.dart';
+import '../../service_image_utils.dart';
 
 class AdminServiceCardWidget extends StatelessWidget {
   final Services service;
@@ -50,9 +51,12 @@ class AdminServiceCardWidget extends StatelessWidget {
                 width: 80,
                 height: 80,
                 color: const Color(0xFF3498db).withValues(alpha: .1),
-                child: service.images.isNotEmpty
-                    ? Image.network(
-                        service.images.first,
+                child: Builder(
+                  builder: (context) {
+                    final imageUrl = firstValidNetworkImage(service.images);
+                    if (imageUrl != null) {
+                      return Image.network(
+                        imageUrl,
                         fit: BoxFit.cover,
                         errorBuilder: (context, error, stackTrace) {
                           return Icon(
@@ -61,12 +65,15 @@ class AdminServiceCardWidget extends StatelessWidget {
                             size: 32,
                           );
                         },
-                      )
-                    : Icon(
-                        getServiceIcon(getServiceCategory(service)),
-                        color: const Color(0xFF3498db),
-                        size: 32,
-                      ),
+                      );
+                    }
+                    return Icon(
+                      getServiceIcon(getServiceCategory(service)),
+                      color: const Color(0xFF3498db),
+                      size: 32,
+                    );
+                  },
+                ),
               ),
             ),
 

@@ -1,7 +1,10 @@
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+
 import 'package:portafolio_project/config/constants/secure_storage_keys.dart';
+import 'package:portafolio_project/config/constants/preferences_keys.dart';
 import 'package:portafolio_project/config/services/secure_storage_service.dart';
 import 'package:portafolio_project/firebase_options.dart';
 
@@ -86,6 +89,16 @@ class PushNotificationsService {
   static Future<void> _onMessage(RemoteMessage message) async {
     final notification = message.notification;
     if (notification == null) return;
+
+    // Verificar si el usuario ha habilitado notificaciones
+    final prefs = await SharedPreferences.getInstance();
+    final notificationsEnabled =
+        prefs.getBool(PreferencesKeys.notificationsEnabled) ?? true;
+
+    if (!notificationsEnabled) {
+      print('📵 Notificaciones deshabilitadas por el usuario');
+      return;
+    }
 
     await _localNotifications.show(
       notification.hashCode,

@@ -1,3 +1,4 @@
+import 'package:flutter/cupertino.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:formz/formz.dart';
 
@@ -53,6 +54,19 @@ class MessageFormNotifier extends StateNotifier<MessageFormState>{
     );
   }
 
+  resetForm() {
+    state = MessageFormState();
+  }
+
+  resetMessageOnly() {
+    state = state.copyWith(
+      name: const Name.pure(),
+      email: const Email.pure(),
+      message: const Messages.pure(),
+      isPosting: false,
+    );
+  }
+
   Future<bool> postMessage() async {
 
     try {
@@ -69,12 +83,12 @@ class MessageFormNotifier extends StateNotifier<MessageFormState>{
          state.message.value
       );
       if (!mounted) return false;  // Verifica si el StateNotifier está montado
-      state = state.copyWith( isPosting: false, );
-      
+      resetForm();
+     
       return true;
 
     } catch (e) {
-            e.toString();
+      debugPrint(e.toString());
       return false;
     }
   }

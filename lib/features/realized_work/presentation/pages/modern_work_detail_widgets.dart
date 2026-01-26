@@ -467,15 +467,15 @@ class WorkDescription extends ConsumerWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Row(
+            const Row(
               children: [
-                const Icon(
+                Icon(
                   Icons.description,
                   color: Color(0xFF9b59b6),
                   size: 20,
                 ),
-                const SizedBox(width: 8),
-                const Text(
+                SizedBox(width: 8),
+                Text(
                   'Descripción del Trabajo',
                   style: TextStyle(
                     fontSize: 18,
@@ -535,15 +535,15 @@ class WorkTestimonialAndRating extends ConsumerWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Row(
+            const Row(
               children: [
-                const Icon(
+                Icon(
                   Icons.rate_review_outlined,
                   color: Color(0xFF9b59b6),
                   size: 20,
                 ),
-                const SizedBox(width: 8),
-                const Text(
+                SizedBox(width: 8),
+                Text(
                   'Testimonio y Calificación',
                   style: TextStyle(
                     fontSize: 18,
@@ -671,15 +671,15 @@ class WorkDateSection extends ConsumerWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Row(
+            const Row(
               children: [
-                const Icon(
+                Icon(
                   Icons.calendar_today,
                   color: Color(0xFF9b59b6),
                   size: 20,
                 ),
-                const SizedBox(width: 8),
-                const Text(
+                SizedBox(width: 8),
+                Text(
                   'Fecha del Trabajo',
                   style: TextStyle(
                     fontSize: 18,

@@ -10,6 +10,7 @@ import 'package:portafolio_project/features/user/presentation/profile/modern_pro
 import '../../../../presentation/presentation_container.dart';
 import '../../../../presentation/pages/auth/modern_scaffold_with_drawer.dart';
 import '../../domain/entities/user.dart';
+import 'modern_edit_profile_widgets.dart';
 
 class ModernProfilePage extends ConsumerStatefulWidget {
   static const name = 'ModernProfilePage';
@@ -26,55 +27,61 @@ class ModernProfilePageState extends ConsumerState<ModernProfilePage> {
     final authState = ref.watch(betterAuthProvider);
     final profileUser = _mapAuthUser(authState);
 
-    return ModernScaffoldWithDrawer(
-      title: 'Mi Perfil',
-      body: Container(
-        decoration: BoxDecoration(
-          gradient: LinearGradient(
-            begin: Alignment.topCenter,
-            end: Alignment.bottomCenter,
-            colors: [
-              const Color(0xFF667eea).withOpacity(0.1),
-              const Color(0xFFf8fafc),
-            ],
-          ),
-        ),
-        child: SingleChildScrollView(
-          padding: const EdgeInsets.all(20),
-          child: Column(
-            children: [
-              // Header del perfil
-              FadeInDown(
-                child: ProfileHeader(
-                  user: profileUser,
-                  onChangeAvatar: _changeAvatar,
-                ),
-              ),
-              const SizedBox(height: 32),
-              // Información personal
-              FadeInLeft(child: PersonalInfoSection(user: profileUser)),
-              const SizedBox(height: 24),
-              // Estadísticas (solo para admin)
-              if (profileUser.role == UserRole.admin) ...[
-                FadeInRight(child: const AdminStatsSection()),
-                const SizedBox(height: 24),
+    return SafeArea(
+      top: false,
+      child: ModernScaffoldWithDrawer(
+        title: 'Mi Perfil',
+        body: Container(
+          decoration: BoxDecoration(
+            gradient: LinearGradient(
+              begin: Alignment.topCenter,
+              end: Alignment.bottomCenter,
+              colors: [
+                const Color(0xFF667eea).withValues(alpha: .1),
+                const Color(0xFFf8fafc),
               ],
-
-              // Configuración
-              FadeInUp(child: const SettingsSection()),
-
-              const SizedBox(height: 24),
-
-              // Acciones
-              FadeInUp(
-                delay: const Duration(milliseconds: 200),
-                child: ActionsSection(
-                  onChangePassword: () {
-                    // Cambiar contraseña logic
-                  },
+            ),
+          ),
+          child: SingleChildScrollView(
+            padding: const EdgeInsets.all(20),
+            child: Column(
+              children: [
+                // Header del perfil
+                FadeInDown(
+                  child: ProfileHeader(
+                    user: profileUser,
+                    onChangeAvatar: _changeAvatar,
+                  ),
                 ),
-              ),
-            ],
+                const SizedBox(height: 32),
+                // Información personal
+                FadeInLeft(child: PersonalInfoSection(user: profileUser)),
+                const SizedBox(height: 24),
+                // Estadísticas (solo para admin)
+                if (profileUser.role == UserRole.admin) ...[
+                  FadeInRight(child: const AdminStatsSection()),
+                  const SizedBox(height: 24),
+                ],
+      
+                // Configuración
+                FadeInUp(child: const SettingsSection()),
+      
+                const SizedBox(height: 24),
+      
+                // Acciones
+                FadeInUp(
+                  delay: const Duration(milliseconds: 200),
+                  child: ActionsSection(
+                    onChangePassword: () {
+                      showDialog(
+                        context: context,
+                        builder: (_) => const ChangePasswordDialog(),
+                      );
+                    },
+                  ),
+                ),
+              ],
+            ),
           ),
         ),
       ),

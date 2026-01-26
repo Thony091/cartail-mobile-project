@@ -36,7 +36,7 @@ class ModernReservationsPageState
             begin: Alignment.topCenter,
             end: Alignment.bottomCenter,
             colors: [
-              const Color(0xFF667eea).withOpacity(0.1),
+              const Color(0xFF667eea).withValues(alpha: .1),
               const Color(0xFFf8fafc),
             ],
           ),
@@ -129,12 +129,12 @@ class ModernReservationsPageState
     });
   }
 
-  String _formatDate(DateTime date) {
-    final year = date.year.toString().padLeft(4, '0');
-    final month = date.month.toString().padLeft(2, '0');
-    final day = date.day.toString().padLeft(2, '0');
-    return '$year-$month-$day';
-  }
+  // String _formatDate(DateTime date) {
+  //   final year = date.year.toString().padLeft(4, '0');
+  //   final month = date.month.toString().padLeft(2, '0');
+  //   final day = date.day.toString().padLeft(2, '0');
+  //   return '$year-$month-$day';
+  // }
 
   void _showSnackBar(String message) {
     ScaffoldMessenger.of(context).showSnackBar(
@@ -159,7 +159,7 @@ class ModernReservationsPageState
               width: 80,
               height: 80,
               decoration: BoxDecoration(
-                color: const Color(0xFF27ae60).withOpacity(0.1),
+                color: const Color(0xFF27ae60).withValues(alpha: .1),
                 borderRadius: BorderRadius.circular(40),
               ),
               child: const Icon(

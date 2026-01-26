@@ -96,6 +96,9 @@ class _ReservationFormBody extends ConsumerWidget {
     if (state.time.errorMessage != null) {
       return state.time.errorMessage;
     }
+    if (state.selectedSlotId == null) {
+      return 'Debes seleccionar un horario disponible';
+    }
     return null;
   }
 
@@ -185,28 +188,27 @@ class _ReservationFormBody extends ConsumerWidget {
     }
   }
 
-  Future<void> _selectTime( BuildContext context, WidgetRef ref ) async {
-
-    final List<String> timeOptions = [];
-    for (int hour = 9; hour <= 18; hour++) {
-      final formattedHour = hour.toString().padLeft(2, '0');
-      timeOptions.add('$formattedHour:00');
-      timeOptions.add('$formattedHour:30');
+  void _selectSlot(
+    BuildContext context,
+    WidgetRef ref,
+  ) {
+    final state = ref.read(reservationFormProvider);
+    if (state.availableSlots.isEmpty) {
+      _showErrorSnackBar(context, 'No hay horarios disponibles');
+      return;
     }
-
-    if ( timeOptions.isEmpty ) return;
-
-    final String? pickedTime = await showModalBottomSheet<String>(
+    showModalBottomSheet<void>(
       context: context,
       builder: (context) {
         return SingleChildScrollView(
           child: Column(
             mainAxisSize: MainAxisSize.min,
-            children: timeOptions.map((time) {
+            children: state.availableSlots.map((slot) {
               return ListTile(
-                title: Text(time),
+                title: Text('${slot.startTime} - ${slot.endTime}'),
                 onTap: () {
-                  Navigator.of(context).pop(time);
+                  ref.read(reservationFormProvider.notifier).onSlotSelected(slot);
+                  Navigator.of(context).pop();
                 },
               );
             }).toList(),
@@ -214,9 +216,6 @@ class _ReservationFormBody extends ConsumerWidget {
         );
       },
     );
-    if (pickedTime != null) {
-      ref.read(reservationFormProvider.notifier).onReservationTime(pickedTime);
-    }
   }
 
 
@@ -376,19 +375,26 @@ class _ReservationFormBody extends ConsumerWidget {
                           isBottomField: true,
                           isTopField: true,
                           readOnly: true,
-                          label: "Hora",
-                          // initialValue: state.time.value.isNotEmpty ? state.time.value : "Hora de Reserva",
-                          hint: state.time.value.isNotEmpty ? state.time.value : "",
+                          label: "Horario",
+                          hint: state.selectedSlotId != null
+                              ? state.time.value
+                              : "Selecciona un horario",
                           onTap: () {
                             if (state.date.value.isNotEmpty) {
-                              _selectTime(context, ref);
+                              _selectSlot(context, ref);
                             } else {
                               _showErrorSnackBar(context, 'Primero selecciona una fecha');
                             }
                           },
-                          onChanged: (value) {
-                            ref.read( reservationFormProvider.notifier ).onReservationTime(value);
-                          },
+                          onChanged: (_) {},
+                        ),
+                      if (state.slotErrorMessage != null)
+                        Padding(
+                          padding: const EdgeInsets.only(top: 6),
+                          child: Text(
+                            state.slotErrorMessage!,
+                            style: const TextStyle(color: Colors.redAccent),
+                          ),
                         ),
                         
                       const SizedBox(height: 25.0),

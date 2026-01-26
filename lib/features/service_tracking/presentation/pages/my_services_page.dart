@@ -1,9 +1,14 @@
+
 import 'package:animate_do/animate_do.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:portafolio_project/features/auth/presentation/providers/better_auth_provider.dart';
+import 'package:portafolio_project/features/service_tracking/presentation/widgets/service_tracking_widgets.dart';
+import 'package:portafolio_project/features/ticket/presentation/providers/tickets_provider.dart';
+
 import '../../domain/entities/service_status.dart';
-import '../widgets/service_tracking_widgets.dart';
+import 'package:portafolio_project/features/ticket/domain/entities/ticket.dart';
 
 /// Página que muestra los servicios solicitados por el usuario
 class MyServicesPage extends ConsumerStatefulWidget {
@@ -19,18 +24,10 @@ class _MyServicesPageState extends ConsumerState<MyServicesPage>
     with SingleTickerProviderStateMixin {
   late TabController _tabController;
 
-  // TODO: Reemplazar con datos del provider
-  late List<UserServiceRequest> _services;
-
   @override
   void initState() {
     super.initState();
     _tabController = TabController(length: 3, vsync: this);
-    _loadServices();
-  }
-
-  void _loadServices() {
-    _services = _getMockServices();
   }
 
   @override
@@ -39,46 +36,46 @@ class _MyServicesPageState extends ConsumerState<MyServicesPage>
     super.dispose();
   }
 
-  List<UserServiceRequest> get _activeServices =>
-      _services.where((s) => s.isActive).toList();
-
-  List<UserServiceRequest> get _readyServices =>
-      _services.where((s) => s.isReady).toList();
-
-  List<UserServiceRequest> get _completedServices =>
-      _services.where((s) => s.isCompleted).toList();
-
   @override
   Widget build(BuildContext context) {
+    final authState = ref.watch(betterAuthProvider);
+    final ticketsState = ref.watch(ticketsProvider);
+    final userId = authState.session?.user.id;
+
+    final services = _buildUserServices(ticketsState.tickets, userId);
+    final activeServices = services.where((s) => s.isActive).toList();
+    final readyServices = services.where((s) => s.isReady).toList();
+    final completedServices = services.where((s) => s.isCompleted).toList();
+
     return Scaffold(
       backgroundColor: const Color(0xFFf8fafc),
       body: NestedScrollView(
         headerSliverBuilder: (context, innerBoxIsScrolled) => [
           _MyServicesHeader(
-            activeCount: _activeServices.length,
-            readyCount: _readyServices.length,
+            activeCount: activeServices.length,
+            readyCount: readyServices.length,
           ),
           SliverToBoxAdapter(
-            child: _buildTabBar(),
+            child: _buildTabBar(activeServices, readyServices),
           ),
         ],
         body: TabBarView(
           controller: _tabController,
           children: [
             _ServicesList(
-              services: _activeServices,
+              services: activeServices,
               emptyMessage: 'No tienes servicios activos',
               emptyIcon: Icons.build_circle_outlined,
               onServiceTap: _navigateToDetail,
             ),
             _ServicesList(
-              services: _readyServices,
+              services: readyServices,
               emptyMessage: 'No hay servicios listos para recoger',
               emptyIcon: Icons.check_circle_outline,
               onServiceTap: _navigateToDetail,
             ),
             _ServicesList(
-              services: _completedServices,
+              services: completedServices,
               emptyMessage: 'No tienes servicios completados',
               emptyIcon: Icons.history,
               onServiceTap: _navigateToDetail,
@@ -89,7 +86,7 @@ class _MyServicesPageState extends ConsumerState<MyServicesPage>
     );
   }
 
-  Widget _buildTabBar() {
+  Widget _buildTabBar(List<UserServiceRequest> active, List<UserServiceRequest> ready) {
     return Container(
       color: Colors.white,
       child: TabBar(
@@ -103,9 +100,9 @@ class _MyServicesPageState extends ConsumerState<MyServicesPage>
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
                 const Text('Activos'),
-                if (_activeServices.isNotEmpty) ...[
+                if (active.isNotEmpty) ...[
                   const SizedBox(width: 6),
-                  _CountBadge(count: _activeServices.length),
+                  _CountBadge(count: active.length),
                 ],
               ],
             ),
@@ -115,10 +112,10 @@ class _MyServicesPageState extends ConsumerState<MyServicesPage>
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
                 const Text('Listos'),
-                if (_readyServices.isNotEmpty) ...[
+                if (ready.isNotEmpty) ...[
                   const SizedBox(width: 6),
                   _CountBadge(
-                    count: _readyServices.length,
+                    count: ready.length,
                     color: const Color(0xFF27ae60),
                   ),
                 ],
@@ -135,174 +132,81 @@ class _MyServicesPageState extends ConsumerState<MyServicesPage>
     context.push('/my-services/${service.id}');
   }
 
-  List<UserServiceRequest> _getMockServices() {
-    return [
-      UserServiceRequest(
-        id: 'srv-001',
-        orderNumber: '2024-0042',
-        serviceName: 'Instalación de Cámara de Retroceso',
-        serviceDescription:
-            'Instalación completa de cámara con pantalla en espejo',
-        includedItems: [
-          'Cámara HD',
-          'Pantalla 4.3"',
-          'Cableado',
-          'Instalación',
-        ],
-        vehicle: const UserVehicleInfo(
-          brand: 'Toyota',
-          model: 'Corolla',
-          year: 2022,
-          licensePlate: 'ABCD-12',
-          color: 'Gris',
+  List<UserServiceRequest> _buildUserServices(
+    List<Ticket> tickets,
+    String? userId,
+  ) {
+    if (userId == null) return [];
+    return tickets
+        .where((ticket) => ticket.userId == userId)
+        .map(_ticketToServiceRequest)
+        .toList();
+  }
+
+  UserServiceRequest _ticketToServiceRequest(Ticket ticket) {
+    final status = _mapTicketState(ticket.stateId);
+    final metadata = ticket.metadata;
+    final vehicle = UserVehicleInfo(
+      brand: metadata['vehicleBrand']?.toString() ?? 'Toyota',
+      model: metadata['vehicleModel']?.toString() ?? 'Corolla',
+      year: metadata['vehicleYear'] is int
+          ? metadata['vehicleYear'] as int
+          : 2022,
+      licensePlate: metadata['licensePlate']?.toString() ?? '----',
+      color: metadata['vehicleColor']?.toString() ?? 'Gris',
+    );
+    final List<String> included = [];
+    if (metadata['includedItems'] is List) {
+      included.addAll(List<String>.from(metadata['includedItems'] as List));
+    }
+
+    return UserServiceRequest(
+      id: ticket.id,
+      orderNumber: metadata['orderNumber']?.toString() ?? ticket.id,
+      serviceName: ticket.title.isNotEmpty ? ticket.title : 'Servicio técnico',
+      serviceDescription: ticket.description,
+      includedItems: included,
+      vehicle: vehicle,
+      currentStatus: status,
+      statusHistory: [
+        StatusUpdate(
+          status: status,
+          timestamp: ticket.createdAt,
+          message: ticket.metadata['statusNote']?.toString(),
         ),
-        currentStatus: ServiceStatus.inProgress,
-        statusHistory: [
-          StatusUpdate(
-            status: ServiceStatus.received,
-            timestamp: DateTime.now().subtract(const Duration(hours: 5)),
-            message: 'Vehículo recibido en el taller',
-          ),
-          StatusUpdate(
-            status: ServiceStatus.inProgress,
-            timestamp: DateTime.now().subtract(const Duration(hours: 2)),
-            message: 'Comenzamos la instalación de tu cámara',
-          ),
-        ],
-        requestedAt: DateTime.now().subtract(const Duration(hours: 5)),
-        estimatedCompletionDate: DateTime.now().add(const Duration(hours: 2)),
-        estimatedCost: 150000,
-        workshopPhone: '+56 2 1234 5678',
-        assignedOperatorName: 'Carlos',
-      ),
-      UserServiceRequest(
-        id: 'srv-002',
-        orderNumber: '2024-0041',
-        serviceName: 'Detailing Premium Completo',
-        serviceDescription: 'Limpieza interior y exterior con protección',
-        includedItems: [
-          'Lavado exterior',
-          'Aspirado interior',
-          'Protección cerámica',
-        ],
-        vehicle: const UserVehicleInfo(
-          brand: 'Honda',
-          model: 'Civic',
-          year: 2023,
-          licensePlate: 'WXYZ-99',
-          color: 'Negro',
-        ),
-        currentStatus: ServiceStatus.ready,
-        statusHistory: [
-          StatusUpdate(
-            status: ServiceStatus.received,
-            timestamp: DateTime.now().subtract(const Duration(days: 1)),
-          ),
-          StatusUpdate(
-            status: ServiceStatus.inProgress,
-            timestamp:
-                DateTime.now().subtract(const Duration(hours: 20)),
-          ),
-          StatusUpdate(
-            status: ServiceStatus.ready,
-            timestamp: DateTime.now().subtract(const Duration(hours: 1)),
-            message:
-                '¡Tu vehículo quedó impecable! Puedes venir a recogerlo cuando quieras.',
-          ),
-        ],
-        requestedAt: DateTime.now().subtract(const Duration(days: 1)),
-        estimatedCost: 180000,
-        finalCost: 180000,
-        workshopPhone: '+56 2 1234 5678',
-        assignedOperatorName: 'Miguel',
-      ),
-      UserServiceRequest(
-        id: 'srv-003',
-        orderNumber: '2024-0038',
-        serviceName: 'Cambio de Aceite + Filtros',
-        serviceDescription: 'Mantenimiento preventivo completo',
-        includedItems: [
-          'Aceite sintético 5W-30',
-          'Filtro de aceite',
-          'Filtro de aire',
-          'Revisión de 25 puntos',
-        ],
-        vehicle: const UserVehicleInfo(
-          brand: 'Mazda',
-          model: 'CX-5',
-          year: 2021,
-          licensePlate: 'MNOP-45',
-          color: 'Rojo',
-        ),
-        currentStatus: ServiceStatus.delivered,
-        statusHistory: [
-          StatusUpdate(
-            status: ServiceStatus.received,
-            timestamp: DateTime.now().subtract(const Duration(days: 5)),
-          ),
-          StatusUpdate(
-            status: ServiceStatus.inProgress,
-            timestamp: DateTime.now().subtract(const Duration(days: 5)),
-          ),
-          StatusUpdate(
-            status: ServiceStatus.ready,
-            timestamp: DateTime.now().subtract(const Duration(days: 4)),
-          ),
-          StatusUpdate(
-            status: ServiceStatus.delivered,
-            timestamp: DateTime.now().subtract(const Duration(days: 4)),
-            message: '¡Gracias por tu visita!',
-          ),
-        ],
-        requestedAt: DateTime.now().subtract(const Duration(days: 5)),
-        completedAt: DateTime.now().subtract(const Duration(days: 4)),
-        estimatedCost: 75000,
-        finalCost: 72000,
-        workshopPhone: '+56 2 1234 5678',
-      ),
-      UserServiceRequest(
-        id: 'srv-004',
-        orderNumber: '2024-0035',
-        serviceName: 'Instalación de Sensores de Estacionamiento',
-        serviceDescription: '4 sensores traseros con display LED',
-        includedItems: [
-          'Sensores x4',
-          'Display LED',
-          'Instalación profesional',
-        ],
-        vehicle: const UserVehicleInfo(
-          brand: 'Nissan',
-          model: 'Sentra',
-          year: 2020,
-          licensePlate: 'QRST-67',
-          color: 'Blanco',
-        ),
-        currentStatus: ServiceStatus.delivered,
-        statusHistory: [
-          StatusUpdate(
-            status: ServiceStatus.received,
-            timestamp: DateTime.now().subtract(const Duration(days: 10)),
-          ),
-          StatusUpdate(
-            status: ServiceStatus.inProgress,
-            timestamp: DateTime.now().subtract(const Duration(days: 10)),
-          ),
-          StatusUpdate(
-            status: ServiceStatus.ready,
-            timestamp: DateTime.now().subtract(const Duration(days: 9)),
-          ),
-          StatusUpdate(
-            status: ServiceStatus.delivered,
-            timestamp: DateTime.now().subtract(const Duration(days: 9)),
-          ),
-        ],
-        requestedAt: DateTime.now().subtract(const Duration(days: 10)),
-        completedAt: DateTime.now().subtract(const Duration(days: 9)),
-        estimatedCost: 95000,
-        finalCost: 95000,
-        workshopPhone: '+56 2 1234 5678',
-      ),
-    ];
+      ],
+      requestedAt: ticket.createdAt,
+      estimatedCompletionDate: metadata['estimatedCompletion'] is String
+          ? DateTime.tryParse(metadata['estimatedCompletion'] as String)
+          : null,
+      estimatedCost: metadata['estimatedCost'] is int
+          ? metadata['estimatedCost'] as int
+          : 0,
+      finalCost: metadata['finalCost'] is int
+          ? metadata['finalCost'] as int
+          : null,
+      workshopPhone: metadata['workshopPhone']?.toString() ?? '+56 2 0000 0000',
+      assignedOperatorName: ticket.assignedToName ??
+          (ticket.assignedToId != null && ticket.assignedToId!.isNotEmpty
+              ? 'Operario ${ticket.assignedToId}'
+              : null),
+    );
+  }
+
+  ServiceStatus _mapTicketState(int? stateId) {
+    switch (stateId) {
+      case 1:
+        return ServiceStatus.received;
+      case 2:
+        return ServiceStatus.inProgress;
+      case 3:
+        return ServiceStatus.ready;
+      case 4:
+      case 5:
+        return ServiceStatus.delivered;
+      default:
+        return ServiceStatus.received;
+    }
   }
 }
 
@@ -333,7 +237,6 @@ class _MyServicesHeader extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                // Título
                 FadeInDown(
                   child: const Row(
                     children: [
@@ -354,9 +257,7 @@ class _MyServicesHeader extends StatelessWidget {
                     ],
                   ),
                 ),
-
                 const SizedBox(height: 8),
-
                 FadeInUp(
                   child: Text(
                     'Revisa el estado de tus vehículos en servicio',
@@ -366,10 +267,7 @@ class _MyServicesHeader extends StatelessWidget {
                     ),
                   ),
                 ),
-
                 const SizedBox(height: 20),
-
-                // Stats rápidos
                 FadeInUp(
                   delay: const Duration(milliseconds: 100),
                   child: Row(

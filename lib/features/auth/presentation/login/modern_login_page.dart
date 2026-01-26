@@ -23,6 +23,8 @@ class ModernLoginPage extends StatelessWidget {
         ),
         child: SafeArea(
           child: SingleChildScrollView(
+            keyboardDismissBehavior: 
+              ScrollViewKeyboardDismissBehavior.onDrag,
             padding: const EdgeInsets.all(24),
             child: Column(
               children: [

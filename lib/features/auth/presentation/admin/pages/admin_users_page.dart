@@ -1,13 +1,13 @@
 import 'package:animate_do/animate_do.dart';
 import 'package:flutter/material.dart';
+import 'dart:async';
+
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:portafolio_project/features/auth/data/models/admin_response_models.dart';
 import 'package:portafolio_project/presentation/pages/auth/modern_scaffold_with_drawer.dart';
 
 import '../../../../shared/presentation/shared/widgets/modern_button.dart';
-import '../../../../shared/presentation/shared/widgets/modern_card.dart';
 import '../../../../shared/presentation/shared/widgets/modern_floating_action_button.dart';
-import '../../../../shared/presentation/shared/widgets/modern_input_field.dart';
 import '../../providers/admin_auth_provider.dart';
 import '../providers/admin_password_form_provider.dart';
 import '../providers/admin_user_form_provider.dart';
@@ -27,7 +27,18 @@ class AdminUsersPage extends ConsumerStatefulWidget {
 
 class _AdminUsersPageState extends ConsumerState<AdminUsersPage> {
   final TextEditingController _searchController = TextEditingController();
+  final FocusNode _searchFocusNode = FocusNode();
   String _searchValue = '';
+  bool _isSearching = false;
+  String _pendingSearchValue = '';
+  Timer? _searchDebounce;
+  String _roleFilter = 'all';
+  static const List<String> _roleOptions = [
+    'all',
+    'admin',
+    'operator',
+    'user',
+  ];
 
   void _showTopSnackBar(String message, {bool isError = false}) {
     if (!mounted) return;
@@ -64,6 +75,8 @@ class _AdminUsersPageState extends ConsumerState<AdminUsersPage> {
   @override
   void dispose() {
     _searchController.dispose();
+    _searchFocusNode.dispose();
+    _searchDebounce?.cancel();
     super.dispose();
   }
 
@@ -84,8 +97,86 @@ class _AdminUsersPageState extends ConsumerState<AdminUsersPage> {
     final usersState = ref.watch(adminUsersListProvider);
     final impersonationState = ref.watch(adminImpersonationProvider);
 
+    if (_isSearching && !_searchFocusNode.hasFocus) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted) _searchFocusNode.requestFocus();
+      });
+    }
+
     return ModernScaffoldWithDrawer(
       title: 'Gestión de Usuarios',
+      titleWidget: _isSearching
+          ? Align(
+              alignment: Alignment.centerLeft,
+              child: Container(
+                height: 50,
+                padding: const EdgeInsets.symmetric(horizontal: 12),
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(18),
+                  border: Border.all(
+                    color: const Color(0xFF3498db).withValues(alpha: 0.6),
+                  ),
+                ),
+                child: Center(
+                  child: TextField(
+                    controller: _searchController,
+                    focusNode: _searchFocusNode,
+                    autofocus: true,
+                    cursorColor: const Color(0xFF2c3e50),
+                    keyboardAppearance: Brightness.light,
+                    textInputAction: TextInputAction.search,
+                    onChanged: _onSearchChanged,
+                    onSubmitted: (_) => _commitSearch(),
+                    style: const TextStyle(
+                      color: Color(0xFF2c3e50),
+                      fontSize: 20,
+                      fontWeight: FontWeight.w600,
+                    ),
+                    decoration: const InputDecoration(
+                      hintText: 'Buscar usuario...',
+                      hintStyle: TextStyle(color: Color(0xFF7f8c8d)),
+                      border: InputBorder.none,
+                      isDense: true,
+                      contentPadding: EdgeInsets.zero,
+                    ),
+                  ),
+                ),
+              ),
+            )
+          : null,
+      appBarActions: [
+        if (_isSearching)
+          IconButton(
+            icon: const Icon(Icons.close, color: Colors.white),
+            onPressed: () {
+              _searchDebounce?.cancel();
+              setState(() {
+                _isSearching = false;
+                _searchValue = '';
+                _pendingSearchValue = '';
+              });
+              _searchController.clear();
+              _searchFocusNode.unfocus();
+              _loadUsers();
+            },
+          )
+        else ...[
+          IconButton(
+            icon: const Icon(Icons.search, color: Colors.white),
+            onPressed: () {
+              setState(() => _isSearching = true);
+              WidgetsBinding.instance.addPostFrameCallback((_) {
+                _searchFocusNode.requestFocus();
+              });
+            },
+          ),
+          IconButton(
+            icon: const Icon(Icons.filter_list, color: Colors.white),
+            onPressed: _showRoleFilterDialog,
+          ),
+        ],
+      ],
       body: Container(
         decoration: BoxDecoration(
           gradient: LinearGradient(
@@ -179,98 +270,6 @@ class _AdminUsersPageState extends ConsumerState<AdminUsersPage> {
                           ],
                         ),
                       ],
-                    ),
-                  ),
-                ),
-              ),
-
-              // Barra de búsqueda mejorada
-              SliverToBoxAdapter(
-                child: FadeInUp(
-                  delay: const Duration(milliseconds: 100),
-                  child: Padding(
-                    padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
-                    child: ModernCard(
-                      child: Padding(
-                        padding: const EdgeInsets.all(16),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.stretch,
-                          children: [
-                            Row(
-                              children: [
-                                Icon(
-                                  Icons.search,
-                                  color: const Color(0xFF667eea),
-                                  size: 20,
-                                ),
-                                const SizedBox(width: 8),
-                                const Text(
-                                  'Buscar Usuario',
-                                  style: TextStyle(
-                                    fontSize: 16,
-                                    fontWeight: FontWeight.w600,
-                                    color: Color(0xFF2c3e50),
-                                  ),
-                                ),
-                              ],
-                            ),
-                            const SizedBox(height: 16),
-                            ModernInputField(
-                              label: 'Buscar',
-                              hint: 'Nombre o correo electrónico',
-                              prefixIcon: const Icon(Icons.search_outlined),
-                              controller: _searchController,
-                              onChanged: (value) => setState(() {
-                                _searchValue = value;
-                              }),
-                              suffixIcon: _searchValue.isNotEmpty
-                                  ? IconButton(
-                                      icon: const Icon(Icons.clear),
-                                      onPressed: () {
-                                        _searchController.clear();
-                                        setState(() {
-                                          _searchValue = '';
-                                        });
-                                        _loadUsers();
-                                      },
-                                    )
-                                  : null,
-                            ),
-                            const SizedBox(height: 12),
-                            Row(
-                              children: [
-                                Expanded(
-                                  child: ModernButton(
-                                    text: 'Buscar',
-                                    icon: Icons.search,
-                                    isLoading: usersState.isLoading,
-                                    onPressed: usersState.isLoading
-                                        ? null
-                                        : () => _loadUsers(),
-                                  ),
-                                ),
-                                if (_searchValue.isNotEmpty) ...[
-                                  const SizedBox(width: 12),
-                                  Expanded(
-                                    child: ModernButton(
-                                      text: 'Limpiar',
-                                      icon: Icons.clear_all,
-                                      style: ModernButtonStyle.secondary,
-                                      onPressed: () {
-                                        _searchController.clear();
-                                        setState(() {
-                                          _searchValue = '';
-                                        });
-                                        _loadUsers();
-                                      },
-                                    ),
-                                  ),
-                                ],
-                              ],
-                            ),
-                          ],
-                        ),
-                      ),
                     ),
                   ),
                 ),
@@ -373,7 +372,64 @@ class _AdminUsersPageState extends ConsumerState<AdminUsersPage> {
   Future<void> _loadUsers() async {
     await ref.read(adminUsersListProvider.notifier).loadUsers(
           searchValue: _searchValue.trim().isEmpty ? null : _searchValue.trim(),
+          filterField: _roleFilter == 'all' ? null : 'role',
+          filterOperator: _roleFilter == 'all' ? null : 'eq',
+          filterValue: _roleFilter == 'all' ? null : _roleFilter,
         );
+  }
+
+  void _onSearchChanged(String value) {
+    _searchDebounce?.cancel();
+    _pendingSearchValue = value;
+    _searchDebounce = Timer(const Duration(milliseconds: 300), () {
+      _commitSearch();
+    });
+  }
+
+  void _commitSearch() {
+    if (_searchValue == _pendingSearchValue) return;
+    setState(() {
+      _searchValue = _pendingSearchValue;
+    });
+    _loadUsers();
+  }
+
+  void _showRoleFilterDialog() {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Filtrar por tipo de usuario'),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: _roleOptions.map((role) {
+            final label = role == 'all'
+                ? 'Todos'
+                : role == 'admin'
+                    ? 'Administradores'
+                    : role == 'operator'
+                        ? 'Operarios'
+                        : 'Usuarios';
+            return RadioListTile<String>(
+              title: Text(label),
+              value: role,
+              groupValue: _roleFilter,
+              onChanged: (value) {
+                if (value == null) return;
+                setState(() => _roleFilter = value);
+                Navigator.pop(context);
+                _loadUsers();
+              },
+            );
+          }).toList(),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Cancelar'),
+          ),
+        ],
+      ),
+    );
   }
 
   void _openUserForm(AdminUserFormArgs args) {

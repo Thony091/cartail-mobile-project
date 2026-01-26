@@ -42,6 +42,26 @@ class ModernAppTheme {
   static const Color backgroundLight = Color(0xFFf8fafc);
   static const Color borderLight = Color(0xFFe2e8f0);
 
+  // ==================== COLORES OSCUROS (DARK MODE) ====================
+
+  /// Fondo principal oscuro
+  static const Color darkBackground = Color(0xFF121212);
+
+  /// Superficie oscura (cards elevadas)
+  static const Color darkSurface = Color(0xFF1E1E1E);
+
+  /// Card más elevada
+  static const Color darkCard = Color(0xFF2C2C2C);
+
+  /// Texto principal oscuro
+  static const Color darkText = Color(0xFFE0E0E0);
+
+  /// Texto secundario oscuro
+  static const Color darkTextSecondary = Color(0xFFB0B0B0);
+
+  /// Borde oscuro
+  static const Color darkBorder = Color(0xFF3C3C3C);
+
   // ==================== GRADIENTES ====================
   
   /// Gradiente principal (púrpura)
@@ -330,6 +350,142 @@ class ModernAppTheme {
       // Divider
       dividerTheme: const DividerThemeData(
         color: borderLight,
+        thickness: 1,
+        space: 1,
+      ),
+    );
+  }
+
+  /// Genera el ThemeData para modo oscuro
+  ThemeData getDarkTheme() {
+    return ThemeData(
+      useMaterial3: true,
+      brightness: Brightness.dark,
+
+      // Colores principales
+      colorScheme: ColorScheme.fromSeed(
+        brightness: Brightness.dark,
+        seedColor: primaryBlue,
+        primary: primaryBlue,
+        secondary: purpleLight,
+        error: dangerRed,
+        surface: darkSurface,
+        background: darkBackground,
+      ),
+
+      // Scaffold
+      scaffoldBackgroundColor: darkBackground,
+
+      // AppBar
+      appBarTheme: const AppBarTheme(
+        elevation: 0,
+        centerTitle: true,
+        backgroundColor: darkCard,
+        foregroundColor: darkText,
+        titleTextStyle: TextStyle(
+          fontSize: 20,
+          fontWeight: FontWeight.w700,
+          color: darkText,
+        ),
+      ),
+
+      // Card
+      cardTheme: CardThemeData(
+        elevation: 0,
+        color: darkCard,
+        shape: const RoundedRectangleBorder(
+          borderRadius: cardRadius,
+        ),
+        shadowColor: Colors.black.withValues(alpha: .3),
+      ),
+
+      // Elevated Button
+      elevatedButtonTheme: ElevatedButtonThemeData(
+        style: ElevatedButton.styleFrom(
+          elevation: 0,
+          backgroundColor: primaryBlue,
+          foregroundColor: Colors.white,
+          padding: const EdgeInsets.symmetric(
+            horizontal: paddingLarge,
+            vertical: paddingMedium,
+          ),
+          shape: const RoundedRectangleBorder(
+            borderRadius: buttonRadius,
+          ),
+          textStyle: buttonText,
+        ),
+      ),
+
+      // Input Decoration
+      inputDecorationTheme: InputDecorationTheme(
+        filled: true,
+        fillColor: darkSurface,
+        border: const OutlineInputBorder(
+          borderRadius: inputRadius,
+          borderSide: BorderSide(color: darkBorder),
+        ),
+        enabledBorder: const OutlineInputBorder(
+          borderRadius: inputRadius,
+          borderSide: BorderSide(color: darkBorder),
+        ),
+        focusedBorder: const OutlineInputBorder(
+          borderRadius: inputRadius,
+          borderSide: BorderSide(color: primaryBlue, width: 2),
+        ),
+        errorBorder: const OutlineInputBorder(
+          borderRadius: inputRadius,
+          borderSide: BorderSide(color: dangerRed),
+        ),
+        contentPadding: const EdgeInsets.symmetric(
+          horizontal: paddingMedium,
+          vertical: paddingMedium,
+        ),
+        labelStyle: subtitle.copyWith(color: darkTextSecondary),
+        hintStyle: caption.copyWith(color: darkTextSecondary),
+      ),
+
+      // Floating Action Button
+      floatingActionButtonTheme: const FloatingActionButtonThemeData(
+        backgroundColor: primaryBlue,
+        foregroundColor: Colors.white,
+        elevation: 4,
+        shape: RoundedRectangleBorder(
+          borderRadius: buttonRadius,
+        ),
+      ),
+
+      // Chip
+      chipTheme: ChipThemeData(
+        backgroundColor: darkCard,
+        selectedColor: primaryBlue.withValues(alpha: .3),
+        labelStyle: caption.copyWith(color: darkText),
+        padding: const EdgeInsets.symmetric(
+          horizontal: paddingSmall,
+          vertical: paddingSmall,
+        ),
+        shape: const RoundedRectangleBorder(
+          borderRadius: chipRadius,
+        ),
+      ),
+
+      // Text Theme
+      textTheme: TextTheme(
+        displayLarge: titleLarge.copyWith(color: darkText),
+        displayMedium: titleMedium.copyWith(color: darkText),
+        displaySmall: titleSmall.copyWith(color: darkText),
+        headlineMedium: titleMedium.copyWith(color: darkText),
+        headlineSmall: titleSmall.copyWith(color: darkText),
+        titleLarge: titleSmall.copyWith(color: darkText),
+        titleMedium: subtitle.copyWith(color: darkText),
+        bodyLarge: bodyText.copyWith(color: darkText),
+        bodyMedium: bodyTextSecondary.copyWith(color: darkTextSecondary),
+        bodySmall: caption.copyWith(color: darkTextSecondary),
+        labelLarge: buttonText,
+      ),
+
+      // Divider
+      dividerTheme: const DividerThemeData(
+        color: darkBorder,
         thickness: 1,
         space: 1,
       ),

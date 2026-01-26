@@ -5,6 +5,9 @@ import 'package:intl/intl.dart';
 import '../../../../config/services/error_handler_service.dart';
 import '../../../../presentation/presentation_container.dart';
 import '../../../auth/presentation/providers/better_auth_provider.dart';
+import '../../../slot/domain/entities/slot.dart';
+import '../../../slot/presentation/providers/slot_repository_provider.dart';
+// import '../../../ticket/presentation/providers/tickets_provider.dart';
 
 final reservationFormProvider = StateNotifierProvider.autoDispose<ReservationFormNotifier, ReservationFormState>((ref) {
   final createReservationCallback = ref.watch(reservationProvider.notifier).createReservation;
@@ -61,8 +64,13 @@ class ReservationFormNotifier extends StateNotifier<ReservationFormState>{
     final newDate = ReservationDate.dirty(DateFormat('yyyy-MM-dd').format(value));
     state = state.copyWith(
       date: newDate,
-      isValid: Formz.validate([newDate, state.date])
+      isValid: Formz.validate([newDate, state.date]),
+      clearSelectedSlotId: true,
+      time: const ReservationTime.pure(),
+      endTimeEstimated: const ReservationTime.pure(),
+      slotErrorMessage: null,
     );
+    _loadAvailableSlots();
   }
 
   onReservationTime( String value) {
@@ -105,7 +113,21 @@ class ReservationFormNotifier extends StateNotifier<ReservationFormState>{
 
   onServiceIdChange( String value ) {
     state = state.copyWith(
-      serviceId: value
+      serviceId: value,
+      clearSelectedSlotId: true,
+      time: const ReservationTime.pure(),
+      endTimeEstimated: const ReservationTime.pure(),
+      slotErrorMessage: null,
+    );
+    _loadAvailableSlots();
+  }
+
+  void onSlotSelected(Slot slot) {
+    state = state.copyWith(
+      selectedSlotId: slot.id,
+      time: ReservationTime.dirty(_normalizeSlotTime(slot.startTime)),
+      endTimeEstimated: ReservationTime.dirty(_normalizeSlotTime(slot.endTime)),
+      slotErrorMessage: null,
     );
   }
 
@@ -118,27 +140,46 @@ class ReservationFormNotifier extends StateNotifier<ReservationFormState>{
       state = state.copyWith(isFormPosted: true);
       _touchEveryField();
 
-      if ( !state.isValid || state.serviceId.isEmpty ) return false;
+      if ( !state.isValid || state.serviceId.isEmpty || state.selectedSlotId == null ) {
+        if (state.selectedSlotId == null) {
+          state = state.copyWith(
+            slotErrorMessage: 'Debes seleccionar un horario disponible',
+          );
+        }
+        return false;
+      }
 
       state = state.copyWith( isPosting: true );
 
       final clientId = await _ensureClientId();
       if (clientId == null) return false;
 
+      final slotRepository = ref.read(slotRepositoryProvider);
+      final slot = await slotRepository.getSlotById(state.selectedSlotId!);
+      if (!slot.isAvailable) {
+        state = state.copyWith(
+          isPosting: false,
+          slotErrorMessage: 'El horario seleccionado ya no está disponible.',
+          clearSelectedSlotId: true,
+        );
+        await _loadAvailableSlots(force: true);
+        return false;
+      }
+
       final reservationSimilar = {
         'patenteVehiculo': state.vehiclePlate.value,
-        'fecha': _buildReservationDateTime(),
-        'horaInicio': state.time.value,
-        'horaFinEstimada': state.endTimeEstimated.value,
         'notasCliente': state.customerNotes.value,
-        'notasMecanico': state.mechanicNotes.value,
         'recordatorio': state.reminder,
         'idEstado': state.statusId,
         'idServicio': int.tryParse(state.serviceId) ?? state.statusId,
         'idCliente': clientId,
+        'idSlot': slot.id,
       };
 
       final created = await createReservationCallback(reservationSimilar);
+      if (created) {
+        await ref.read(ticketsProvider.notifier).getTickets();
+      }
 
       state = state.copyWith( isPosting: false );
 
@@ -195,22 +236,11 @@ class ReservationFormNotifier extends StateNotifier<ReservationFormState>{
     return client.id;
   }
 
-  String _buildReservationDateTime() {
-    final date = state.date.value;
-    final time = state.time.value;
-    if (date.isEmpty) return date;
-    if (time.isEmpty) return date;
-    return '${date}T${_buildNormalizedTime(time)}';
-  }
-
-  String _buildNormalizedTime(String value) {
+  String _normalizeSlotTime(String value) {
     if (value.isEmpty) return value;
     final parts = value.split(':');
-    if (parts.length == 2) {
-      return '${parts[0].padLeft(2, '0')}:${parts[1].padLeft(2, '0')}:00';
-    }
-    if (parts.length == 3) {
-      return '${parts[0].padLeft(2, '0')}:${parts[1].padLeft(2, '0')}:${parts[2].padLeft(2, '0')}';
+    if (parts.length >= 2) {
+      return '${parts[0].padLeft(2, '0')}:${parts[1].padLeft(2, '0')}';
     }
     return value;
   }
@@ -258,6 +288,54 @@ class ReservationFormNotifier extends StateNotifier<ReservationFormState>{
     state = ReservationFormState();
   }
 
+  Future<void> _loadAvailableSlots({bool force = false}) async {
+    if (state.serviceId.isEmpty || state.date.value.isEmpty || !state.date.isValid) {
+      return;
+    }
+    if (state.isLoadingSlots && !force) return;
+
+    state = state.copyWith(isLoadingSlots: true, slotErrorMessage: null);
+    try {
+      final serviceId = int.tryParse(state.serviceId);
+      if (serviceId == null) {
+        state = state.copyWith(isLoadingSlots: false);
+        return;
+      }
+      final slotRepository = ref.read(slotRepositoryProvider);
+      final slots = await slotRepository.getSlots();
+      final dateKey = state.date.value.substring(0, 10);
+      final available = slots
+          .where(
+            (slot) =>
+                slot.serviceId == serviceId &&
+                slot.isAvailable &&
+                slot.date.startsWith(dateKey),
+          )
+          .toList()
+        ..sort((a, b) => a.startTime.compareTo(b.startTime));
+
+      final selected = state.selectedSlotId;
+      final selectedExists =
+          selected != null && available.any((slot) => slot.id == selected);
+
+      state = state.copyWith(
+        isLoadingSlots: false,
+        availableSlots: available,
+        selectedSlotId: selectedExists ? selected : null,
+        clearSelectedSlotId: !selectedExists,
+        time: selectedExists ? state.time : const ReservationTime.pure(),
+        endTimeEstimated:
+            selectedExists ? state.endTimeEstimated : const ReservationTime.pure(),
+        timeOptions: available.map((slot) => slot.startTime).toList(),
+      );
+    } catch (e) {
+      state = state.copyWith(
+        isLoadingSlots: false,
+        slotErrorMessage: 'No se pudieron cargar los horarios.',
+      );
+    }
+  }
+
 
 }
 
@@ -281,6 +359,10 @@ class ReservationFormState {
   final Phone clientPhone;
   final List<String> timeOptions;
   final String? errorMessage;
+  final List<Slot> availableSlots;
+  final int? selectedSlotId;
+  final bool isLoadingSlots;
+  final String? slotErrorMessage;
 
   ReservationFormState({
     this.isPosting      = false,
@@ -301,6 +383,10 @@ class ReservationFormState {
     this.clientPhone    = const Phone.pure(),
     this.timeOptions    = const [],
     this.errorMessage,
+    this.availableSlots = const [],
+    this.selectedSlotId,
+    this.isLoadingSlots = false,
+    this.slotErrorMessage,
   });
 
   ReservationFormState copyWith({
@@ -322,6 +408,11 @@ class ReservationFormState {
     Phone? clientPhone,
     List<String>? timeOptions,
     String? errorMessage,
+    List<Slot>? availableSlots,
+    int? selectedSlotId,
+    bool? isLoadingSlots,
+    String? slotErrorMessage,
+    bool clearSelectedSlotId = false,
   }) => ReservationFormState(
     isPosting: isPosting ?? this.isPosting,
     isFormPosted: isFormPosted ?? this.isFormPosted,
@@ -341,6 +432,10 @@ class ReservationFormState {
     clientPhone: clientPhone ?? this.clientPhone,
     timeOptions: timeOptions ?? this.timeOptions,
     errorMessage: errorMessage ?? this.errorMessage,
+    availableSlots: availableSlots ?? this.availableSlots,
+    selectedSlotId: clearSelectedSlotId ? null : (selectedSlotId ?? this.selectedSlotId),
+    isLoadingSlots: isLoadingSlots ?? this.isLoadingSlots,
+    slotErrorMessage: slotErrorMessage ?? this.slotErrorMessage,
   );
 
   @override
@@ -365,6 +460,10 @@ class ReservationFormState {
         clientPhone: $clientPhone
         timeOptions: $timeOptions
         errorMessage: $errorMessage
+        availableSlots: ${availableSlots.length}
+        selectedSlotId: $selectedSlotId
+        isLoadingSlots: $isLoadingSlots
+        slotErrorMessage: $slotErrorMessage
       ''';
   }
 

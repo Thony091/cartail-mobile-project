@@ -16,6 +16,7 @@ class ReservationModel {
   final int? statusId;
   final int? serviceId;
   final int? clientId;
+  final int? slotId;
 
   ReservationModel({
     required this.id,
@@ -33,6 +34,7 @@ class ReservationModel {
     this.statusId,
     this.serviceId,
     this.clientId,
+    this.slotId,
   });
 
   factory ReservationModel.fromJson(Map<String, dynamic> json) {
@@ -68,6 +70,7 @@ class ReservationModel {
       statusId: json['idEstado'] != null ? _parseInt(json['idEstado']) : null,
       serviceId: json['idServicio'] != null ? _parseInt(json['idServicio']) : null,
       clientId: json['idCliente'] != null ? _parseInt(json['idCliente']) : null,
+      slotId: json['idSlot'] != null ? _parseInt(json['idSlot']) : null,
     );
   }
 
@@ -87,6 +90,7 @@ class ReservationModel {
       if (statusId != null) 'idEstado': statusId,
       if (serviceId != null) 'idServicio': serviceId,
       if (clientId != null) 'idCliente': clientId,
+      if (slotId != null) 'idSlot': slotId,
     };
   }
 
@@ -107,6 +111,7 @@ class ReservationModel {
       statusId: statusId,
       serviceId: serviceId,
       clientId: clientId,
+      slotId: slotId,
     );
   }
 
@@ -127,6 +132,7 @@ class ReservationModel {
       statusId: reservation.statusId,
       serviceId: reservation.serviceId,
       clientId: reservation.clientId,
+      slotId: reservation.slotId,
     );
   }
 

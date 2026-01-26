@@ -9,6 +9,7 @@ import 'package:portafolio_project/features/services/presentation/providers/serv
 import 'package:portafolio_project/features/shared/presentation/shared/widgets/modern_button.dart';
 import 'package:portafolio_project/features/shared/presentation/shared/widgets/modern_card.dart';
 import '../../../shared/presentation/shared/services/camera/camera_gallery_service_impl.dart';
+import 'service_image_utils.dart';
 
 class ServiceImageGallery extends ConsumerWidget {
   final Services service;
@@ -35,7 +36,7 @@ class ServiceImageGallery extends ConsumerWidget {
 
   Widget _buildImageWidget(String imagePath) {
     // Verificar si es una URL o una ruta local
-    if (imagePath.startsWith('http') || imagePath.startsWith('https')) {
+    if (isValidNetworkImageUrl(imagePath)) {
       return Image.network(
         imagePath,
         fit: BoxFit.cover,
@@ -47,19 +48,18 @@ class ServiceImageGallery extends ConsumerWidget {
           );
         },
       );
-    } else {
-      return Image.file(
-        File(imagePath),
-        fit: BoxFit.cover,
-        width: double.infinity,
-        height: double.infinity,
-        errorBuilder: (context, error, stackTrace) {
-          return const Center(
-            child: Icon(Icons.broken_image, size: 64, color: Colors.grey),
-          );
-        },
-      );
     }
+    return Image.file(
+      File(imagePath),
+      fit: BoxFit.cover,
+      width: double.infinity,
+      height: double.infinity,
+      errorBuilder: (context, error, stackTrace) {
+        return const Center(
+          child: Icon(Icons.broken_image, size: 64, color: Colors.grey),
+        );
+      },
+    );
   }
 
   @override

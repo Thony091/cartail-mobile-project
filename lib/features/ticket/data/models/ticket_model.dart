@@ -44,11 +44,14 @@ class TicketModel {
   factory TicketModel.fromJson(Map<String, dynamic> json) {
     return TicketModel(
       id: json['id']?.toString() ?? '',
-      userId: json['id_user']?.toString() ?? json['userId']?.toString() ?? '',
-      userName: json['nombre'] as String? ?? json['userName'] as String? ?? '',
+      userId: json['id_cliente']?.toString() ??
+          json['idCliente']?.toString() ??
+          json['userId']?.toString() ??
+          '',
+      userName: json['clienteNombre'] as String? ?? json['userName'] as String? ?? '',
       type: TicketType.fromJson(json['type'] as String? ?? 'reservation'),
       status: _statusFromId(_parseInt(json['id_estado'])),
-      assignedToId: json['assignedToId']?.toString(),
+      assignedToId: json['id_user']?.toString() ?? json['assignedToId']?.toString(),
       assignedToName: json['assignedToName'] as String?,
       createdAt: json['createdAt'] != null
         ? DateTime.parse(json['createdAt'] as String)
@@ -71,7 +74,7 @@ class TicketModel {
   Map<String, dynamic> toJson() {
     return {
       'id': id,
-      'id_user': userId,
+      'id_user': assignedToId ?? userId,
       'nombre': title,
       'description': description,
       'desde': startDate,
@@ -80,8 +83,6 @@ class TicketModel {
       'id_estado': stateId,
       'id_importancia': importanceId,
       'id_urgencia': urgencyId,
-      if (assignedToId != null) 'assignedToId': assignedToId,
-      if (assignedToName != null) 'assignedToName': assignedToName,
       'metadata': metadata,
     };
   }

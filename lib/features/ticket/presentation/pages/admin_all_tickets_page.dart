@@ -2,10 +2,14 @@ import 'package:flutter/material.dart' hide FilterChip;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../presentation/pages/auth/modern_scaffold_with_drawer.dart';
 import 'widgets/ticket_widgets.dart';
-import '../../../state/presentation/providers/states_provider.dart';
 import '../providers/tickets_provider.dart';
 import '../providers/operator_users_provider.dart';
 import '../../domain/entities/ticket.dart';
+import '../providers/ticket_lookups_provider.dart';
+import '../../../services/presentation/providers/services_provider.dart';
+import '../../../shared/domain/entities/state.dart' as lookup;
+import '../../../services/domain/entities/services.dart';
+import '../../../auth/data/models/admin_response_models.dart';
 
 /// Página para que el administrador vea todos los tickets del sistema
 class AdminAllTicketsPage extends ConsumerStatefulWidget {
@@ -18,26 +22,110 @@ class AdminAllTicketsPage extends ConsumerStatefulWidget {
 }
 
 class AdminAllTicketsPageState extends ConsumerState<AdminAllTicketsPage> {
-  String _filterStatus = 'all';
-  String _filterType = 'all';
+  final TextEditingController _searchController = TextEditingController();
+  final FocusNode _searchFocusNode = FocusNode();
+
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      ref.read(operatorUsersProvider.notifier).loadOperators();
+    });
+  }
+
+  @override
+  void dispose() {
+    _searchController.dispose();
+    _searchFocusNode.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
     final ticketsState = ref.watch(ticketsProvider);
-    final filteredTickets = _filterTickets(ticketsState.tickets);
+    final filtersState = ref.watch(ticketsFiltersProvider);
+    final filtersNotifier = ref.read(ticketsFiltersProvider.notifier);
+    final lookupsState = ref.watch(ticketLookupsProvider);
+    final servicesState = ref.watch(servicesProvider);
+    final operatorsState = ref.watch(operatorUsersProvider);
+    final filteredTickets = _filterTickets(
+      ticketsState.tickets,
+      filtersState,
+    );
     final stats = _buildStats(ticketsState.tickets);
+
+    if (filtersState.isSearching && !_searchFocusNode.hasFocus) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted) _searchFocusNode.requestFocus();
+      });
+    }
 
     return ModernScaffoldWithDrawer(
       title: 'Gestión de Tickets',
+      titleWidget: filtersState.isSearching
+          ? Align(
+              alignment: Alignment.centerLeft,
+              child: Container(
+                height: 36,
+                padding: const EdgeInsets.symmetric(horizontal: 12),
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(18),
+                  border: Border.all(
+                    color: const Color(0xFF3498db).withValues(alpha: 0.6),
+                  ),
+                ),
+                child: Center(
+                  child: TextField(
+                    controller: _searchController,
+                    focusNode: _searchFocusNode,
+                    autofocus: true,
+                    cursorColor: const Color(0xFF2c3e50),
+                    keyboardAppearance: Brightness.light,
+                    textInputAction: TextInputAction.search,
+                    onChanged: filtersNotifier.setSearchQuery,
+                    style: const TextStyle(
+                      color: Color(0xFF2c3e50),
+                      fontSize: 15,
+                      fontWeight: FontWeight.w600,
+                    ),
+                    decoration: const InputDecoration(
+                      hintText: 'Buscar ticket...',
+                      hintStyle: TextStyle(color: Color(0xFF7f8c8d)),
+                      border: InputBorder.none,
+                      isDense: true,
+                      contentPadding: EdgeInsets.zero,
+                    ),
+                  ),
+                ),
+              ),
+            )
+          : null,
       appBarActions: [
-        IconButton(
-          icon: const Icon(Icons.search, color: Colors.white),
-          onPressed: () => _showSearchDialog(context),
-        ),
-        IconButton(
-          icon: const Icon(Icons.filter_list, color: Colors.white),
-          onPressed: () => _showFilterDialog(context),
-        ),
+        if (filtersState.isSearching)
+          IconButton(
+            icon: const Icon(Icons.close, color: Colors.white),
+            onPressed: () {
+              filtersNotifier.stopSearch();
+              _searchController.clear();
+              _searchFocusNode.unfocus();
+            },
+          )
+        else ...[
+          IconButton(
+            icon: const Icon(Icons.search, color: Colors.white),
+            onPressed: () {
+              filtersNotifier.startSearch();
+              WidgetsBinding.instance.addPostFrameCallback((_) {
+                _searchFocusNode.requestFocus();
+              });
+            },
+          ),
+          IconButton(
+            icon: const Icon(Icons.filter_list, color: Colors.white),
+            onPressed: () => _showFilterDialog(context),
+          ),
+        ],
       ],
       body: Column(
         children: [
@@ -52,8 +140,8 @@ class AdminAllTicketsPageState extends ConsumerState<AdminAllTicketsPage> {
 
           // Filtros rápidos
           QuickFiltersSection(
-            filterStatus: _filterStatus,
-            onFilterChanged: (value) => setState(() => _filterStatus = value),
+            filterStatus: filtersState.filterStatus,
+            onFilterChanged: filtersNotifier.setFilterStatus,
           ),
 
           const SizedBox(height: 16),
@@ -62,7 +150,14 @@ class AdminAllTicketsPageState extends ConsumerState<AdminAllTicketsPage> {
           Expanded(
             child: ticketsState.isLoading
                 ? const Center(child: CircularProgressIndicator())
-                : AdminTicketsList(tickets: filteredTickets),
+                : AdminTicketsList(
+                    tickets: filteredTickets,
+                    ticketStates: lookupsState.estados,
+                    ticketImportances: lookupsState.importancias,
+                    ticketUrgencies: lookupsState.urgencias,
+                    services: servicesState.services,
+                    // operators: operatorsState.operators,
+                  ),
           ),
         ],
       ),
@@ -92,10 +187,13 @@ class AdminAllTicketsPageState extends ConsumerState<AdminAllTicketsPage> {
     );
   }
 
-  List<Ticket> _filterTickets(List<Ticket> tickets) {
+  List<Ticket> _filterTickets(
+    List<Ticket> tickets,
+    TicketsFiltersState filtersState,
+  ) {
     return tickets.where((ticket) {
       final stateId = ticket.stateId ?? 1;
-      final matchesStatus = switch (_filterStatus) {
+      final matchesStatus = switch (filtersState.filterStatus) {
         'pending' => stateId == 1,
         'assigned' => stateId == 2,
         'inProgress' => stateId == 3,
@@ -103,84 +201,187 @@ class AdminAllTicketsPageState extends ConsumerState<AdminAllTicketsPage> {
         _ => true,
       };
 
-      final matchesType = switch (_filterType) {
+      final matchesType = switch (filtersState.filterType) {
         'reservation' => ticket.type == TicketType.reservation,
         'purchase' => ticket.type == TicketType.purchase,
         'order' => ticket.type == TicketType.order,
         _ => true,
       };
 
-      return matchesStatus && matchesType;
-    }).toList();
-  }
+      final matchesState =
+          filtersState.stateId == null || ticket.stateId == filtersState.stateId;
+      final matchesImportance = filtersState.importanceId == null ||
+          ticket.importanceId == filtersState.importanceId;
+      final matchesUrgency = filtersState.urgencyId == null ||
+          ticket.urgencyId == filtersState.urgencyId;
+      final matchesService = filtersState.serviceId == null ||
+          ticket.serviceId == filtersState.serviceId;
 
-  void _showSearchDialog(BuildContext context) {
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Buscar Ticket'),
-        content: const TextField(
-          decoration: InputDecoration(
-            hintText: 'ID de ticket o nombre de cliente',
-            prefixIcon: Icon(Icons.search),
-          ),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text('Cancelar'),
-          ),
-          ElevatedButton(
-            onPressed: () {
-              Navigator.pop(context);
-              // TODO: Aplicar búsqueda
-            },
-            child: const Text('Buscar'),
-          ),
-        ],
-      ),
-    );
+      final range = filtersState.dateRange;
+      final ticketDate = DateTime.tryParse(ticket.startDate);
+      final matchesDate = range == null || ticketDate == null
+          ? true
+          : !(ticketDate.isBefore(range.start) ||
+              ticketDate.isAfter(range.end));
+
+      final query = filtersState.searchQuery.trim().toLowerCase();
+      final matchesSearch =
+          query.isEmpty ||
+          ticket.id.toLowerCase().contains(query) ||
+          ticket.userName.toLowerCase().contains(query) ||
+          ticket.title.toLowerCase().contains(query) ||
+          ticket.description.toLowerCase().contains(query);
+
+      return matchesStatus &&
+          matchesType &&
+          matchesSearch &&
+          matchesState &&
+          matchesImportance &&
+          matchesUrgency &&
+          matchesService &&
+          matchesDate;
+    }).toList()
+      ..sort((a, b) {
+        final aDate = DateTime.tryParse(a.startDate) ?? DateTime.fromMillisecondsSinceEpoch(0);
+        final bDate = DateTime.tryParse(b.startDate) ?? DateTime.fromMillisecondsSinceEpoch(0);
+        return bDate.compareTo(aDate);
+      });
   }
 
   void _showFilterDialog(BuildContext context) {
+    final filtersNotifier = ref.read(ticketsFiltersProvider.notifier);
+    final filtersState = ref.read(ticketsFiltersProvider);
+    final lookupsState = ref.read(ticketLookupsProvider);
+    final servicesState = ref.read(servicesProvider);
     showDialog(
       context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Filtros Avanzados'),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            DropdownButtonFormField<String>(
-              value: _filterType,
-              decoration: const InputDecoration(labelText: 'Tipo de Ticket'),
-              items: const [
-                DropdownMenuItem(value: 'all', child: Text('Todos')),
-                DropdownMenuItem(value: 'reservation', child: Text('Reservas')),
-                DropdownMenuItem(value: 'purchase', child: Text('Compras')),
-                DropdownMenuItem(value: 'order', child: Text('Pedidos')),
-              ],
-              onChanged: (value) {
-                if (value != null) {
-                  setState(() => _filterType = value);
-                }
-              },
+      builder: (context) {
+        DateTimeRange? selectedRange = filtersState.dateRange;
+        return StatefulBuilder(
+          builder: (context, setState) => AlertDialog(
+            title: const Text('Filtros Avanzados'),
+            content: SingleChildScrollView(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  DropdownButtonFormField<String>(
+                    value: filtersState.filterType,
+                    decoration: const InputDecoration(labelText: 'Tipo de Ticket'),
+                    items: const [
+                      DropdownMenuItem(value: 'all', child: Text('Todos')),
+                      DropdownMenuItem(value: 'reservation', child: Text('Reservas')),
+                      DropdownMenuItem(value: 'purchase', child: Text('Compras')),
+                      DropdownMenuItem(value: 'order', child: Text('Pedidos')),
+                    ],
+                    onChanged: (value) {
+                      if (value != null) {
+                        filtersNotifier.setFilterType(value);
+                      }
+                    },
+                  ),
+                  const SizedBox(height: 12),
+                  DropdownButtonFormField<int?>(
+                    value: filtersState.stateId,
+                    decoration: const InputDecoration(labelText: 'Estado'),
+                    items: [
+                      const DropdownMenuItem(value: null, child: Text('Todos')),
+                      ...lookupsState.estados.map(
+                        (state) => DropdownMenuItem(
+                          value: state.id,
+                          child: Text(state.name),
+                        ),
+                      ),
+                    ],
+                    onChanged: (value) {
+                      filtersNotifier.setStateFilter(value);
+                    },
+                  ),
+                  const SizedBox(height: 12),
+                  DropdownButtonFormField<int?>(
+                    value: filtersState.importanceId,
+                    decoration: const InputDecoration(labelText: 'Importancia'),
+                    items: [
+                      const DropdownMenuItem(value: null, child: Text('Todas')),
+                      ...lookupsState.importancias.map(
+                        (state) => DropdownMenuItem(
+                          value: state.id,
+                          child: Text(state.name),
+                        ),
+                      ),
+                    ],
+                    onChanged: (value) {
+                      filtersNotifier.setImportanceFilter(value);
+                    },
+                  ),
+                  const SizedBox(height: 12),
+                  DropdownButtonFormField<int?>(
+                    value: filtersState.urgencyId,
+                    decoration: const InputDecoration(labelText: 'Urgencia'),
+                    items: [
+                      const DropdownMenuItem(value: null, child: Text('Todas')),
+                      ...lookupsState.urgencias.map(
+                        (state) => DropdownMenuItem(
+                          value: state.id,
+                          child: Text(state.name),
+                        ),
+                      ),
+                    ],
+                    onChanged: (value) {
+                      filtersNotifier.setUrgencyFilter(value);
+                    },
+                  ),
+                  const SizedBox(height: 12),
+                  DropdownButtonFormField<int?>(
+                    value: filtersState.serviceId,
+                    decoration: const InputDecoration(labelText: 'Servicio'),
+                    items: [
+                      const DropdownMenuItem(value: null, child: Text('Todos')),
+                      ...servicesState.services.map(
+                        (service) => DropdownMenuItem(
+                          value: int.tryParse(service.id),
+                          child: Text(service.name),
+                        ),
+                      ),
+                    ],
+                    onChanged: (value) {
+                      filtersNotifier.setServiceFilter(value);
+                    },
+                  ),
+                  const SizedBox(height: 12),
+                  ListTile(
+                    contentPadding: EdgeInsets.zero,
+                    title: const Text('Rango de fechas'),
+                    subtitle: Text(
+                      selectedRange == null
+                          ? 'Todas'
+                          : '${selectedRange!.start.toString().substring(0, 10)} - ${selectedRange!.end.toString().substring(0, 10)}',
+                    ),
+                    trailing: const Icon(Icons.date_range),
+                    onTap: () async {
+                      final picked = await showDateRangePicker(
+                        context: context,
+                        firstDate: DateTime(2020),
+                        lastDate: DateTime.now().add(const Duration(days: 365)),
+                        initialDateRange: selectedRange,
+                      );
+                      if (picked != null) {
+                        setState(() => selectedRange = picked);
+                        filtersNotifier.setDateRange(picked);
+                      }
+                    },
+                  ),
+                ],
+              ),
             ),
-          ],
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text('Cancelar'),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(context),
+                child: const Text('Cerrar'),
+              ),
+            ],
           ),
-          ElevatedButton(
-            onPressed: () {
-              Navigator.pop(context);
-              // TODO: Aplicar filtros
-            },
-            child: const Text('Aplicar'),
-          ),
-        ],
-      ),
+        );
+      },
     );
   }
 }
@@ -224,7 +425,7 @@ class TicketStatisticsSection extends StatelessWidget {
               color: Colors.orange,
             ),
           ),
-          SizedBox(width: 12),
+          const SizedBox(width: 12),
           Expanded(
             child: StatisticCard(
               title: 'En Progreso',
@@ -233,7 +434,7 @@ class TicketStatisticsSection extends StatelessWidget {
               color: Colors.blue,
             ),
           ),
-          SizedBox(width: 12),
+          const SizedBox(width: 12),
           Expanded(
             child: StatisticCard(
               title: 'Completados',
@@ -304,30 +505,114 @@ class QuickFiltersSection extends StatelessWidget {
 /// Lista de tickets para administrador
 class AdminTicketsList extends StatelessWidget {
   final List<Ticket> tickets;
+  final List<lookup.State> ticketStates;
+  final List<lookup.State> ticketImportances;
+  final List<lookup.State> ticketUrgencies;
+  final List<Services> services;
 
-  const AdminTicketsList({super.key, required this.tickets});
+  const AdminTicketsList({
+    super.key,
+    required this.tickets,
+    required this.ticketStates,
+    required this.ticketImportances,
+    required this.ticketUrgencies,
+    required this.services,
+  });
 
   @override
   Widget build(BuildContext context) {
     if (tickets.isEmpty) {
       return const Center(child: Text('No hay tickets'));
     }
-    return ListView.builder(
+    final unassigned = tickets
+        .where((ticket) => ticket.assignedToId == null || ticket.assignedToId!.isEmpty)
+        .toList();
+    final assigned = tickets
+        .where((ticket) => ticket.assignedToId != null && ticket.assignedToId!.isNotEmpty)
+        .toList();
+
+    return ListView(
       padding: const EdgeInsets.all(16),
-      itemCount: tickets.length,
-      itemBuilder: (context, index) {
-        return AdminTicketCard(ticket: tickets[index], index: index);
-      },
+      children: [
+        _SectionHeader(title: 'Sin asignar', count: unassigned.length),
+        ...unassigned.map(
+          (ticket) => AdminTicketCard(
+            ticket: ticket,
+            ticketStates: ticketStates,
+            ticketImportances: ticketImportances,
+            ticketUrgencies: ticketUrgencies,
+            services: services,
+          ),
+        ),
+        const SizedBox(height: 16),
+        _SectionHeader(title: 'Asignados', count: assigned.length),
+        ...assigned.map(
+          (ticket) => AdminTicketCard(
+            ticket: ticket,
+            ticketStates: ticketStates,
+            ticketImportances: ticketImportances,
+            ticketUrgencies: ticketUrgencies,
+            services: services,
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+class _SectionHeader extends StatelessWidget {
+  final String title;
+  final int count;
+
+  const _SectionHeader({
+    required this.title,
+    required this.count,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 8),
+      child: Row(
+        children: [
+          Text(
+            title,
+            style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w700),
+          ),
+          const SizedBox(width: 8),
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+            decoration: BoxDecoration(
+              color: Colors.blueGrey.shade50,
+              borderRadius: BorderRadius.circular(12),
+            ),
+            child: Text(
+              count.toString(),
+              style: const TextStyle(fontSize: 12, color: Colors.black54),
+            ),
+          ),
+        ],
+      ),
     );
   }
 }
 
 /// Tarjeta de ticket para vista de administrador
 class AdminTicketCard extends ConsumerStatefulWidget {
-  final int index;
   final Ticket ticket;
+  final List<lookup.State> ticketStates;
+  final List<lookup.State> ticketImportances;
+  final List<lookup.State> ticketUrgencies;
+  final List<Services> services;
 
-  const AdminTicketCard({super.key, required this.index, required this.ticket});
+  const AdminTicketCard({
+    super.key,
+    required this.ticket,
+    required this.ticketStates,
+    required this.ticketImportances,
+    required this.ticketUrgencies,
+    required this.services,
+  });
 
   @override
   ConsumerState<AdminTicketCard> createState() => _AdminTicketCardState();
@@ -335,13 +620,17 @@ class AdminTicketCard extends ConsumerStatefulWidget {
 
 class _AdminTicketCardState extends ConsumerState<AdminTicketCard> {
   late int _selectedStateId;
+  late int _selectedImportanceId;
+  late int _selectedUrgencyId;
   late Ticket _ticket;
 
   @override
   void initState() {
     super.initState();
     _ticket = widget.ticket;
-    _selectedStateId = widget.ticket.stateId ?? ((widget.index % 5) + 1);
+    _selectedStateId = widget.ticket.stateId ?? 1;
+    _selectedImportanceId = widget.ticket.importanceId ?? 1;
+    _selectedUrgencyId = widget.ticket.urgencyId ?? 1;
   }
 
   Future<void> _showAssignOperatorDialog(BuildContext context) async {
@@ -486,13 +775,36 @@ class _AdminTicketCardState extends ConsumerState<AdminTicketCard> {
 
   @override
   Widget build(BuildContext context) {
-    final states = ref.watch(statesProvider);
-    final selectedStateName = states
+    final states = widget.ticketStates;
+    final hasStates = states.isNotEmpty;
+    final hasImportances = widget.ticketImportances.isNotEmpty;
+    final hasUrgencies = widget.ticketUrgencies.isNotEmpty;
+    final selectedStateName = states.isEmpty
+        ? 'Estado'
+        : states
             .firstWhere(
               (state) => state.id == _selectedStateId,
               orElse: () => states.first,
             )
             .name;
+    final serviceName = widget.services
+        .firstWhere(
+          (service) => int.tryParse(service.id) == _ticket.serviceId,
+          orElse: () => widget.services.isNotEmpty
+              ? widget.services.first
+              : Services(
+                  id: '',
+                  name: '',
+                  description: '',
+                  minPrice: 0,
+                  maxPrice: 0,
+                  durationMinutes: 0,
+                  requiresReservation: true,
+                  isActive: true,
+                  images: const [],
+                ),
+        )
+        .name;
     return Card(
       margin: const EdgeInsets.only(bottom: 12),
       elevation: 2,
@@ -515,7 +827,7 @@ class _AdminTicketCardState extends ConsumerState<AdminTicketCard> {
                     color: _getStatusColor(_selectedStateId),
                   ),
                   const SizedBox(width: 8),
-                  TypeBadge(label: _getTypeLabel(widget.ticket.type)),
+                  TypeBadge(label: serviceName.isNotEmpty ? serviceName : _getTypeLabel(widget.ticket.type)),
                   const Spacer(),
                   Text(
                     'Ticket #${_ticket.id}',
@@ -535,7 +847,7 @@ class _AdminTicketCardState extends ConsumerState<AdminTicketCard> {
                   const SizedBox(width: 12),
                   Expanded(
                     child: DropdownButton<int>(
-                      value: _selectedStateId,
+                      value: hasStates ? _selectedStateId : null,
                       isExpanded: true,
                       items: states
                           .map(
@@ -545,10 +857,15 @@ class _AdminTicketCardState extends ConsumerState<AdminTicketCard> {
                             ),
                           )
                           .toList(),
-                      onChanged: (value) {
+                      onChanged: !hasStates
+                          ? null
+                          : (value) {
                         if (value == null) return;
-                        setState(() => _selectedStateId = value);
-                        ref.read(ticketsProvider.notifier).updateTicketStatus(
+                        setState(() {
+                          _selectedStateId = value;
+                          _ticket = _ticket.copyWith(stateId: value);
+                        });
+                        ref.read(ticketsProvider.notifier).updateTicketPriority(
                           ticket: _ticket,
                           stateId: value,
                         );
@@ -558,6 +875,84 @@ class _AdminTicketCardState extends ConsumerState<AdminTicketCard> {
                               'Estado actualizado a ${states.firstWhere((s) => s.id == value, orElse: () => states.first).name}',
                             ),
                           ),
+                        );
+                      },
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 12),
+              Row(
+                children: [
+                  const Icon(Icons.priority_high, size: 16, color: Colors.grey),
+                  const SizedBox(width: 6),
+                  const Text(
+                    'Importancia:',
+                    style: TextStyle(fontSize: 13, color: Colors.grey),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: DropdownButton<int>(
+                      value: hasImportances ? _selectedImportanceId : null,
+                      isExpanded: true,
+                      items: widget.ticketImportances
+                          .map(
+                            (state) => DropdownMenuItem(
+                              value: state.id,
+                              child: Text(state.name),
+                            ),
+                          )
+                          .toList(),
+                      onChanged: !hasImportances
+                          ? null
+                          : (value) {
+                        if (value == null) return;
+                        setState(() {
+                          _selectedImportanceId = value;
+                          _ticket = _ticket.copyWith(importanceId: value);
+                        });
+                        ref.read(ticketsProvider.notifier).updateTicketPriority(
+                          ticket: _ticket,
+                          importanceId: value,
+                        );
+                      },
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 12),
+              Row(
+                children: [
+                  const Icon(Icons.warning_amber, size: 16, color: Colors.grey),
+                  const SizedBox(width: 6),
+                  const Text(
+                    'Urgencia:',
+                    style: TextStyle(fontSize: 13, color: Colors.grey),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: DropdownButton<int>(
+                      value: hasUrgencies ? _selectedUrgencyId : null,
+                      isExpanded: true,
+                      items: widget.ticketUrgencies
+                          .map(
+                            (state) => DropdownMenuItem(
+                              value: state.id,
+                              child: Text(state.name),
+                            ),
+                          )
+                          .toList(),
+                      onChanged: !hasUrgencies
+                          ? null
+                          : (value) {
+                        if (value == null) return;
+                        setState(() {
+                          _selectedUrgencyId = value;
+                          _ticket = _ticket.copyWith(urgencyId: value);
+                        });
+                        ref.read(ticketsProvider.notifier).updateTicketPriority(
+                          ticket: _ticket,
+                          urgencyId: value,
                         );
                       },
                     ),
@@ -588,7 +983,9 @@ class _AdminTicketCardState extends ConsumerState<AdminTicketCard> {
                   Text(
                     _ticket.assignedToName != null && _ticket.assignedToName!.isNotEmpty
                         ? 'Asignado a: ${_ticket.assignedToName}'
-                        : 'Sin asignar',
+                        : _ticket.assignedToId != null && _ticket.assignedToId!.isNotEmpty
+                            ? 'Asignado a: Operario ${_ticket.assignedToId}'
+                            : 'Sin asignar',
                     style: TextStyle(color: Colors.grey.shade600, fontSize: 14),
                   ),
                 ],

@@ -29,43 +29,52 @@ String getWorkCategory(Works work) {
 }
 
 class WorkCategoryTabs extends StatelessWidget {
-  final TabController tabController;
+  final List<String> categories;
+  final String selectedCategory;
+  final ValueChanged<String> onCategorySelected;
 
-  const WorkCategoryTabs({super.key, required this.tabController});
+  const WorkCategoryTabs({
+    super.key,
+    required this.categories,
+    required this.selectedCategory,
+    required this.onCategorySelected,
+  });
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      margin: const EdgeInsets.all(20),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(12),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.05),
-            blurRadius: 10,
-            offset: const Offset(0, 2),
-          ),
-        ],
-      ),
-      child: TabBar(
-        controller: tabController,
-        indicator: BoxDecoration(
-          gradient: const LinearGradient(
-            colors: [Color(0xFF3498db), Color(0xFF2980b9)],
-          ),
-          borderRadius: BorderRadius.circular(12),
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+      child: SizedBox(
+        height: 40,
+        child: ListView.builder(
+          scrollDirection: Axis.horizontal,
+          itemCount: categories.length,
+          itemBuilder: (context, index) {
+            final category = categories[index];
+            final isSelected = selectedCategory == category;
+
+            return Container(
+              margin: const EdgeInsets.only(right: 12),
+              child: FilterChip(
+                label: Text(category),
+                selected: isSelected,
+                onSelected: (selected) => onCategorySelected(category),
+                backgroundColor: Colors.white,
+                selectedColor:
+                    const Color(0xFF3498db).withValues(alpha: 0.2),
+                checkmarkColor: const Color(0xFF3498db),
+                labelStyle: TextStyle(
+                  color: isSelected
+                      ? const Color(0xFF3498db)
+                      : const Color(0xFF7f8c8d),
+                  fontWeight: isSelected
+                      ? FontWeight.w600
+                      : FontWeight.w500,
+                ),
+              ),
+            );
+          },
         ),
-        indicatorSize: TabBarIndicatorSize.tab,
-        dividerColor: Colors.transparent,
-        labelColor: Colors.white,
-        unselectedLabelColor: const Color(0xFF7f8c8d),
-        labelStyle: const TextStyle(fontWeight: FontWeight.w600),
-        tabs: const [
-          Tab(text: 'Todos'),
-          Tab(text: 'Detailing'),
-          Tab(text: 'Restauración'),
-        ],
       ),
     );
   }
@@ -147,7 +156,7 @@ class UserWorkCard extends StatelessWidget {
                         fit: BoxFit.cover,
                         errorBuilder: (context, error, stackTrace) {
                           return Container(
-                            color: const Color(0xFF3498db).withOpacity(0.1),
+                            color: const Color(0xFF3498db).withValues(alpha: .1),
                             child: const Icon(
                               Icons.image_not_supported,
                               size: 48,
@@ -157,7 +166,7 @@ class UserWorkCard extends StatelessWidget {
                         },
                       )
                     : Container(
-                        color: const Color(0xFF3498db).withOpacity(0.1),
+                        color: const Color(0xFF3498db).withValues(alpha: .1),
                         child: const Icon(
                           Icons.car_repair,
                           size: 48,
@@ -201,7 +210,7 @@ class UserWorkCard extends StatelessWidget {
                     ),
                     decoration: BoxDecoration(
                       color: getCategoryColor(getWorkCategory(work))
-                          .withOpacity(0.1),
+                          .withValues(alpha: .1),
                       borderRadius: BorderRadius.circular(12),
                     ),
                     child: Text(
@@ -263,7 +272,7 @@ class AdminWorkCard extends StatelessWidget {
               child: Container(
                 width: 80,
                 height: 80,
-                color: const Color(0xFF3498db).withOpacity(0.1),
+                color: const Color(0xFF3498db).withValues(alpha: .1),
                 child: imageProvider != null
                     ? Image(
                         image: imageProvider,
@@ -317,7 +326,7 @@ class AdminWorkCard extends StatelessWidget {
                     ),
                     decoration: BoxDecoration(
                       color: getCategoryColor(getWorkCategory(work))
-                          .withOpacity(0.1),
+                          .withValues(alpha: .1),
                       borderRadius: BorderRadius.circular(12),
                     ),
                     child: Text(
@@ -388,7 +397,7 @@ class EmptyWorksState extends StatelessWidget {
             width: 120,
             height: 120,
             decoration: BoxDecoration(
-              color: const Color(0xFF3498db).withOpacity(0.1),
+              color: const Color(0xFF3498db).withValues(alpha: .1),
               borderRadius: BorderRadius.circular(60),
             ),
             child: const Icon(
@@ -451,7 +460,7 @@ class WorkDetailSheet extends StatelessWidget {
               margin: const EdgeInsets.all(20),
               decoration: BoxDecoration(
                 borderRadius: BorderRadius.circular(20),
-                color: const Color(0xFF3498db).withOpacity(0.1),
+                color: const Color(0xFF3498db).withValues(alpha: .1),
               ),
               child: work.image.isNotEmpty
                   ? ClipRRect(
@@ -490,7 +499,7 @@ class WorkDetailSheet extends StatelessWidget {
                     ),
                     decoration: BoxDecoration(
                       color: getCategoryColor(getWorkCategory(work))
-                          .withOpacity(0.1),
+                          .withValues(alpha: .1),
                       borderRadius: BorderRadius.circular(20),
                     ),
                     child: Text(

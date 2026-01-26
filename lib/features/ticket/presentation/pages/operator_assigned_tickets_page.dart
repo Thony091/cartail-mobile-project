@@ -21,11 +21,21 @@ class OperatorAssignedTicketsPage extends ConsumerStatefulWidget {
 
 class OperatorAssignedTicketsPageState
     extends ConsumerState<OperatorAssignedTicketsPage> {
-  String _filterStatus = 'all';
+  final TextEditingController _searchController = TextEditingController();
+  final FocusNode _searchFocusNode = FocusNode();
+
+  @override
+  void dispose() {
+    _searchController.dispose();
+    _searchFocusNode.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
     final ticketsState = ref.watch(ticketsProvider);
+    final filtersState = ref.watch(ticketsFiltersProvider);
+    final filtersNotifier = ref.read(ticketsFiltersProvider.notifier);
     final authState = ref.watch(betterAuthProvider);
     final operatorId = authState.session!.user.id;
     final assignedTickets =
@@ -33,8 +43,74 @@ class OperatorAssignedTicketsPageState
     final filteredTickets = _filterTickets(assignedTickets.toList());
     final stats = _buildStats(filteredTickets);
 
+    if (filtersState.isSearching && !_searchFocusNode.hasFocus) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted) _searchFocusNode.requestFocus();
+      });
+    }
+
     return ModernScaffoldWithDrawer(
       title: 'Mis Tickets Asignados',
+      titleWidget: filtersState.isSearching
+          ? Align(
+              alignment: Alignment.centerLeft,
+              child: Container(
+                height: 36,
+                padding: const EdgeInsets.symmetric(horizontal: 12),
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(18),
+                  border: Border.all(
+                    color: const Color(0xFF3498db).withValues(alpha: 0.6),
+                  ),
+                ),
+                child: Center(
+                  child: TextField(
+                    controller: _searchController,
+                    focusNode: _searchFocusNode,
+                    autofocus: true,
+                    cursorColor: const Color(0xFF2c3e50),
+                    keyboardAppearance: Brightness.light,
+                    textInputAction: TextInputAction.search,
+                    onChanged: filtersNotifier.setSearchQuery,
+                    style: const TextStyle(
+                      color: Color(0xFF2c3e50),
+                      fontSize: 15,
+                      fontWeight: FontWeight.w600,
+                    ),
+                    decoration: const InputDecoration(
+                      hintText: 'Buscar ticket...',
+                      hintStyle: TextStyle(color: Color(0xFF7f8c8d)),
+                      border: InputBorder.none,
+                      isDense: true,
+                      contentPadding: EdgeInsets.zero,
+                    ),
+                  ),
+                ),
+              ),
+            )
+          : null,
+      appBarActions: [
+        if (filtersState.isSearching)
+          IconButton(
+            icon: const Icon(Icons.close, color: Colors.white),
+            onPressed: () {
+              filtersNotifier.stopSearch();
+              _searchController.clear();
+              _searchFocusNode.unfocus();
+            },
+          )
+        else
+          IconButton(
+            icon: const Icon(Icons.search, color: Colors.white),
+            onPressed: () {
+              filtersNotifier.startSearch();
+              WidgetsBinding.instance.addPostFrameCallback((_) {
+                _searchFocusNode.requestFocus();
+              });
+            },
+          ),
+      ],
       body: Column(
         children: [
           // Resumen de tickets
@@ -48,8 +124,8 @@ class OperatorAssignedTicketsPageState
 
           // Filtros
           OperatorFiltersSection(
-            filterStatus: _filterStatus,
-            onFilterChanged: (value) => setState(() => _filterStatus = value),
+            filterStatus: filtersState.filterStatus,
+            onFilterChanged: filtersNotifier.setFilterStatus,
           ),
 
           const SizedBox(height: 16),
@@ -94,13 +170,24 @@ class OperatorAssignedTicketsPageState
 
   List<Ticket> _filterTickets(List<Ticket> tickets) {
     return tickets.where((ticket) {
+      final filtersState = ref.read(ticketsFiltersProvider);
       final stateId = ticket.stateId ?? 1;
-      return switch (_filterStatus) {
+      final matchesStatus = switch (filtersState.filterStatus) {
         'pending' => stateId == 1 || stateId == 2,
         'inProgress' => stateId == 3,
         'completed' => stateId == 4 || stateId == 5,
         _ => true,
       };
+
+      final query = filtersState.searchQuery.trim().toLowerCase();
+      final matchesSearch =
+          query.isEmpty ||
+          ticket.id.toLowerCase().contains(query) ||
+          ticket.userName.toLowerCase().contains(query) ||
+          ticket.title.toLowerCase().contains(query) ||
+          ticket.description.toLowerCase().contains(query);
+
+      return matchesStatus && matchesSearch;
     }).toList();
   }
 }
@@ -404,7 +491,7 @@ class _OperatorTicketCardState extends ConsumerState<OperatorTicketCard> {
                   const Icon(Icons.access_time, size: 16, color: Colors.grey),
                   const SizedBox(width: 4),
                   Text(
-                    'Asignado: ${widget.ticket.assignedToName ?? widget.operatorName}',
+                    'Asignado: ${widget.ticket.assignedToName ?? widget.operatorName ?? (widget.ticket.assignedToId != null ? 'Operario ${widget.ticket.assignedToId}' : '')}',
                     style: TextStyle(color: Colors.grey.shade600, fontSize: 14),
                   ),
                 ],

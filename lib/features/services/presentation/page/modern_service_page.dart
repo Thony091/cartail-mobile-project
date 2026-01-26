@@ -25,6 +25,16 @@ class ModernServicesPage extends ConsumerStatefulWidget {
 }
 
 class ModernServicesPageState extends ConsumerState<ModernServicesPage> {
+  final TextEditingController _searchController = TextEditingController();
+  final FocusNode _searchFocusNode = FocusNode();
+
+  @override
+  void dispose() {
+    _searchController.dispose();
+    _searchFocusNode.dispose();
+    super.dispose();
+  }
+
   @override
   Widget build(BuildContext context) {
     final servicesState = ref.watch(servicesProvider);
@@ -44,15 +54,75 @@ class ModernServicesPageState extends ConsumerState<ModernServicesPage> {
     final List<Services> services = _filterServices(servicesState.services);
     // final bool isAdmin = false; // authState.userData?.isAdmin ?? false
 
+    if (filtersState.isSearching && !_searchFocusNode.hasFocus) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted) _searchFocusNode.requestFocus();
+      });
+    }
+
     return ModernScaffoldWithDrawer(
       title: (isAdmin != null && isAdmin) 
         ? 'Gestión de Servicios' 
         : 'Nuestros Servicios',
+      titleWidget: filtersState.isSearching
+          ? Align(
+              alignment: Alignment.centerLeft,
+              child: Container(
+                height: 50,
+                padding: const EdgeInsets.symmetric(horizontal: 12),
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(18),
+                  border: Border.all(
+                    color: const Color(0xFF3498db).withValues(alpha: 0.6),
+                  ),
+                ),
+                child: Center(
+                  child: TextField(
+                    controller: _searchController,
+                    focusNode: _searchFocusNode,
+                    autofocus: true,
+                    cursorColor: const Color(0xFF2c3e50),
+                    keyboardAppearance: Brightness.light,
+                    textInputAction: TextInputAction.search,
+                    onChanged: filtersNotifier.setSearchQuery,
+                    style: const TextStyle(
+                      color: Color(0xFF2c3e50),
+                      fontSize: 20,
+                      fontWeight: FontWeight.w600,
+                    ),
+                    decoration: const InputDecoration(
+                      hintText: 'Buscar servicio...',
+                      hintStyle: TextStyle(color: Color(0xFF7f8c8d)),
+                      border: InputBorder.none,
+                      isDense: true,
+                      contentPadding: EdgeInsets.zero,
+                    ),
+                  ),
+                ),
+              ),
+            )
+          : null,
       appBarActions: [
-        IconButton(
-          icon: const Icon(Icons.search, color: Colors.white),
-          onPressed: _showSearchDialog,
-        ),
+        if (filtersState.isSearching)
+          IconButton(
+            icon: const Icon(Icons.close, color: Colors.white),
+            onPressed: () {
+              filtersNotifier.stopSearch();
+              _searchController.clear();
+              _searchFocusNode.unfocus();
+            },
+          )
+        else
+          IconButton(
+            icon: const Icon(Icons.search, color: Colors.white),
+            onPressed: () {
+              filtersNotifier.startSearch();
+              WidgetsBinding.instance.addPostFrameCallback((_) {
+                _searchFocusNode.requestFocus();
+              });
+            },
+          ),
         if (isAdmin != null && isAdmin)
           IconButton(
             icon: const Icon(Icons.filter_list, color: Colors.white),
@@ -89,6 +159,7 @@ class ModernServicesPageState extends ConsumerState<ModernServicesPage> {
                     final categoryId = _categoryIdFromLabel(category, categories);
                     filtersNotifier.setCategoryId(categoryId);
                   },
+                  showSearchBar: false,
                 ),
               ),
 
@@ -121,16 +192,6 @@ class ModernServicesPageState extends ConsumerState<ModernServicesPage> {
 
   Future<void> _refreshServices() async {
     await ref.read(servicesProvider.notifier).getServices();
-  }
-
-  void _showSearchDialog() {
-    final filtersNotifier = ref.read(servicesFiltersProvider.notifier);
-    showDialog(
-      context: context,
-      builder: (context) => SearchServicesDialog(
-        onSearch: filtersNotifier.setSearchQuery,
-      ),
-    );
   }
 
   void _showFilterDialog() {

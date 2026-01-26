@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:portafolio_project/features/user/domain/entities/user.dart';
 import 'package:portafolio_project/features/user/domain/entities/user_role.dart';
 
 import '../../../../presentation/presentation_container.dart';
+import '../providers/user_preferences_provider.dart';
 
 class ProfileHeader extends StatelessWidget {
   final User user;
@@ -358,11 +360,13 @@ class StatItem extends StatelessWidget {
   }
 }
 
-class SettingsSection extends StatelessWidget {
+class SettingsSection extends ConsumerWidget {
   const SettingsSection({super.key});
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final preferences = ref.watch(userPreferencesProvider);
+
     return ModernCard(
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -378,51 +382,68 @@ class SettingsSection extends StatelessWidget {
 
           const SizedBox(height: 16),
 
-          SettingItem(
+          // Tema - Funcional
+          _SettingItem(
+            icon: preferences.isDarkMode ? Icons.dark_mode : Icons.light_mode,
+            title: 'Tema',
+            subtitle: preferences.isDarkMode ? 'Oscuro' : 'Claro',
+            trailing: Switch(
+              value: preferences.isDarkMode,
+              onChanged: (_) => ref.read(userPreferencesProvider.notifier).toggleTheme(),
+            ),
+          ),
+
+          const Divider(height: 1),
+
+          // Notificaciones - Funcional
+          _SettingItem(
             icon: Icons.notifications,
             title: 'Notificaciones',
             subtitle: 'Gestionar notificaciones push',
-            onTap: () {},
+            trailing: Switch(
+              value: preferences.notificationsEnabled,
+              onChanged: (_) => ref.read(userPreferencesProvider.notifier).toggleNotifications(),
+            ),
           ),
 
-          SettingItem(
-            icon: Icons.security,
-            title: 'Privacidad y Seguridad',
-            subtitle: 'Configurar seguridad de la cuenta',
-            onTap: () {},
-          ),
+          const Divider(height: 1),
 
-          SettingItem(
+
+          // Idioma - Deshabilitado (sin funcionalidad)
+          _SettingItem(
             icon: Icons.language,
             title: 'Idioma',
             subtitle: 'Español (Chile)',
-            onTap: () {},
+            onTap: null,
           ),
 
-          SettingItem(
-            icon: Icons.dark_mode,
-            title: 'Tema',
-            subtitle: 'Claro',
-            onTap: () {},
-          ),
+          // Privacidad y Seguridad - Comentado (no implementado)
+          // const Divider(height: 1),
+          // _SettingItem(
+          //   icon: Icons.security,
+          //   title: 'Privacidad y Seguridad',
+          //   subtitle: 'Configurar seguridad de la cuenta',
+          //   onTap: null,
+          // ),
         ],
       ),
     );
   }
 }
 
-class SettingItem extends StatelessWidget {
+class _SettingItem extends StatelessWidget {
   final IconData icon;
   final String title;
   final String subtitle;
-  final VoidCallback onTap;
+  final Widget? trailing;
+  final VoidCallback? onTap;
 
-  const SettingItem({
-    super.key,
+  const _SettingItem({
     required this.icon,
     required this.title,
     required this.subtitle,
-    required this.onTap,
+    this.trailing,
+    this.onTap,
   });
 
   @override
@@ -450,8 +471,9 @@ class SettingItem extends StatelessWidget {
         subtitle,
         style: const TextStyle(fontSize: 14, color: Color(0xFF7f8c8d)),
       ),
-      trailing: const Icon(Icons.chevron_right, color: Color(0xFF7f8c8d)),
+      trailing: trailing ?? (onTap != null ? const Icon(Icons.chevron_right, color: Color(0xFF7f8c8d)) : null),
       onTap: onTap,
+      enabled: onTap != null || trailing != null,
     );
   }
 }

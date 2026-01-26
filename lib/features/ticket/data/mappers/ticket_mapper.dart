@@ -3,11 +3,16 @@ import '../../domain/entities/ticket.dart';
 class TicketMapper {
   static Ticket jsonToEntity(Map<String, dynamic> json) => Ticket(
     id: json['id']?.toString() ?? '',
-    userId: json['id_user']?.toString() ?? json['userId']?.toString() ?? '',
-    userName: json['nombre'] as String? ?? json['userName'] as String? ?? '',
+    userId: json['id_cliente']?.toString() ??
+        json['idCliente']?.toString() ??
+        json['userId']?.toString() ??
+        '',
+    userName: json['clienteNombre'] as String? ??
+        json['userName'] as String? ??
+        '',
     type: TicketType.fromJson(json['type'] as String? ?? 'reservation'),
     status: _statusFromId(_parseInt(json['id_estado'])),
-    assignedToId: json['assignedToId']?.toString(),
+    assignedToId: json['id_user']?.toString() ?? json['assignedToId']?.toString(),
     assignedToName: json['assignedToName'] as String?,
     createdAt: json['createdAt'] != null
       ? DateTime.parse(json['createdAt'] as String)
@@ -28,7 +33,7 @@ class TicketMapper {
 
   static Map<String, dynamic> entityToJson(Ticket ticket) => {
     'id': ticket.id,
-    'id_user': ticket.userId,
+    'id_user': ticket.assignedToId ?? ticket.userId,
     'nombre': ticket.title,
     'description': ticket.description,
     'desde': ticket.startDate,
@@ -37,8 +42,6 @@ class TicketMapper {
     'id_estado': ticket.stateId,
     'id_importancia': ticket.importanceId,
     'id_urgencia': ticket.urgencyId,
-    if (ticket.assignedToId != null) 'assignedToId': ticket.assignedToId,
-    if (ticket.assignedToName != null) 'assignedToName': ticket.assignedToName,
     'metadata': ticket.metadata,
   };
 

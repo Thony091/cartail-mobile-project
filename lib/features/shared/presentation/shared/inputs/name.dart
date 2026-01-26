@@ -19,6 +19,7 @@ class Name extends FormzInput<String, NameError> {
     if ( isValid || isPure ) return null;
 
     if ( displayError == NameError.empty ) return 'El campo es requerido';
+    if ( displayError == NameError.length ) return 'Máximo 6 caracteres';
 
 
     return null;
@@ -29,6 +30,7 @@ class Name extends FormzInput<String, NameError> {
   NameError? validator(String value) {
     
     if ( value.isEmpty || value.trim().isEmpty ) return NameError.empty;
+    if ( value.length > 6 ) return NameError.length;
 
     return null;
   }

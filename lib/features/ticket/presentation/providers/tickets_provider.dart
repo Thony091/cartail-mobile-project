@@ -147,6 +147,44 @@ class TicketsNotifier extends StateNotifier<TicketsState> {
     return updateTicket(updatedTicket);
   }
 
+  Future<bool> updateTicketWithComments({
+    required Ticket ticket,
+    required int stateId,
+    required List<String> comments,
+    required String authorId,
+    required String authorName,
+  }) async {
+    final now = DateTime.now().toIso8601String();
+    final existing = ticket.metadata['comments'];
+    final List<Map<String, dynamic>> merged = [];
+    if (existing is List) {
+      for (final item in existing) {
+        if (item is Map<String, dynamic>) {
+          merged.add(Map<String, dynamic>.from(item));
+        }
+      }
+    }
+    for (final comment in comments) {
+      final trimmed = comment.trim();
+      if (trimmed.isEmpty) continue;
+      merged.add({
+        'message': trimmed,
+        'authorId': authorId,
+        'authorName': authorName,
+        'createdAt': now,
+      });
+    }
+
+    final updatedTicket = ticket.copyWith(
+      stateId: stateId,
+      metadata: {
+        ...ticket.metadata,
+        'comments': merged,
+      },
+    );
+    return updateTicket(updatedTicket);
+  }
+
   Map<String, dynamic> _buildTicketPayload(Ticket ticket) {
     final now = DateTime.now();
     final fallbackDate =

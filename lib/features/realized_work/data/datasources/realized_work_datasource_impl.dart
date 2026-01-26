@@ -1,5 +1,5 @@
-import 'dart:convert';
 import 'dart:io';
+import 'package:flutter/foundation.dart';
 
 import 'package:dio/dio.dart';
 
@@ -8,43 +8,43 @@ import '../../domain/entities/works.dart';
 import '../errors/work_error.dart';
 import '../mappers/realized_work_mapper.dart';
 import 'realized_work_datasources.dart';
+import 'package:portafolio_project/core/utils/image_encoder_service.dart';
 
 class RealizedWorkDatasourceImpl extends RealizedWorkDatasource {
+  final ImageEncoderService _imageEncoder;
   late final Dio dio;
   final String accessToken;
 
-  RealizedWorkDatasourceImpl({required this.accessToken})
-    : dio = Dio(
-        BaseOptions(
-          baseUrl: Enviroment.baseUrl,
-          headers: {
-            // 'x-api-key': 'ZvHNth6qgZ6LNnwtXwJX75Jk8YlXEZxX2AZvOFSW',
-            // 'Authorization': 'Bearer $accessToken'
-          },
-        ),
-      );
+  RealizedWorkDatasourceImpl({
+    required this.accessToken,
+    ImageEncoderService? imageEncoder,
+  })  : _imageEncoder = imageEncoder ?? const ImageEncoderService(),
+        dio = Dio(
+          BaseOptions(
+            baseUrl: Enviroment.baseUrl,
+            headers: {
+              // 'x-api-key': 'ZvHNth6qgZ6LNnwtXwJX75Jk8YlXEZxX2AZvOFSW',
+              // 'Authorization': 'Bearer $accessToken'
+            },
+          ),
+        );
 
-  Future<String> _uploadFile(String path) async {
-    try {
-      // Leer el archivo de imagen como bytes
-      final fileBytes = File(path).readAsBytesSync();
-      // Codificar los bytes a Base64
-      final base64Image = base64Encode(fileBytes);
-      // Devolver la cadena Base64 de la imagen
-      return base64Image;
-    } catch (e) {
-      throw Exception('Error al convertir la imagen a Base64: $e');
+  Future<String> _preparePhoto(String photo) async {
+    final trimmedPhoto = photo.trim();
+    if (trimmedPhoto.isEmpty) return '';
+    if (trimmedPhoto.startsWith('http')) return trimmedPhoto;
+    if (trimmedPhoto.startsWith('data:image/')) {
+      return ImageEncoderService.stripDataUriPrefix(trimmedPhoto);
     }
-  }
 
-  Future<String> _uploadPhoto(String photo) async {
-    if (photo.isEmpty) return '';
-    if (photo.startsWith('http')) return photo;
-    final file = File(photo);
-    if (file.existsSync()) {
-      return _uploadFile(photo);
+    final normalizedPath = trimmedPhoto.startsWith('file://')
+        ? Uri.parse(trimmedPhoto).toFilePath()
+        : trimmedPhoto;
+    final file = File(normalizedPath);
+    if (await file.exists()) {
+      return _imageEncoder.encodeFile(file);
     }
-    return photo;
+    return ImageEncoderService.stripDataUriPrefix(trimmedPhoto);
   }
 
   @override
@@ -63,11 +63,15 @@ class RealizedWorkDatasourceImpl extends RealizedWorkDatasource {
         payload.remove('image');
       }
 
-      if (payload['imagen_antes'] is String && payload['imagen_antes'] != "") {
-        payload['imagen_antes'] = await _uploadPhoto(payload['imagen_antes']);
+      if (payload['imagen_antes'] is String &&
+          payload['imagen_antes'] != "") {
+        payload['imagen_antes'] =
+            await _preparePhoto(payload['imagen_antes']);
       }
-      if (payload['imagen_despues'] is String && payload['imagen_despues'] != "") {
-        payload['imagen_despues'] = await _uploadPhoto(payload['imagen_despues']);
+      if (payload['imagen_despues'] is String &&
+          payload['imagen_despues'] != "") {
+        payload['imagen_despues'] =
+            await _preparePhoto(payload['imagen_despues']);
       }
 
       payload['titulo'] ??= payload['name'] ?? '';
@@ -79,6 +83,9 @@ class RealizedWorkDatasourceImpl extends RealizedWorkDatasource {
       payload['fecha'] = _normalizeDate(payload['fecha']?.toString() ?? '');
       payload['id_modelo_vehiculo'] =
           _normalizeInt(payload['id_modelo_vehiculo'], defaultValue: 1);
+
+      _normalizeImageFields(payload);
+      _logImagePayload(payload);
 
       final fallbackWork = _workFromPayload(payload, workId: workId);
       final response = await dio.request(
@@ -173,6 +180,35 @@ class RealizedWorkDatasourceImpl extends RealizedWorkDatasource {
     if (value is int) return value;
     final parsed = int.tryParse(value.toString());
     return parsed ?? defaultValue;
+  }
+
+  void _normalizeImageFields(Map<String, dynamic> payload) {
+    const fields = ['imagen_antes', 'imagen_despues'];
+    for (final field in fields) {
+      final value = payload[field];
+      if (value is String) {
+        final trimmed = value.trim();
+        if (trimmed.isEmpty) {
+          payload.remove(field);
+        } else {
+          payload[field] = trimmed;
+        }
+      }
+    }
+  }
+
+  void _logImagePayload(Map<String, dynamic> payload) {
+    if (!kDebugMode) return;
+    final info = <String>[];
+    for (final field in ['imagen_antes', 'imagen_despues']) {
+      final value = payload[field];
+      if (value is String && value.isNotEmpty) {
+        info.add('$field:${value.length}');
+      }
+    }
+    if (info.isNotEmpty) {
+      debugPrint('RealizedWork payload image lengths: ${info.join(', ')}');
+    }
   }
 
   Works _workFromPayload(Map<String, dynamic> payload, {String? workId}) {

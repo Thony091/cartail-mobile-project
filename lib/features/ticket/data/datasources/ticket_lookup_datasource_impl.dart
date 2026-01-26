@@ -44,13 +44,23 @@ class TicketLookupDatasourceImpl extends TicketLookupDatasource {
 
   State _mapState(Map<String, dynamic> json) {
     final id = _parseInt(json['id']) ?? 0;
-    final name = json['nombre'] as String? ?? json['name'] as String? ?? '';
+    final name = json['nombre'] as String? ??
+        json['name'] as String? ??
+        json['nivel'] as String? ??
+        '';
     return State(id: id, name: name);
   }
 
   dynamic _extractData(dynamic responseData) {
     if (responseData is Map<String, dynamic> && responseData.containsKey('data')) {
-      return responseData['data'];
+      final data = responseData['data'];
+      if (data is Map<String, dynamic>) {
+        if (data.containsKey('data')) return data['data'];
+        if (data.containsKey('items')) return data['items'];
+        if (data.containsKey('rows')) return data['rows'];
+        if (data.containsKey('results')) return data['results'];
+      }
+      return data;
     }
     return responseData;
   }

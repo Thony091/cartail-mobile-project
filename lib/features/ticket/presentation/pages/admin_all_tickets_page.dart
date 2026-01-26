@@ -1,11 +1,12 @@
 import 'package:flutter/material.dart' hide FilterChip;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import '../../../../presentation/pages/auth/modern_scaffold_with_drawer.dart';
 import 'widgets/ticket_widgets.dart';
 import '../providers/tickets_provider.dart';
-import '../providers/operator_users_provider.dart';
+import 'package:portafolio_project/features/auth/presentation/providers/users_provider.dart';
 import '../../domain/entities/ticket.dart';
-import '../providers/ticket_lookups_provider.dart';
+import '../providers/ticket_lookup_crud_providers.dart';
 import '../../../services/presentation/providers/services_provider.dart';
 import '../../../shared/domain/entities/state.dart' as lookup;
 import '../../../services/domain/entities/services.dart';
@@ -29,7 +30,10 @@ class AdminAllTicketsPageState extends ConsumerState<AdminAllTicketsPage> {
   void initState() {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      ref.read(operatorUsersProvider.notifier).loadOperators();
+      ref.read(usersProvider.notifier).loadUsers();
+      ref.read(ticketEstadosCrudProvider.notifier).load();
+      ref.read(ticketImportanciasCrudProvider.notifier).load();
+      ref.read(ticketUrgenciasCrudProvider.notifier).load();
     });
   }
 
@@ -45,9 +49,10 @@ class AdminAllTicketsPageState extends ConsumerState<AdminAllTicketsPage> {
     final ticketsState = ref.watch(ticketsProvider);
     final filtersState = ref.watch(ticketsFiltersProvider);
     final filtersNotifier = ref.read(ticketsFiltersProvider.notifier);
-    final lookupsState = ref.watch(ticketLookupsProvider);
+    final estados = ref.watch(ticketEstadosProvider);
+    final importancias = ref.watch(ticketImportanciasProvider);
+    final urgencias = ref.watch(ticketUrgenciasProvider);
     final servicesState = ref.watch(servicesProvider);
-    final operatorsState = ref.watch(operatorUsersProvider);
     final filteredTickets = _filterTickets(
       ticketsState.tickets,
       filtersState,
@@ -66,7 +71,7 @@ class AdminAllTicketsPageState extends ConsumerState<AdminAllTicketsPage> {
           ? Align(
               alignment: Alignment.centerLeft,
               child: Container(
-                height: 36,
+                height: 50,
                 padding: const EdgeInsets.symmetric(horizontal: 12),
                 decoration: BoxDecoration(
                   color: Colors.white,
@@ -86,7 +91,7 @@ class AdminAllTicketsPageState extends ConsumerState<AdminAllTicketsPage> {
                     onChanged: filtersNotifier.setSearchQuery,
                     style: const TextStyle(
                       color: Color(0xFF2c3e50),
-                      fontSize: 15,
+                      fontSize: 20,
                       fontWeight: FontWeight.w600,
                     ),
                     decoration: const InputDecoration(
@@ -152,9 +157,9 @@ class AdminAllTicketsPageState extends ConsumerState<AdminAllTicketsPage> {
                 ? const Center(child: CircularProgressIndicator())
                 : AdminTicketsList(
                     tickets: filteredTickets,
-                    ticketStates: lookupsState.estados,
-                    ticketImportances: lookupsState.importancias,
-                    ticketUrgencies: lookupsState.urgencias,
+                    ticketStates: estados,
+                    ticketImportances: importancias,
+                    ticketUrgencies: urgencias,
                     services: servicesState.services,
                     // operators: operatorsState.operators,
                   ),
@@ -251,7 +256,9 @@ class AdminAllTicketsPageState extends ConsumerState<AdminAllTicketsPage> {
   void _showFilterDialog(BuildContext context) {
     final filtersNotifier = ref.read(ticketsFiltersProvider.notifier);
     final filtersState = ref.read(ticketsFiltersProvider);
-    final lookupsState = ref.read(ticketLookupsProvider);
+    final estados = ref.read(ticketEstadosProvider);
+    final importancias = ref.read(ticketImportanciasProvider);
+    final urgencias = ref.read(ticketUrgenciasProvider);
     final servicesState = ref.read(servicesProvider);
     showDialog(
       context: context,
@@ -285,7 +292,7 @@ class AdminAllTicketsPageState extends ConsumerState<AdminAllTicketsPage> {
                     decoration: const InputDecoration(labelText: 'Estado'),
                     items: [
                       const DropdownMenuItem(value: null, child: Text('Todos')),
-                      ...lookupsState.estados.map(
+                      ...estados.map(
                         (state) => DropdownMenuItem(
                           value: state.id,
                           child: Text(state.name),
@@ -302,7 +309,7 @@ class AdminAllTicketsPageState extends ConsumerState<AdminAllTicketsPage> {
                     decoration: const InputDecoration(labelText: 'Importancia'),
                     items: [
                       const DropdownMenuItem(value: null, child: Text('Todas')),
-                      ...lookupsState.importancias.map(
+                      ...importancias.map(
                         (state) => DropdownMenuItem(
                           value: state.id,
                           child: Text(state.name),
@@ -319,7 +326,7 @@ class AdminAllTicketsPageState extends ConsumerState<AdminAllTicketsPage> {
                     decoration: const InputDecoration(labelText: 'Urgencia'),
                     items: [
                       const DropdownMenuItem(value: null, child: Text('Todas')),
-                      ...lookupsState.urgencias.map(
+                      ...urgencias.map(
                         (state) => DropdownMenuItem(
                           value: state.id,
                           child: Text(state.name),
@@ -624,6 +631,27 @@ class _AdminTicketCardState extends ConsumerState<AdminTicketCard> {
   late int _selectedUrgencyId;
   late Ticket _ticket;
 
+  bool get _hasAssignment =>
+      _ticket.assignedToId?.trim().isNotEmpty == true;
+
+  String? _resolveOperatorName(
+    Map<String, AdminUserModel> usersById,
+  ) {
+    final explicitName = _ticket.assignedToName?.trim();
+    if (explicitName != null && explicitName.isNotEmpty) {
+      return explicitName;
+    }
+
+    final assignedId = _ticket.assignedToId;
+    if (assignedId == null || assignedId.isEmpty) return null;
+
+    final user = usersById[assignedId];
+    if (user == null) return 'Operario no encontrado';
+    final name = user.name?.trim();
+    if (name != null && name.isNotEmpty) return name;
+    return user.email;
+  }
+
   @override
   void initState() {
     super.initState();
@@ -634,7 +662,7 @@ class _AdminTicketCardState extends ConsumerState<AdminTicketCard> {
   }
 
   Future<void> _showAssignOperatorDialog(BuildContext context) async {
-    ref.read(operatorUsersProvider.notifier).loadOperators();
+    ref.read(usersProvider.notifier).loadUsers();
 
     showModalBottomSheet(
       context: context,
@@ -645,26 +673,27 @@ class _AdminTicketCardState extends ConsumerState<AdminTicketCard> {
       builder: (context) {
         return Consumer(
           builder: (context, ref, _) {
-            final operatorsState = ref.watch(operatorUsersProvider);
+            final usersState = ref.watch(usersProvider);
+            final operarios = ref.watch(operariosProvider);
 
-            if (operatorsState.isLoading && operatorsState.operators.isEmpty) {
+            if (usersState.isLoading && usersState.users.isEmpty) {
               return const Padding(
                 padding: EdgeInsets.all(24),
                 child: Center(child: CircularProgressIndicator()),
               );
             }
 
-            if (operatorsState.errorMessage != null) {
+            if (usersState.errorMessage != null) {
               return Padding(
                 padding: const EdgeInsets.all(24),
                 child: Text(
-                  operatorsState.errorMessage!,
+                  usersState.errorMessage!,
                   style: const TextStyle(color: Colors.redAccent),
                 ),
               );
             }
 
-            if (operatorsState.operators.isEmpty) {
+            if (operarios.isEmpty) {
               return const Padding(
                 padding: EdgeInsets.all(24),
                 child: Text('No hay operarios disponibles'),
@@ -689,10 +718,10 @@ class _AdminTicketCardState extends ConsumerState<AdminTicketCard> {
                     Flexible(
                       child: ListView.separated(
                         shrinkWrap: true,
-                        itemCount: operatorsState.operators.length,
+                        itemCount: operarios.length,
                         separatorBuilder: (_, __) => const Divider(height: 16),
                         itemBuilder: (context, index) {
-                          final operator = operatorsState.operators[index];
+                          final operator = operarios[index];
                           final operatorName =
                               operator.name?.trim().isNotEmpty == true
                                   ? operator.name!.trim()
@@ -805,6 +834,13 @@ class _AdminTicketCardState extends ConsumerState<AdminTicketCard> {
                 ),
         )
         .name;
+    final usersById = ref.watch(usersByIdProvider);
+    final resolvedOperatorName = _resolveOperatorName(usersById);
+    final assignmentLabel = resolvedOperatorName != null
+        ? 'Asignado a: $resolvedOperatorName'
+        : 'Sin asignar';
+    final canAssign = !_hasAssignment;
+    final canEdit = _selectedStateId != 4 && _selectedStateId != 5;
     return Card(
       margin: const EdgeInsets.only(bottom: 12),
       elevation: 2,
@@ -821,14 +857,26 @@ class _AdminTicketCardState extends ConsumerState<AdminTicketCard> {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  StatusBadge(
-                    label: selectedStateName,
-                    color: _getStatusColor(_selectedStateId),
+                  Expanded(
+                    child: Wrap(
+                      spacing: 8,
+                      runSpacing: 4,
+                      crossAxisAlignment: WrapCrossAlignment.center,
+                      children: [
+                        StatusBadge(
+                          label: selectedStateName,
+                          color: _getStatusColor(_selectedStateId),
+                        ),
+                        TypeBadge(
+                          label: serviceName.isNotEmpty
+                              ? serviceName
+                              : _getTypeLabel(widget.ticket.type),
+                        ),
+                      ],
+                    ),
                   ),
-                  const SizedBox(width: 8),
-                  TypeBadge(label: serviceName.isNotEmpty ? serviceName : _getTypeLabel(widget.ticket.type)),
-                  const Spacer(),
                   Text(
                     'Ticket #${_ticket.id}',
                     style: const TextStyle(color: Colors.grey, fontSize: 12),
@@ -837,12 +885,16 @@ class _AdminTicketCardState extends ConsumerState<AdminTicketCard> {
               ),
               const SizedBox(height: 12),
               Row(
+                crossAxisAlignment: CrossAxisAlignment.center,
                 children: [
                   const Icon(Icons.flag_outlined, size: 16, color: Colors.grey),
                   const SizedBox(width: 6),
-                  const Text(
-                    'Estado del ticket:',
-                    style: TextStyle(fontSize: 13, color: Colors.grey),
+                  const Flexible(
+                    child: Text(
+                      'Estado del ticket:',
+                      style: TextStyle(fontSize: 13, color: Colors.grey),
+                      overflow: TextOverflow.ellipsis,
+                    ),
                   ),
                   const SizedBox(width: 12),
                   Expanded(
@@ -860,35 +912,41 @@ class _AdminTicketCardState extends ConsumerState<AdminTicketCard> {
                       onChanged: !hasStates
                           ? null
                           : (value) {
-                        if (value == null) return;
-                        setState(() {
-                          _selectedStateId = value;
-                          _ticket = _ticket.copyWith(stateId: value);
-                        });
-                        ref.read(ticketsProvider.notifier).updateTicketPriority(
-                          ticket: _ticket,
-                          stateId: value,
-                        );
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          SnackBar(
-                            content: Text(
-                              'Estado actualizado a ${states.firstWhere((s) => s.id == value, orElse: () => states.first).name}',
-                            ),
-                          ),
-                        );
-                      },
+                              if (value == null) return;
+                              setState(() {
+                                _selectedStateId = value;
+                                _ticket = _ticket.copyWith(stateId: value);
+                              });
+                              ref
+                                  .read(ticketsProvider.notifier)
+                                  .updateTicketPriority(
+                                    ticket: _ticket,
+                                    stateId: value,
+                                  );
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                SnackBar(
+                                  content: Text(
+                                    'Estado actualizado a ${states.firstWhere((s) => s.id == value, orElse: () => states.first).name}',
+                                  ),
+                                ),
+                              );
+                            },
                     ),
                   ),
                 ],
               ),
               const SizedBox(height: 12),
               Row(
+                crossAxisAlignment: CrossAxisAlignment.center,
                 children: [
                   const Icon(Icons.priority_high, size: 16, color: Colors.grey),
                   const SizedBox(width: 6),
-                  const Text(
-                    'Importancia:',
-                    style: TextStyle(fontSize: 13, color: Colors.grey),
+                  const Flexible(
+                    child: Text(
+                      'Importancia:',
+                      style: TextStyle(fontSize: 13, color: Colors.grey),
+                      overflow: TextOverflow.ellipsis,
+                    ),
                   ),
                   const SizedBox(width: 12),
                   Expanded(
@@ -906,28 +964,34 @@ class _AdminTicketCardState extends ConsumerState<AdminTicketCard> {
                       onChanged: !hasImportances
                           ? null
                           : (value) {
-                        if (value == null) return;
-                        setState(() {
-                          _selectedImportanceId = value;
-                          _ticket = _ticket.copyWith(importanceId: value);
-                        });
-                        ref.read(ticketsProvider.notifier).updateTicketPriority(
-                          ticket: _ticket,
-                          importanceId: value,
-                        );
-                      },
+                              if (value == null) return;
+                              setState(() {
+                                _selectedImportanceId = value;
+                                _ticket = _ticket.copyWith(importanceId: value);
+                              });
+                              ref
+                                  .read(ticketsProvider.notifier)
+                                  .updateTicketPriority(
+                                    ticket: _ticket,
+                                    importanceId: value,
+                                  );
+                            },
                     ),
                   ),
                 ],
               ),
               const SizedBox(height: 12),
               Row(
+                crossAxisAlignment: CrossAxisAlignment.center,
                 children: [
                   const Icon(Icons.warning_amber, size: 16, color: Colors.grey),
                   const SizedBox(width: 6),
-                  const Text(
-                    'Urgencia:',
-                    style: TextStyle(fontSize: 13, color: Colors.grey),
+                  const Flexible(
+                    child: Text(
+                      'Urgencia:',
+                      style: TextStyle(fontSize: 13, color: Colors.grey),
+                      overflow: TextOverflow.ellipsis,
+                    ),
                   ),
                   const SizedBox(width: 12),
                   Expanded(
@@ -945,16 +1009,18 @@ class _AdminTicketCardState extends ConsumerState<AdminTicketCard> {
                       onChanged: !hasUrgencies
                           ? null
                           : (value) {
-                        if (value == null) return;
-                        setState(() {
-                          _selectedUrgencyId = value;
-                          _ticket = _ticket.copyWith(urgencyId: value);
-                        });
-                        ref.read(ticketsProvider.notifier).updateTicketPriority(
-                          ticket: _ticket,
-                          urgencyId: value,
-                        );
-                      },
+                              if (value == null) return;
+                              setState(() {
+                                _selectedUrgencyId = value;
+                                _ticket = _ticket.copyWith(urgencyId: value);
+                              });
+                              ref
+                                  .read(ticketsProvider.notifier)
+                                  .updateTicketPriority(
+                                    ticket: _ticket,
+                                    urgencyId: value,
+                                  );
+                            },
                     ),
                   ),
                 ],
@@ -962,6 +1028,8 @@ class _AdminTicketCardState extends ConsumerState<AdminTicketCard> {
               const SizedBox(height: 12),
               Text(
                 _ticket.title,
+                maxLines: 2,
+                overflow: TextOverflow.ellipsis,
                 style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
               ),
               const SizedBox(height: 8),
@@ -969,9 +1037,12 @@ class _AdminTicketCardState extends ConsumerState<AdminTicketCard> {
                 children: [
                   const Icon(Icons.person, size: 16, color: Colors.grey),
                   const SizedBox(width: 4),
-                  Text(
-                    'Cliente: ${_ticket.userName.isNotEmpty ? _ticket.userName : 'Sin nombre'}',
-                    style: TextStyle(color: Colors.grey.shade600, fontSize: 14),
+                  Expanded(
+                    child: Text(
+                      'Cliente: ${_ticket.userName.isNotEmpty ? _ticket.userName : 'Sin nombre'}',
+                      style: TextStyle(color: Colors.grey.shade600, fontSize: 14),
+                      overflow: TextOverflow.ellipsis,
+                    ),
                   ),
                 ],
               ),
@@ -980,32 +1051,54 @@ class _AdminTicketCardState extends ConsumerState<AdminTicketCard> {
                 children: [
                   const Icon(Icons.engineering, size: 16, color: Colors.grey),
                   const SizedBox(width: 4),
-                  Text(
-                    _ticket.assignedToName != null && _ticket.assignedToName!.isNotEmpty
-                        ? 'Asignado a: ${_ticket.assignedToName}'
-                        : _ticket.assignedToId != null && _ticket.assignedToId!.isNotEmpty
-                            ? 'Asignado a: Operario ${_ticket.assignedToId}'
-                            : 'Sin asignar',
-                    style: TextStyle(color: Colors.grey.shade600, fontSize: 14),
+                  Expanded(
+                    child: Text(
+                      assignmentLabel,
+                      style: TextStyle(color: Colors.grey.shade600, fontSize: 14),
+                      overflow: TextOverflow.ellipsis,
+                    ),
                   ),
                 ],
               ),
               const SizedBox(height: 12),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.end,
+              Wrap(
+                spacing: 8,
+                runSpacing: 4,
+                alignment: WrapAlignment.end,
                 children: [
-                  TextButton.icon(
-                    onPressed: () => _showAssignOperatorDialog(context),
-                    icon: const Icon(Icons.person_add, size: 18),
-                    label: const Text('Asignar'),
-                    style: TextButton.styleFrom(
-                      foregroundColor: const Color(0xFF3498db),
+                  if (canAssign)
+                    TextButton.icon(
+                      onPressed: () => _showAssignOperatorDialog(context),
+                      icon: const Icon(Icons.person_add, size: 18),
+                      label: const Text('Asignar'),
+                      style: TextButton.styleFrom(
+                        foregroundColor: const Color(0xFF3498db),
+                      ),
                     ),
-                  ),
-                  const SizedBox(width: 8),
+                  // else
+                    // Container(
+                    //   padding: const EdgeInsets.symmetric(
+                    //     horizontal: 12,
+                    //     vertical: 6,
+                    //   ),
+                    //   decoration: BoxDecoration(
+                    //     color: Colors.green.shade50,
+                    //     borderRadius: BorderRadius.circular(8),
+                    //   ),
+                    //   child: Text(
+                    //     resolvedOperatorName != null
+                    //         ? 'Asignado a: $resolvedOperatorName'
+                    //         : 'Ticket asignado',
+                    //     style: const TextStyle(
+                    //       fontSize: 13,
+                    //       color: Colors.green,
+                    //       fontWeight: FontWeight.w600,
+                    //     ),
+                    //   ),
+                    // ),
                   TextButton.icon(
                     onPressed: () {
-                      // TODO: Ver detalle
+                      context.push('/admin-ticket/${_ticket.id}');
                     },
                     icon: const Icon(Icons.visibility, size: 18),
                     label: const Text('Ver Detalle'),
@@ -1013,6 +1106,17 @@ class _AdminTicketCardState extends ConsumerState<AdminTicketCard> {
                       foregroundColor: const Color(0xFF3498db),
                     ),
                   ),
+                  if (canEdit)
+                    TextButton.icon(
+                      onPressed: () {
+                        context.push('/admin-ticket/${_ticket.id}/edit');
+                      },
+                      icon: const Icon(Icons.edit, size: 18),
+                      label: const Text('Editar'),
+                      style: TextButton.styleFrom(
+                        foregroundColor: const Color(0xFF3498db),
+                      ),
+                    ),
                 ],
               ),
             ],

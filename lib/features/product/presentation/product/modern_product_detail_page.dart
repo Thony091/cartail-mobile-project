@@ -6,7 +6,6 @@ import 'package:portafolio_project/features/auth/presentation/providers/better_a
 
 import 'package:portafolio_project/features/product/presentation/product/modern_product_detail_widgets.dart';
 
-import '../../../auth/presentation/providers/auth_provider.dart';
 import '../../../shared/presentation/shared/widgets/modern_button.dart';
 import '../../../../presentation/pages/auth/modern_scaffold_with_drawer.dart';
 

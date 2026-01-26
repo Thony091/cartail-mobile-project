@@ -73,9 +73,9 @@ class ReservationDatasourceImpl extends ReservationDatasource {
       return reservation;
     } on DioException catch (e) {
       if (e.response!.statusCode == 404) throw ServiceNotFound();
-      throw e;
+      rethrow;
     } catch (e) {
-      throw e;
+      rethrow;
     }
   }
 
@@ -126,6 +126,12 @@ class ReservationDatasourceImpl extends ReservationDatasource {
     data['idEstado'] = _parseInt(data['idEstado'], defaultValue: 1);
     data['idServicio'] = _parseInt(data['idServicio'], defaultValue: 1);
     data['idCliente'] = _parseInt(data['idCliente'], defaultValue: 1);
+    if (data.containsKey('idImportancia')) {
+      data['idImportancia'] = _parseInt(data['idImportancia'], defaultValue: 1);
+    }
+    if (data.containsKey('idUrgencia')) {
+      data['idUrgencia'] = _parseInt(data['idUrgencia'], defaultValue: 1);
+    }
     if (data.containsKey('idSlot')) {
       data['idSlot'] = _parseInt(data['idSlot'], defaultValue: 0);
     }

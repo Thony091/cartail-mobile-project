@@ -42,6 +42,7 @@ class ModernReservationsPageState
           ),
         ),
         child: SingleChildScrollView(
+          keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
           padding: const EdgeInsets.all(20),
           child: Column(
             children: [
@@ -71,32 +72,24 @@ class ModernReservationsPageState
   void _handleReservation() async {
     if (_formKey.currentState?.validate() ?? false) {
       final providerState = ref.read(reservationFormProvider);
-      if (providerState.date.value.isEmpty) {
-          _showSnackBar('Por favor selecciona una fecha');
-          return;
-      }
-      if (providerState.time.value.isEmpty) {
-          _showSnackBar('Por favor selecciona una hora');
-          return;
-      }
 
-      if (providerState.endTimeEstimated.value.isEmpty) {
-        _showSnackBar('Por favor ingresa la hora fin estimada');
-        return;
-      }
-
-      if (providerState.customerNotes.value.isEmpty) {
-        _showSnackBar('Por favor ingresa las notas del cliente');
-        return;
-      }
-
-      if (providerState.mechanicNotes.value.isEmpty) {
-        _showSnackBar('Por favor ingresa las notas del mecánico');
+      if (providerState.vehiclePlate.value.isEmpty) {
+        _showSnackBar('Por favor ingresa la patente del vehículo');
         return;
       }
 
       if (providerState.serviceId.isEmpty) {
         _showSnackBar('Por favor selecciona un servicio');
+        return;
+      }
+
+      if (providerState.selectedSlotId == null) {
+        _showSnackBar('Por favor selecciona un horario disponible');
+        return;
+      }
+
+      if (providerState.customerNotes.value.isEmpty) {
+        _showSnackBar('Por favor ingresa las notas del cliente');
         return;
       }
 

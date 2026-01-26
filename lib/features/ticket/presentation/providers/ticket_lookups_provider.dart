@@ -81,3 +81,15 @@ final ticketLookupsProvider =
   final repo = ref.watch(ticketLookupRepositoryProvider);
   return TicketLookupsNotifier(repo)..loadLookups();
 });
+
+final ticketEstadosProvider = Provider<List<State>>((ref) {
+  return ref.watch(ticketLookupsProvider).estados;
+});
+
+final ticketImportanciasProvider = Provider<List<State>>((ref) {
+  return ref.watch(ticketLookupsProvider).importancias;
+});
+
+final ticketUrgenciasProvider = Provider<List<State>>((ref) {
+  return ref.watch(ticketLookupsProvider).urgencias;
+});

@@ -11,7 +11,9 @@ class TicketMapper {
         json['userName'] as String? ??
         '',
     type: TicketType.fromJson(json['type'] as String? ?? 'reservation'),
-    status: _statusFromId(_parseInt(json['id_estado'])),
+    status: _statusFromId(
+      _parseInt(json['id_estado'] ?? json['idEstado'] ?? json['stateId']),
+    ),
     assignedToId: json['id_user']?.toString() ?? json['assignedToId']?.toString(),
     assignedToName: json['assignedToName'] as String?,
     createdAt: json['createdAt'] != null
@@ -24,10 +26,18 @@ class TicketMapper {
     description: json['description'] as String? ?? '',
     startDate: json['desde'] as String? ?? '',
     endDate: json['hasta'] as String? ?? '',
-    serviceId: _parseInt(json['id_servicio']),
-    stateId: _parseInt(json['id_estado']),
-    importanceId: _parseInt(json['id_importancia']),
-    urgencyId: _parseInt(json['id_urgencia']),
+    serviceId: _parseInt(
+      json['id_servicio'] ?? json['idServicio'] ?? json['serviceId'],
+    ),
+    stateId: _parseInt(
+      json['id_estado'] ?? json['idEstado'] ?? json['stateId'],
+    ),
+    importanceId: _parseInt(
+      json['id_importancia'] ?? json['idImportancia'] ?? json['importanceId'],
+    ),
+    urgencyId: _parseInt(
+      json['id_urgencia'] ?? json['idUrgencia'] ?? json['urgencyId'],
+    ),
     metadata: json['metadata'] as Map<String, dynamic>? ?? {},
   );
 

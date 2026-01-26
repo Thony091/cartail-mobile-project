@@ -1,9 +1,14 @@
 import 'package:flutter/material.dart' hide FilterChip;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:portafolio_project/features/auth/data/models/admin_response_models.dart';
 import 'package:portafolio_project/features/auth/presentation/providers/better_auth_provider.dart';
+import 'package:portafolio_project/features/auth/presentation/providers/users_provider.dart';
+import 'package:portafolio_project/features/client/domain/entities/client.dart';
+import 'package:portafolio_project/features/client/presentation/providers/clients_provider.dart';
 import '../../../../presentation/pages/auth/modern_scaffold_with_drawer.dart';
-import 'widgets/ticket_widgets.dart';
 import '../../../state/presentation/providers/states_provider.dart';
+import 'widgets/ticket_widgets.dart';
+import '../providers/operator_ticket_progress_provider.dart';
 import '../providers/tickets_provider.dart';
 import '../../domain/entities/ticket.dart';
 import '../../../../presentation/presentation_container.dart';
@@ -25,6 +30,14 @@ class OperatorAssignedTicketsPageState
   final FocusNode _searchFocusNode = FocusNode();
 
   @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      ref.read(usersProvider.notifier).loadUsers();
+    });
+  }
+
+  @override
   void dispose() {
     _searchController.dispose();
     _searchFocusNode.dispose();
@@ -38,9 +51,18 @@ class OperatorAssignedTicketsPageState
     final filtersNotifier = ref.read(ticketsFiltersProvider.notifier);
     final authState = ref.watch(betterAuthProvider);
     final operatorId = authState.session!.user.id;
+    final operatorName = (authState.session!.user.name?.trim().isNotEmpty ?? false)
+        ? authState.session!.user.name!.trim()
+        : authState.session!.user.email;
     final assignedTickets =
         ticketsState.tickets.where((ticket) => ticket.assignedToId == operatorId);
-    final filteredTickets = _filterTickets(assignedTickets.toList());
+    final usersById = ref.watch(usersByIdProvider);
+    final clientsState = ref.watch(clientsProvider);
+    final clientsById = <String, Client>{
+      for (final client in clientsState.clients) client.id.toString(): client,
+    };
+    final filteredTickets =
+        _filterTickets(assignedTickets.toList(), usersById, clientsById);
     final stats = _buildStats(filteredTickets);
 
     if (filtersState.isSearching && !_searchFocusNode.hasFocus) {
@@ -55,7 +77,7 @@ class OperatorAssignedTicketsPageState
           ? Align(
               alignment: Alignment.centerLeft,
               child: Container(
-                height: 36,
+                height: 50,
                 padding: const EdgeInsets.symmetric(horizontal: 12),
                 decoration: BoxDecoration(
                   color: Colors.white,
@@ -75,7 +97,7 @@ class OperatorAssignedTicketsPageState
                     onChanged: filtersNotifier.setSearchQuery,
                     style: const TextStyle(
                       color: Color(0xFF2c3e50),
-                      fontSize: 15,
+                      fontSize: 20,
                       fontWeight: FontWeight.w600,
                     ),
                     decoration: const InputDecoration(
@@ -111,36 +133,39 @@ class OperatorAssignedTicketsPageState
             },
           ),
       ],
-      body: Column(
-        children: [
-          // Resumen de tickets
-          OperatorSummarySection(
-            pendingCount: stats.pending,
-            inProgressCount: stats.inProgress,
-            completedCount: stats.completed,
-          ),
-
-          const SizedBox(height: 16),
-
-          // Filtros
-          OperatorFiltersSection(
-            filterStatus: filtersState.filterStatus,
-            onFilterChanged: filtersNotifier.setFilterStatus,
-          ),
-
-          const SizedBox(height: 16),
-
-          // Lista de tickets asignados
-          Expanded(
-            child: ticketsState.isLoading
-                ? const Center(child: CircularProgressIndicator())
+      body: GestureDetector(
+        onTap:() => _searchFocusNode.unfocus(),
+        child: Column(
+          children: [
+            // Resumen de tickets
+            OperatorSummarySection(
+              pendingCount: stats.pending,
+              inProgressCount: stats.inProgress,
+              completedCount: stats.completed,
+            ),
+        
+            const SizedBox(height: 16),
+        
+            // Filtros
+            OperatorFiltersSection(
+              filterStatus: filtersState.filterStatus,
+              onFilterChanged: filtersNotifier.setFilterStatus,
+            ),
+        
+            const SizedBox(height: 16),
+        
+            // Lista de tickets asignados
+            Expanded(
+              child: ticketsState.isLoading
+                  ? const Center(child: CircularProgressIndicator())
                 : OperatorTicketsList(
                     tickets: filteredTickets,
                     operatorId: operatorId,
-                    operatorName: authState.session!.user.name ?? 'Operario',
+                    operatorName: operatorName,
                   ),
           ),
         ],
+        ),
       ),
     );
   }
@@ -168,7 +193,11 @@ class OperatorAssignedTicketsPageState
     );
   }
 
-  List<Ticket> _filterTickets(List<Ticket> tickets) {
+  List<Ticket> _filterTickets(
+    List<Ticket> tickets,
+    Map<String, AdminUserModel> usersById,
+    Map<String, Client> clientsById,
+  ) {
     return tickets.where((ticket) {
       final filtersState = ref.read(ticketsFiltersProvider);
       final stateId = ticket.stateId ?? 1;
@@ -180,15 +209,55 @@ class OperatorAssignedTicketsPageState
       };
 
       final query = filtersState.searchQuery.trim().toLowerCase();
+      final clientName = _resolveClientName(ticket, usersById, clientsById);
       final matchesSearch =
           query.isEmpty ||
           ticket.id.toLowerCase().contains(query) ||
-          ticket.userName.toLowerCase().contains(query) ||
+          clientName.toLowerCase().contains(query) ||
           ticket.title.toLowerCase().contains(query) ||
           ticket.description.toLowerCase().contains(query);
 
       return matchesStatus && matchesSearch;
     }).toList();
+  }
+
+  String _resolveClientName(
+    Ticket ticket,
+    Map<String, AdminUserModel> usersById,
+    Map<String, Client> clientsById,
+  ) {
+    final explicit = ticket.userName.trim();
+    if (explicit.isNotEmpty) return explicit;
+    final metaName = _metadataValue(
+      ticket,
+      ['clientName', 'clienteNombre', 'nombre', 'cliente'],
+    );
+    if (metaName != null && metaName.trim().isNotEmpty) {
+      return metaName.trim();
+    }
+    final userId = ticket.userId.trim();
+    if (userId.isEmpty) return 'Sin nombre';
+    final client = clientsById[userId];
+    if (client != null) {
+      final name = client.name.trim();
+      if (name.isNotEmpty) return name;
+      if (client.email.trim().isNotEmpty) return client.email.trim();
+    }
+    final user = usersById[userId];
+    if (user == null) return 'Cliente no encontrado';
+    final name = user.name?.trim();
+    if (name != null && name.isNotEmpty) return name;
+    return user.email;
+  }
+
+  String? _metadataValue(Ticket ticket, List<String> keys) {
+    for (final key in keys) {
+      final value = ticket.metadata[key];
+      if (value != null && value.toString().trim().isNotEmpty) {
+        return value.toString();
+      }
+    }
+    return null;
   }
 }
 
@@ -231,7 +300,7 @@ class OperatorSummarySection extends StatelessWidget {
               color: Colors.orange,
             ),
           ),
-          SizedBox(width: 12),
+          const SizedBox(width: 12),
           Expanded(
             child: SummaryCard(
               title: 'En Progreso',
@@ -240,7 +309,7 @@ class OperatorSummarySection extends StatelessWidget {
               color: Colors.blue,
             ),
           ),
-          SizedBox(width: 12),
+          const SizedBox(width: 12),
           Expanded(
             child: SummaryCard(
               title: 'Completados Hoy',
@@ -363,6 +432,49 @@ class _OperatorTicketCardState extends ConsumerState<OperatorTicketCard> {
     _selectedStateId = widget.ticket.stateId ?? ((widget.index % 5) + 1);
   }
 
+  String? _resolveOperatorName(Map<String, AdminUserModel> operatorsById) {
+    final explicit = widget.ticket.assignedToName?.trim();
+    if (explicit != null && explicit.isNotEmpty) return explicit;
+
+    final assignedId = widget.ticket.assignedToId ?? widget.operatorId;
+    if (assignedId.isEmpty) return null;
+
+    final operator = operatorsById[assignedId];
+    if (operator == null) return 'Operario no encontrado';
+
+    final trimmed = operator.name?.trim();
+    if (trimmed != null && trimmed.isNotEmpty) return trimmed;
+    return operator.email;
+  }
+
+  String _resolveClientName(
+    Map<String, AdminUserModel> usersById,
+    Map<String, Client> clientsById,
+  ) {
+    final explicit = widget.ticket.userName.trim();
+    if (explicit.isNotEmpty) return explicit;
+    final metaName = _metadataValue(
+      widget.ticket,
+      ['clientName', 'clienteNombre', 'nombre', 'cliente'],
+    );
+    if (metaName != null && metaName.trim().isNotEmpty) {
+      return metaName.trim();
+    }
+    final userId = widget.ticket.userId.trim();
+    if (userId.isEmpty) return 'Sin nombre';
+    final client = clientsById[userId];
+    if (client != null) {
+      final name = client.name.trim();
+      if (name.isNotEmpty) return name;
+      if (client.email.trim().isNotEmpty) return client.email.trim();
+    }
+    final user = usersById[userId];
+    if (user == null) return 'Cliente no encontrado';
+    final name = user.name?.trim();
+    if (name != null && name.isNotEmpty) return name;
+    return user.email;
+  }
+
   Color _getStatusColor(int stateId) {
     switch (stateId) {
       case 1:
@@ -390,6 +502,17 @@ class _OperatorTicketCardState extends ConsumerState<OperatorTicketCard> {
             )
             .name;
     final isPriority = widget.index % 3 == 0;
+    final usersById = ref.watch(usersByIdProvider);
+    final resolvedOperatorName = _resolveOperatorName(usersById);
+    final displayOperatorName = _normalizeName(
+      resolvedOperatorName,
+      fallback: _normalizeName(widget.operatorName, fallback: 'Operario no encontrado'),
+    );
+    final clientsState = ref.watch(clientsProvider);
+    final clientsById = <String, Client>{
+      for (final client in clientsState.clients) client.id.toString(): client,
+    };
+    final clientName = _resolveClientName(usersById, clientsById);
 
     return Card(
       margin: const EdgeInsets.only(bottom: 12),
@@ -401,10 +524,11 @@ class _OperatorTicketCardState extends ConsumerState<OperatorTicketCard> {
             : BorderSide.none,
       ),
       child: InkWell(
-        onTap: () {
-          // TODO: Navegar a detalle del ticket
-          // context.push('/ticket/$ticketId');
-        },
+        onTap: () => _showTicketDetailSheet(
+          context,
+          displayOperatorName,
+          clientName,
+        ),
         borderRadius: BorderRadius.circular(12),
         child: Padding(
           padding: const EdgeInsets.all(16),
@@ -480,7 +604,7 @@ class _OperatorTicketCardState extends ConsumerState<OperatorTicketCard> {
                   const Icon(Icons.person, size: 16, color: Colors.grey),
                   const SizedBox(width: 4),
                   Text(
-                    'Cliente: ${widget.ticket.userName.isNotEmpty ? widget.ticket.userName : 'Sin nombre'}',
+                    'Cliente: $clientName',
                     style: TextStyle(color: Colors.grey.shade600, fontSize: 14),
                   ),
                 ],
@@ -490,9 +614,12 @@ class _OperatorTicketCardState extends ConsumerState<OperatorTicketCard> {
                 children: [
                   const Icon(Icons.access_time, size: 16, color: Colors.grey),
                   const SizedBox(width: 4),
-                  Text(
-                    'Asignado: ${widget.ticket.assignedToName ?? widget.operatorName ?? (widget.ticket.assignedToId != null ? 'Operario ${widget.ticket.assignedToId}' : '')}',
-                    style: TextStyle(color: Colors.grey.shade600, fontSize: 14),
+                  Expanded(
+                    child: Text(
+                      'Asignado: $displayOperatorName',
+                      style: TextStyle(color: Colors.grey.shade600, fontSize: 14),
+                      overflow: TextOverflow.ellipsis,
+                    ),
                   ),
                 ],
               ),
@@ -501,18 +628,11 @@ class _OperatorTicketCardState extends ConsumerState<OperatorTicketCard> {
                 mainAxisAlignment: MainAxisAlignment.end,
                 children: [
                   TextButton.icon(
-                    onPressed: () => _showCommentDialog(context),
-                    icon: const Icon(Icons.comment, size: 18),
-                    label: const Text('Comentario'),
-                    style: TextButton.styleFrom(
-                      foregroundColor: const Color(0xFF3498db),
+                    onPressed: () => _showTicketDetailSheet(
+                      context,
+                      displayOperatorName,
+                      clientName,
                     ),
-                  ),
-                  const SizedBox(width: 8),
-                  TextButton.icon(
-                    onPressed: () {
-                      // TODO: Ver detalle
-                    },
                     icon: const Icon(Icons.visibility, size: 18),
                     label: const Text('Ver Detalle'),
                     style: TextButton.styleFrom(
@@ -528,58 +648,265 @@ class _OperatorTicketCardState extends ConsumerState<OperatorTicketCard> {
     );
   }
 
-  Future<void> _showCommentDialog(BuildContext context) async {
-    final controller = TextEditingController();
-    final formKey = GlobalKey<FormState>();
+  String _normalizeName(String? value, {required String fallback}) {
+    final trimmed = value?.trim() ?? '';
+    return trimmed.isNotEmpty ? trimmed : fallback;
+  }
 
-    await showDialog<void>(
+  String? _metadataValue(Ticket ticket, List<String> keys) {
+    for (final key in keys) {
+      final value = ticket.metadata[key];
+      if (value != null && value.toString().trim().isNotEmpty) {
+        return value.toString();
+      }
+    }
+    return null;
+  }
+
+  Future<void> _showTicketDetailSheet(
+    BuildContext context,
+    String operatorName,
+    String clientName,
+  ) async {
+    final states = ref.read(statesProvider);
+    await showModalBottomSheet<void>(
       context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.white,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
+      ),
       builder: (context) {
-        return AlertDialog(
-          title: const Text('Agregar comentario'),
-          content: Form(
-            key: formKey,
-            child: TextFormField(
-              controller: controller,
-              maxLines: 3,
-              decoration: const InputDecoration(
-                hintText: 'Describe el avance o detalle...',
-              ),
-              validator: (value) {
-                if (value == null || value.trim().isEmpty) {
-                  return 'Ingresa un comentario';
-                }
-                return null;
+        return Consumer(
+          builder: (context, ref, _) {
+            final progressState =
+                ref.watch(operatorTicketProgressProvider(widget.ticket));
+            final progressNotifier =
+                ref.read(operatorTicketProgressProvider(widget.ticket).notifier);
+            final stateName = states
+                .firstWhere(
+                  (state) => state.id == progressState.stateId,
+                  orElse: () => states.first,
+                )
+                .name;
+            return DraggableScrollableSheet(
+              expand: false,
+              initialChildSize: 0.85,
+              maxChildSize: 0.9,
+              minChildSize: 0.6,
+              builder: (context, scrollController) {
+                return ListView(
+                  controller: scrollController,
+                  padding: const EdgeInsets.all(16),
+                  children: [
+                    Row(
+                      children: [
+                        Expanded(
+                          child: Text(
+                            widget.ticket.title,
+                            style: const TextStyle(
+                              fontSize: 20,
+                              fontWeight: FontWeight.w700,
+                            ),
+                          ),
+                        ),
+                        Text(
+                          '#${widget.ticket.id}',
+                          style:
+                              const TextStyle(color: Colors.grey, fontSize: 12),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 12),
+                    _detailRow('Cliente', clientName),
+                    _detailRow('Operario', operatorName),
+                    _detailRow('Estado actual', stateName),
+                    if (progressState.errorMessage != null) ...[
+                      const SizedBox(height: 8),
+                      Text(
+                        progressState.errorMessage!,
+                        style: const TextStyle(color: Colors.redAccent),
+                      ),
+                    ],
+                    const SizedBox(height: 16),
+                    const Text(
+                      'Panel de Operario',
+                      style: TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                    const SizedBox(height: 12),
+                    DropdownButtonFormField<int>(
+                      value: progressState.stateId,
+                      decoration: const InputDecoration(
+                        labelText: 'Cambiar estado',
+                        border: OutlineInputBorder(),
+                      ),
+                      items: states
+                          .map(
+                            (state) => DropdownMenuItem(
+                              value: state.id,
+                              child: Text(state.name),
+                            ),
+                          )
+                          .toList(),
+                      onChanged: (value) {
+                        if (value == null) return;
+                        setState(() => _selectedStateId = value);
+                        progressNotifier.changeState(value);
+                      },
+                    ),
+                    const SizedBox(height: 16),
+                    const Text(
+                      'Checklist de avance',
+                      style: TextStyle(
+                        fontSize: 15,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    if (progressState.template.isEmpty)
+                      const Text(
+                        'No hay checklist para este estado.',
+                        style: TextStyle(color: Colors.black54),
+                      )
+                    else
+                      Column(
+                        children: [
+                          for (var i = 0; i < progressState.template.length; i++)
+                            CheckboxListTile(
+                              value: progressState.checkedItems.contains(i),
+                              dense: true,
+                              contentPadding: EdgeInsets.zero,
+                              title: Text(progressState.template[i]),
+                              onChanged: (value) {
+                                if (value == null) return;
+                                progressNotifier.toggleItem(i, value);
+                              },
+                            ),
+                        ],
+                      ),
+                    const SizedBox(height: 12),
+                    const Text(
+                      'Comentarios generados',
+                      style: TextStyle(
+                        fontSize: 14,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    if (progressState.autoComments.isEmpty)
+                      const Text(
+                        'Aun no hay comentarios generados.',
+                        style: TextStyle(color: Colors.black54),
+                      )
+                    else
+                      Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: progressState.autoComments
+                            .map(
+                              (comment) => Padding(
+                                padding: const EdgeInsets.only(bottom: 4),
+                                child: Text('• $comment'),
+                              ),
+                            )
+                            .toList(),
+                      ),
+                    const SizedBox(height: 12),
+                    const Text(
+                      'Comentario manual',
+                      style: TextStyle(
+                        fontSize: 14,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    TextField(
+                      minLines: 2,
+                      maxLines: 4,
+                      decoration: const InputDecoration(
+                        hintText: 'Escribe un comentario adicional...',
+                        border: OutlineInputBorder(),
+                      ),
+                      onChanged: progressNotifier.updateManualComment,
+                    ),
+                    const SizedBox(height: 16),
+                    Text(
+                      widget.ticket.description.isNotEmpty
+                          ? widget.ticket.description
+                          : 'Sin descripción',
+                      style: const TextStyle(color: Colors.black87),
+                    ),
+                    const SizedBox(height: 12),
+                    Align(
+                      alignment: Alignment.centerRight,
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          ElevatedButton.icon(
+                            onPressed: progressState.isSaving
+                                ? null
+                                : () async {
+                                    final ok = await progressNotifier
+                                        .submitProgressUpdate(
+                                      ticket: widget.ticket,
+                                      operatorId: widget.operatorId,
+                                      operatorName: operatorName,
+                                    );
+                                    if (!context.mounted) return;
+                                    if (ok) {
+                                      Navigator.pop(context);
+                                      ScaffoldMessenger.of(context).showSnackBar(
+                                        const SnackBar(
+                                          content:
+                                              Text('Avance actualizado correctamente'),
+                                        ),
+                                      );
+                                    }
+                                  },
+                            icon: progressState.isSaving
+                                ? const SizedBox(
+                                    width: 16,
+                                    height: 16,
+                                    child: CircularProgressIndicator(
+                                      strokeWidth: 2,
+                                    ),
+                                  )
+                                : const Icon(Icons.save, size: 18),
+                            label: Text(
+                              progressState.isSaving
+                                  ? 'Guardando'
+                                  : 'Guardar avances',
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                );
               },
-            ),
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(context),
-              child: const Text('Cancelar'),
-            ),
-            ElevatedButton(
-              onPressed: () async {
-                if (!formKey.currentState!.validate()) return;
-                final ok = await ref.read(ticketsProvider.notifier).addTicketComment(
-                      ticket: widget.ticket,
-                      comment: controller.text.trim(),
-                      authorId: widget.operatorId,
-                      authorName: widget.operatorName,
-                    );
-                if (!context.mounted) return;
-                if (ok) {
-                  Navigator.pop(context);
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text('Comentario agregado')),
-                  );
-                }
-              },
-              child: const Text('Guardar'),
-            ),
-          ],
+            );
+          },
         );
       },
     );
   }
+}
+
+Widget _detailRow(String label, String value) {
+  return Padding(
+    padding: const EdgeInsets.only(bottom: 6),
+    child: Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        SizedBox(
+          width: 110,
+          child: Text(label, style: const TextStyle(color: Colors.black54)),
+        ),
+        const SizedBox(width: 8),
+        Expanded(child: Text(value.isNotEmpty ? value : '-')),
+      ],
+    ),
+  );
 }

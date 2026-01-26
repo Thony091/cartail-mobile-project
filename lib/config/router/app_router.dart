@@ -29,6 +29,8 @@ import '../../features/services/presentation/page/modern_service_detail_page.dar
 import '../../features/services/presentation/page/modern_service_page.dart';
 import '../../features/realized_work/presentation/pages/modern_work_detail_page.dart';
 import '../../features/ticket/presentation/pages/admin_all_tickets_page.dart';
+import '../../features/ticket/presentation/pages/ticket_detail_page.dart';
+import '../../features/ticket/presentation/pages/ticket_edit_page.dart';
 import '../../features/ticket/presentation/pages/operator_assigned_tickets_page.dart';
 import '../../features/admin/presentation/ticket_assignment/admin_ticket_assignment_page.dart';
 import '../../features/slot/presentation/pages/admin_slot_creation_page.dart';
@@ -350,6 +352,20 @@ final goRouterProvider = Provider((ref) {
         path: '/admin-all-tickets',
         name: AdminAllTicketsPage.name,
         builder: (context, state) => const AdminAllTicketsPage(),
+      ),
+      //* Admin - Ticket Detail
+      GoRoute(
+        path: '/admin-ticket/:id',
+        name: TicketDetailPage.name,
+        builder: (context, state) =>
+            TicketDetailPage(ticketId: state.params['id'] ?? 'no-id'),
+      ),
+      //* Admin - Ticket Edit
+      GoRoute(
+        path: '/admin-ticket/:id/edit',
+        name: TicketEditPage.name,
+        builder: (context, state) =>
+            TicketEditPage(ticketId: state.params['id'] ?? 'no-id'),
       ),
       //* Admin - Ticket Assignment
       GoRoute(

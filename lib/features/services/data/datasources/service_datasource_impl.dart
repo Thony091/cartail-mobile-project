@@ -1,8 +1,7 @@
-import 'dart:convert';
 import 'dart:io';
 
 import 'package:dio/dio.dart';
-import 'package:flutter/cupertino.dart';
+import 'package:flutter/foundation.dart';
 
 import '../../../../config/config.dart';
 // import '../../../../config/constants/secure_storage_keys.dart';
@@ -11,23 +10,28 @@ import '../../domain/entities/services.dart';
 import '../errors/service_errors.dart';
 import '../mappers/service_mapper.dart';
 import 'services_datasources.dart';
+import 'package:portafolio_project/core/utils/image_encoder_service.dart';
 
 class ServicesDatasourceImpl extends ServicesDatasource {
   late final Dio dio;
   final String accessToken;
+  final ImageEncoderService _imageEncoder;
   // final _secureStorage = SecureStorageService.instance;
 
-  ServicesDatasourceImpl({required this.accessToken})
-    : dio = Dio(
-        BaseOptions(
-          baseUrl: Enviroment.baseUrl,
-          headers: {
-            // 'x-api-key': 'ZvHNth6qgZ6LNnwtXwJX75Jk8YlXEZxX2AZvOFSW',
-            // 'Authorization': 'Bearer $accessToken',
-            'Content-Type': 'application/json',
-          },
-        ),
-      ) {
+  ServicesDatasourceImpl({
+    required this.accessToken,
+    ImageEncoderService? imageEncoder,
+  })  : _imageEncoder = imageEncoder ?? const ImageEncoderService(),
+        dio = Dio(
+          BaseOptions(
+            baseUrl: Enviroment.baseUrl,
+            headers: {
+              // 'x-api-key': 'ZvHNth6qgZ6LNnwtXwJX75Jk8YlXEZxX2AZvOFSW',
+              // 'Authorization': 'Bearer $accessToken',
+              'Content-Type': 'application/json',
+            },
+          ),
+        ) {
     _attachAuthHeader();
   }
 
@@ -52,34 +56,46 @@ class ServicesDatasourceImpl extends ServicesDatasource {
     );
   }
 
-  Future<String> _uploadFile(String path) async {
-    try {
-      // Leer el archivo de imagen como bytes
-      final fileBytes = File(path).readAsBytesSync();
-      // Codificar los bytes a Base64
-      final base64Image = base64Encode(fileBytes);
-      // Devolver la cadena Base64 de la imagen
-      return base64Image;
-    } catch (e) {
-      throw Exception('Error al convertir la imagen a Base64: $e');
+  Future<String?> _encodeImage(String photo) async {
+    final trimmed = photo.trim();
+    if (trimmed.isEmpty) return null;
+    if (trimmed.startsWith('http')) return null;
+    if (trimmed.startsWith('data:image/')) {
+      return ImageEncoderService.stripDataUriPrefix(trimmed);
     }
+
+    final normalizedPath = trimmed.startsWith('file://')
+        ? Uri.parse(trimmed).toFilePath()
+        : trimmed;
+
+    final file = File(normalizedPath);
+    if (await file.exists()) {
+      return _imageEncoder.encodeFile(file);
+    }
+    return null;
   }
 
-  Future<List<String>> _uploadPhotos(List<String> photos) async {
-    final photosToConvert = photos
-        .where(
-          (element) =>
-              !element.startsWith('https') && !element.startsWith('http'),
-        )
-        .toList();
-    // Crear una serie de Futures de conversión de imágenes a Base64
-    final List<Future<String>> conversionJobs = photosToConvert
-        .map((photoPath) => _uploadFile(photoPath))
-        .toList();
-    // Esperar a que todas las conversiones se completen
-    final convertedImages = await Future.wait(conversionJobs);
-    // Devolver solo las imágenes convertidas (locales)
-    return convertedImages;
+  Future<List<String>> _encodeImageCandidates(List<String> photos) async {
+    final encoded = <String>[];
+    for (final photo in photos) {
+      try {
+        final encodedPhoto = await _encodeImage(photo);
+        if (encodedPhoto != null) {
+          encoded.add(encodedPhoto);
+        }
+      } on ImageEncodingException catch (e) {
+        debugPrint('ServicesDatasourceImpl image encoding failed for $photo: $e');
+        rethrow;
+      }
+    }
+
+    if (kDebugMode && encoded.isNotEmpty) {
+      debugPrint(
+        'ServicesDatasourceImpl encoded ${encoded.length} local image(s), first size ${encoded.first.length} chars',
+      );
+    }
+
+    return encoded;
   }
 
   @override
@@ -96,9 +112,11 @@ class ServicesDatasourceImpl extends ServicesDatasource {
 
       // Procesar las imágenes (convertir a Base64 si son locales)
       if (serviceSimilar.containsKey('images') &&
-          serviceSimilar['images'] != null) {
-        final images = serviceSimilar['images'] as List<String>;
-        final convertedImages = await _uploadPhotos(images);
+          serviceSimilar['images'] is List) {
+        final images = (serviceSimilar['images'] as List)
+            .whereType<String>()
+            .toList();
+        final convertedImages = await _encodeImageCandidates(images);
         if (convertedImages.isNotEmpty) {
           // El backend espera 'imagen' (singular) con la primera imagen
           serviceSimilar['imagen'] = convertedImages.first;

@@ -2,6 +2,8 @@ import 'package:animate_do/animate_do.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:portafolio_project/features/auth/presentation/providers/better_auth_provider.dart';
+import 'package:portafolio_project/features/shared/domain/entities/state.dart' as lookup;
+import 'package:portafolio_project/features/ticket/presentation/providers/ticket_lookup_crud_providers.dart';
 
 import '../../../shared/presentation/shared/widgets/modern_button.dart';
 import '../../../shared/presentation/shared/widgets/modern_card.dart';
@@ -88,14 +90,17 @@ class ReservationForm extends ConsumerWidget {
     final authState = ref.watch(betterAuthProvider);
     final isAuthenticated = authState.isAuthenticated;
     final userData = authState.session?.user;
+    final importancias = ref.watch(ticketImportanciasProvider);
+    final urgencias = ref.watch(ticketUrgenciasProvider);
     final needsClientInfo = !isAuthenticated ||
         userData?.name == null ||
         userData?.email == null;
     final selectedService = formState.serviceId.isNotEmpty
         ? formState.serviceId
         : null;
-    final selectedDate = DateTime.tryParse(formState.date.value);
     final selectedSlotId = formState.selectedSlotId;
+    final selectedImportance = formState.importanceId;
+    final selectedUrgency = formState.urgencyId;
 
     return FadeInUp(
       child: ModernCard(
@@ -215,63 +220,6 @@ class ReservationForm extends ConsumerWidget {
 
               const SizedBox(height: 16),
 
-              // Fecha
-              const Text(
-                'Selecciona la Fecha (obligatorio)',
-                style: TextStyle(
-                  fontSize: 16,
-                  fontWeight: FontWeight.w600,
-                  color: Color(0xFF2c3e50),
-                ),
-              ),
-              const SizedBox(height: 12),
-
-              InkWell(
-                onTap: () => _selectDate(context, formNotifier, selectedDate),
-                child: Container(
-                  padding: const EdgeInsets.all(16),
-                  decoration: BoxDecoration(
-                    color: Colors.white,
-                    borderRadius: BorderRadius.circular(12),
-                    border: Border.all(color: const Color(0xFFe2e8f0)),
-                  ),
-                  child: Row(
-                    children: [
-                      const Icon(
-                        Icons.calendar_today,
-                        color: Color(0xFF3498db),
-                      ),
-                      const SizedBox(width: 16),
-                      Text(
-                        selectedDate != null
-                            ? '${selectedDate.day}/${selectedDate.month}/${selectedDate.year}'
-                            : 'Selecciona una fecha',
-                        style: TextStyle(
-                          fontSize: 16,
-                          color: selectedDate != null
-                              ? const Color(0xFF2c3e50)
-                              : const Color(0xFF7f8c8d),
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-              if (formState.isFormPosted && formState.date.errorMessage != null)
-                Padding(
-                  padding: const EdgeInsets.only(top: 8, left: 12),
-                  child: Text(
-                    formState.date.errorMessage!,
-                    style: const TextStyle(
-                      color: Color(0xFFe74c3c),
-                      fontSize: 12,
-                      fontWeight: FontWeight.w500,
-                    ),
-                  ),
-                ),
-
-              const SizedBox(height: 16),
-
               // Horarios disponibles
               const Text(
                 'Selecciona un Horario (obligatorio)',
@@ -321,7 +269,9 @@ class ReservationForm extends ConsumerWidget {
                     items: formState.availableSlots.map((slot) {
                       return DropdownMenuItem(
                         value: slot.id,
-                        child: Text('${slot.startTime} - ${slot.endTime}'),
+                        child: Text(
+                          '${slot.date} • ${slot.startTime} - ${slot.endTime}',
+                        ),
                       );
                     }).toList(),
                     onChanged: (value) {
@@ -349,9 +299,8 @@ class ReservationForm extends ConsumerWidget {
 
               const SizedBox(height: 16),
 
-              // Hora fin estimada
               const Text(
-                'Hora Fin Estimada (obligatorio)',
+                'Selecciona Importancia (obligatorio)',
                 style: TextStyle(
                   fontSize: 16,
                   fontWeight: FontWeight.w600,
@@ -359,13 +308,31 @@ class ReservationForm extends ConsumerWidget {
                 ),
               ),
               const SizedBox(height: 12),
-              ModernInputField(
-                label: 'Hora fin estimada',
-                hint: '18:30',
-                prefixIcon: const Icon(Icons.schedule),
-                keyboardType: TextInputType.datetime,
-                errorMessage: formState.endTimeEstimated.errorMessage,
-                onChanged: formNotifier.onEndTimeEstimatedChange,
+
+              _buildLookupDropdown(
+                items: importancias,
+                value: selectedImportance,
+                hintText: 'Elige una importancia',
+                onChanged: formNotifier.onImportanceChange,
+              ),
+
+              const SizedBox(height: 16),
+
+              const Text(
+                'Selecciona Urgencia (obligatorio)',
+                style: TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.w600,
+                  color: Color(0xFF2c3e50),
+                ),
+              ),
+              const SizedBox(height: 12),
+
+              _buildLookupDropdown(
+                items: urgencias,
+                value: selectedUrgency,
+                hintText: 'Elige una urgencia',
+                onChanged: formNotifier.onUrgencyChange,
               ),
 
               const SizedBox(height: 16),
@@ -378,17 +345,6 @@ class ReservationForm extends ConsumerWidget {
                 prefixIcon: const Icon(Icons.sticky_note_2_outlined),
                 errorMessage: formState.customerNotes.errorMessage,
                 onChanged: formNotifier.onCustomerNotesChange,
-              ),
-
-              const SizedBox(height: 12),
-
-              ModernInputField(
-                label: 'Notas del Mecánico (obligatorio)',
-                hint: 'Si no aplica, escribe \"Sin notas\"',
-                maxLines: 4,
-                prefixIcon: const Icon(Icons.build_outlined),
-                errorMessage: formState.mechanicNotes.errorMessage,
-                onChanged: formNotifier.onMechanicNotesChange,
               ),
 
               const SizedBox(height: 12),
@@ -419,36 +375,45 @@ class ReservationForm extends ConsumerWidget {
     );
   }
 
-  Future<void> _selectDate(
-    BuildContext context,
-    ReservationFormNotifier formNotifier,
-    DateTime? currentDate,
-  ) async {
-    final DateTime? picked = await showDatePicker(
-      context: context,
-      initialDate: currentDate ?? DateTime.now(),
-      firstDate: DateTime.now(),
-      lastDate: DateTime.now().add(const Duration(days: 90)),
-      builder: (context, child) {
-        return Theme(
-          data: Theme.of(context).copyWith(
-            colorScheme: const ColorScheme.light(
-              primary: Color(0xFF3498db),
-              onPrimary: Colors.white,
-              surface: Colors.white,
-              onSurface: Color(0xFF2c3e50),
-            ),
-          ),
-          child: child!,
-        );
+}
+
+Widget _buildLookupDropdown({
+  required List<lookup.State> items,
+  required int? value,
+  required String hintText,
+  required ValueChanged<int?> onChanged,
+}) {
+  return Container(
+    decoration: BoxDecoration(
+      color: Colors.white,
+      borderRadius: BorderRadius.circular(12),
+      border: Border.all(color: const Color(0xFFe2e8f0)),
+    ),
+    child: DropdownButtonFormField<int>(
+      value: value,
+      decoration: InputDecoration(
+        border: InputBorder.none,
+        contentPadding: const EdgeInsets.symmetric(
+          horizontal: 16,
+          vertical: 16,
+        ),
+        hintText: hintText,
+      ),
+      items: items
+          .map((item) => DropdownMenuItem<int>(
+                value: item.id,
+                child: Text(item.name),
+              ))
+          .toList(),
+      validator: (value) {
+        if (value == null) {
+          return 'Campo obligatorio';
+        }
+        return null;
       },
-    );
-
-    if (picked != null && picked != currentDate) {
-      formNotifier.onReservationDate(picked);
-    }
-  }
-
+      onChanged: onChanged,
+    ),
+  );
 }
 
 class ReservationInfoCard extends StatelessWidget {

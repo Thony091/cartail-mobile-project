@@ -111,6 +111,14 @@ class ReservationFormNotifier extends StateNotifier<ReservationFormState>{
     );
   }
 
+  void onImportanceChange(int? value) {
+    state = state.copyWith(importanceId: value);
+  }
+
+  void onUrgencyChange(int? value) {
+    state = state.copyWith(urgencyId: value);
+  }
+
   onServiceIdChange( String value ) {
     state = state.copyWith(
       serviceId: value,
@@ -148,6 +156,9 @@ class ReservationFormNotifier extends StateNotifier<ReservationFormState>{
         }
         return false;
       }
+      if (state.importanceId == null || state.urgencyId == null) {
+        return false;
+      }
 
       state = state.copyWith( isPosting: true );
 
@@ -172,6 +183,8 @@ class ReservationFormNotifier extends StateNotifier<ReservationFormState>{
         'recordatorio': state.reminder,
         'idEstado': state.statusId,
         'idServicio': int.tryParse(state.serviceId) ?? state.statusId,
+        'idImportancia': state.importanceId,
+        'idUrgencia': state.urgencyId,
         'idCliente': clientId,
         'idSlot': slot.id,
       };
@@ -256,11 +269,7 @@ class ReservationFormNotifier extends StateNotifier<ReservationFormState>{
 
     final validationInputs = <FormzInput>[
       Name.dirty(state.vehiclePlate.value),
-      ReservationDate.dirty(state.date.value),
-      ReservationTime.dirty(state.time.value),
-      ReservationTime.dirty(state.endTimeEstimated.value),
       Messages.dirty(state.customerNotes.value),
-      Messages.dirty(state.mechanicNotes.value),
     ];
 
     if (needsClientInfo) {
@@ -289,7 +298,7 @@ class ReservationFormNotifier extends StateNotifier<ReservationFormState>{
   }
 
   Future<void> _loadAvailableSlots({bool force = false}) async {
-    if (state.serviceId.isEmpty || state.date.value.isEmpty || !state.date.isValid) {
+    if (state.serviceId.isEmpty) {
       return;
     }
     if (state.isLoadingSlots && !force) return;
@@ -302,17 +311,21 @@ class ReservationFormNotifier extends StateNotifier<ReservationFormState>{
         return;
       }
       final slotRepository = ref.read(slotRepositoryProvider);
-      final slots = await slotRepository.getSlots();
-      final dateKey = state.date.value.substring(0, 10);
+      final slots = await slotRepository
+          .getSlots()
+          .timeout(const Duration(seconds: 12));
       final available = slots
           .where(
             (slot) =>
-                slot.serviceId == serviceId &&
                 slot.isAvailable &&
-                slot.date.startsWith(dateKey),
+                (slot.serviceId == serviceId || slot.serviceId == 0),
           )
           .toList()
-        ..sort((a, b) => a.startTime.compareTo(b.startTime));
+        ..sort((a, b) {
+          final dateCompare = a.date.compareTo(b.date);
+          if (dateCompare != 0) return dateCompare;
+          return a.startTime.compareTo(b.startTime);
+        });
 
       final selected = state.selectedSlotId;
       final selectedExists =
@@ -354,6 +367,8 @@ class ReservationFormState {
   final int statusId;
   final int? clientId;
   final String serviceId;
+  final int? importanceId;
+  final int? urgencyId;
   final Name clientName;
   final Email clientEmail;
   final Phone clientPhone;
@@ -378,6 +393,8 @@ class ReservationFormState {
     this.statusId       = 1,
     this.clientId,
     this.serviceId      = '',
+    this.importanceId,
+    this.urgencyId,
     this.clientName     = const Name.pure(),
     this.clientEmail    = const Email.pure(),
     this.clientPhone    = const Phone.pure(),
@@ -403,6 +420,8 @@ class ReservationFormState {
     int? statusId,
     int? clientId,
     String? serviceId,
+    int? importanceId,
+    int? urgencyId,
     Name? clientName,
     Email? clientEmail,
     Phone? clientPhone,
@@ -427,6 +446,8 @@ class ReservationFormState {
     statusId: statusId ?? this.statusId,
     clientId: clientId ?? this.clientId,
     serviceId: serviceId ?? this.serviceId,
+    importanceId: importanceId ?? this.importanceId,
+    urgencyId: urgencyId ?? this.urgencyId,
     clientName: clientName ?? this.clientName,
     clientEmail: clientEmail ?? this.clientEmail,
     clientPhone: clientPhone ?? this.clientPhone,
@@ -455,6 +476,8 @@ class ReservationFormState {
         statusId: $statusId
         clientId: $clientId
         serviceId: $serviceId
+        importanceId: $importanceId
+        urgencyId: $urgencyId
         clientName: $clientName
         clientEmail: $clientEmail
         clientPhone: $clientPhone

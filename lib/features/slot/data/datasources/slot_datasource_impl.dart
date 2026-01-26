@@ -13,13 +13,32 @@ class SlotDatasourceImpl extends SlotDatasource {
   SlotDatasourceImpl({
     required this.accessToken
   }) : dio = Dio(
-    BaseOptions(
-      baseUrl: Enviroment.baseUrl,
-      headers: {
-        'Content-Type': 'application/json',
-      }
-    )
-  );
+      BaseOptions(
+        baseUrl: Enviroment.baseUrl,
+        connectTimeout: const Duration(seconds: 10),
+        receiveTimeout: const Duration(seconds: 12),
+        sendTimeout: const Duration(seconds: 10),
+        headers: {
+          'Content-Type': 'application/json',
+        }
+      ),
+    ) {
+    _attachAuthHeader();
+  }
+
+  void _attachAuthHeader() {
+    dio.interceptors.add(
+      InterceptorsWrapper(
+        onRequest: (options, handler) {
+          final token = accessToken.isNotEmpty ? accessToken : '';
+          if (token.isNotEmpty) {
+            options.headers['Authorization'] = 'Bearer $token';
+          }
+          return handler.next(options);
+        },
+      ),
+    );
+  }
 
   @override
   Future<List<Slot>> getSlots() async {
@@ -28,10 +47,13 @@ class SlotDatasourceImpl extends SlotDatasource {
       final List<Slot> slots = [];
       if (response.statusCode == 200) {
         var data = response.data;
+        var slotsData = data;
         if (data is Map<String, dynamic> && data.containsKey('data')) {
-          var slotsData = data['data'];
-          if (slotsData is List) {
-            for (final slot in slotsData) {
+          slotsData = data['data'];
+        }
+        if (slotsData is List) {
+          for (final slot in slotsData) {
+            if (slot is Map<String, dynamic>) {
               slots.add(SlotMapper.jsonToEntity(slot));
             }
           }
@@ -84,7 +106,10 @@ class SlotDatasourceImpl extends SlotDatasource {
       if (response.statusCode == 200) {
         var data = response.data;
         if (data is Map<String, dynamic> && data.containsKey('data')) {
-          slot = SlotMapper.jsonToEntity(data['data']);
+          data = data['data'];
+        }
+        if (data is Map<String, dynamic>) {
+          slot = SlotMapper.jsonToEntity(data);
         }
       }
       return slot;
@@ -99,12 +124,9 @@ class SlotDatasourceImpl extends SlotDatasource {
   @override
   Future<Slot> createSlot(Slot slot) async {
     try {
-      final slotData = SlotMapper.entityToJson(slot);
-      slotData.remove('id');
-
       final response = await dio.post(
         '/slot',
-        data: slotData,
+        data: _slotPayload(slot, includeId: false),
       );
 
       Slot newSlot = Slot(
@@ -129,13 +151,12 @@ class SlotDatasourceImpl extends SlotDatasource {
   @override
   Future<Slot> updateSlot(Slot slot) async {
     try {
-      final slotData = SlotMapper.entityToJson(slot);
-      final int slotId = slotData['id'];
-      slotData.remove('id');
+      final payload = _slotPayload(slot, includeId: true);
+      final int slotId = payload['id'] as int;
 
       final response = await dio.patch(
         '/slot/$slotId',
-        data: slotData,
+        data: payload,
       );
 
       Slot updatedSlot = Slot(
@@ -164,5 +185,50 @@ class SlotDatasourceImpl extends SlotDatasource {
     } catch (e) {
       throw Exception(e);
     }
+  }
+
+  Map<String, dynamic> _slotPayload(Slot slot, {required bool includeId}) {
+    final payload = <String, dynamic>{
+      'idServicio': slot.serviceId,
+      if (slot.reservationId != null) 'idReserva': slot.reservationId,
+    };
+
+    final inicio = _buildIsoDateTime(slot.date, slot.startTime);
+    final fin = _buildIsoDateTime(slot.date, slot.endTime);
+
+    if (inicio != null) payload['inicio'] = inicio;
+    if (fin != null) payload['fin'] = fin;
+    payload['fecha'] = slot.date;
+    payload['horaInicio'] = slot.startTime;
+    payload['horaFin'] = slot.endTime;
+
+    if (includeId && slot.id > 0) {
+      payload['id'] = slot.id;
+    }
+
+    return payload;
+  }
+
+  String? _buildIsoDateTime(String date, String time) {
+    final trimmedDate = date.trim();
+    final trimmedTime = time.trim();
+    if (trimmedDate.isEmpty || trimmedTime.isEmpty) {
+      return null;
+    }
+
+    final dateParts = trimmedDate.split('-');
+    if (dateParts.length != 3) return null;
+    final year = int.tryParse(dateParts[0]);
+    final month = int.tryParse(dateParts[1]);
+    final day = int.tryParse(dateParts[2]);
+    if (year == null || month == null || day == null) return null;
+
+    final timeParts = trimmedTime.split(':');
+    if (timeParts.length != 2) return null;
+    final hour = int.tryParse(timeParts[0]);
+    final minute = int.tryParse(timeParts[1]);
+    if (hour == null || minute == null) return null;
+
+    return DateTime.utc(year, month, day, hour, minute).toIso8601String();
   }
 }

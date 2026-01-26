@@ -34,6 +34,7 @@ class OperatorAssignedTicketsPageState
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
       ref.read(usersProvider.notifier).loadUsers();
+      ref.read(clientsProvider.notifier).getClients();
     });
   }
 
@@ -424,14 +425,6 @@ class OperatorTicketCard extends ConsumerStatefulWidget {
 }
 
 class _OperatorTicketCardState extends ConsumerState<OperatorTicketCard> {
-  late int _selectedStateId;
-
-  @override
-  void initState() {
-    super.initState();
-    _selectedStateId = widget.ticket.stateId ?? ((widget.index % 5) + 1);
-  }
-
   String? _resolveOperatorName(Map<String, AdminUserModel> operatorsById) {
     final explicit = widget.ticket.assignedToName?.trim();
     if (explicit != null && explicit.isNotEmpty) return explicit;
@@ -494,16 +487,21 @@ class _OperatorTicketCardState extends ConsumerState<OperatorTicketCard> {
 
   @override
   Widget build(BuildContext context) {
+    final currentStateId = widget.ticket.stateId ?? 1;
     final states = ref.watch(statesProvider);
     final selectedStateName = states
             .firstWhere(
-              (state) => state.id == _selectedStateId,
+              (state) => state.id == currentStateId,
               orElse: () => states.first,
             )
             .name;
     final isPriority = widget.index % 3 == 0;
+    final operarios = ref.watch(operariosProvider);
+    final operariosById = {
+      for (final operario in operarios) operario.id: operario,
+    };
     final usersById = ref.watch(usersByIdProvider);
-    final resolvedOperatorName = _resolveOperatorName(usersById);
+    final resolvedOperatorName = _resolveOperatorName(operariosById);
     final displayOperatorName = _normalizeName(
       resolvedOperatorName,
       fallback: _normalizeName(widget.operatorName, fallback: 'Operario no encontrado'),
@@ -543,7 +541,7 @@ class _OperatorTicketCardState extends ConsumerState<OperatorTicketCard> {
                   ],
                   StatusBadge(
                     label: selectedStateName,
-                    color: _getStatusColor(_selectedStateId),
+                    color: _getStatusColor(currentStateId),
                   ),
                   const Spacer(),
                   Text(
@@ -564,7 +562,7 @@ class _OperatorTicketCardState extends ConsumerState<OperatorTicketCard> {
                   const SizedBox(width: 12),
                   Expanded(
                     child: DropdownButton<int>(
-                      value: _selectedStateId,
+                      value: currentStateId,
                       isExpanded: true,
                       items: states
                           .map(
@@ -576,7 +574,6 @@ class _OperatorTicketCardState extends ConsumerState<OperatorTicketCard> {
                           .toList(),
                       onChanged: (value) {
                         if (value == null) return;
-                        setState(() => _selectedStateId = value);
                         ref.read(ticketsProvider.notifier).updateTicketStatus(
                           ticket: widget.ticket,
                           stateId: value,
@@ -753,7 +750,6 @@ class _OperatorTicketCardState extends ConsumerState<OperatorTicketCard> {
                           .toList(),
                       onChanged: (value) {
                         if (value == null) return;
-                        setState(() => _selectedStateId = value);
                         progressNotifier.changeState(value);
                       },
                     ),

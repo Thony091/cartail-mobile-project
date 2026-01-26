@@ -4,6 +4,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:portafolio_project/features/auth/presentation/providers/better_auth_provider.dart';
+import 'package:portafolio_project/features/client/domain/entities/client.dart';
+import 'package:portafolio_project/features/client/presentation/providers/clients_provider.dart';
 import 'package:portafolio_project/features/service_tracking/presentation/widgets/service_tracking_widgets.dart';
 import 'package:portafolio_project/features/ticket/presentation/providers/tickets_provider.dart';
 
@@ -40,9 +42,17 @@ class _MyServicesPageState extends ConsumerState<MyServicesPage>
   Widget build(BuildContext context) {
     final authState = ref.watch(betterAuthProvider);
     final ticketsState = ref.watch(ticketsProvider);
+    final clientsState = ref.watch(clientsProvider);
     final userId = authState.session?.user.id;
+    final userEmail = authState.session?.user.email;
+    final clientId = _resolveClientId(clientsState.clients, userEmail);
 
-    final services = _buildUserServices(ticketsState.tickets, userId);
+    final services = _buildUserServices(
+      ticketsState.tickets,
+      userId: userId,
+      userEmail: userEmail,
+      clientId: clientId,
+    );
     final activeServices = services.where((s) => s.isActive).toList();
     final readyServices = services.where((s) => s.isReady).toList();
     final completedServices = services.where((s) => s.isCompleted).toList();
@@ -133,14 +143,69 @@ class _MyServicesPageState extends ConsumerState<MyServicesPage>
   }
 
   List<UserServiceRequest> _buildUserServices(
-    List<Ticket> tickets,
-    String? userId,
-  ) {
-    if (userId == null) return [];
+    List<Ticket> tickets, {
+    required String? userId,
+    required String? userEmail,
+    required String? clientId,
+  }) {
+    if (userId == null && userEmail == null && clientId == null) return [];
     return tickets
-        .where((ticket) => ticket.userId == userId)
+        .where(
+          (ticket) => _isTicketForUser(
+            ticket,
+            userId: userId,
+            userEmail: userEmail,
+            clientId: clientId,
+          ),
+        )
         .map(_ticketToServiceRequest)
         .toList();
+  }
+
+  bool _isTicketForUser(
+    Ticket ticket, {
+    required String? userId,
+    required String? userEmail,
+    required String? clientId,
+  }) {
+    final ticketUserId = ticket.userId.trim();
+    if (userId != null && ticketUserId == userId) return true;
+    if (clientId != null && ticketUserId == clientId) return true;
+
+    final metaClientId =
+        _metadataValue(ticket, ['clientId', 'idCliente', 'id_cliente']);
+    if (metaClientId != null && clientId != null && metaClientId == clientId) {
+      return true;
+    }
+
+    final metaEmail =
+        _metadataValue(ticket, ['clientEmail', 'email', 'correo']);
+    if (metaEmail != null && userEmail != null) {
+      return metaEmail.toLowerCase().trim() == userEmail.toLowerCase().trim();
+    }
+
+    return false;
+  }
+
+  String? _resolveClientId(List<Client> clients, String? email) {
+    if (email == null || email.trim().isEmpty) return null;
+    final lower = email.toLowerCase().trim();
+    for (final client in clients) {
+      if (client.email.toLowerCase().trim() == lower) {
+        return client.id.toString();
+      }
+    }
+    return null;
+  }
+
+  String? _metadataValue(Ticket ticket, List<String> keys) {
+    for (final key in keys) {
+      final value = ticket.metadata[key];
+      if (value != null && value.toString().trim().isNotEmpty) {
+        return value.toString();
+      }
+    }
+    return null;
   }
 
   UserServiceRequest _ticketToServiceRequest(Ticket ticket) {

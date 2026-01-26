@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart' hide FilterChip;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:portafolio_project/features/client/domain/entities/client.dart';
+import 'package:portafolio_project/features/client/presentation/providers/clients_provider.dart';
 import '../../../../presentation/pages/auth/modern_scaffold_with_drawer.dart';
 import 'widgets/ticket_widgets.dart';
 import '../providers/tickets_provider.dart';
@@ -31,6 +33,7 @@ class AdminAllTicketsPageState extends ConsumerState<AdminAllTicketsPage> {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
       ref.read(usersProvider.notifier).loadUsers();
+      ref.read(clientsProvider.notifier).getClients();
       ref.read(ticketEstadosCrudProvider.notifier).load();
       ref.read(ticketImportanciasCrudProvider.notifier).load();
       ref.read(ticketUrgenciasCrudProvider.notifier).load();
@@ -53,9 +56,14 @@ class AdminAllTicketsPageState extends ConsumerState<AdminAllTicketsPage> {
     final importancias = ref.watch(ticketImportanciasProvider);
     final urgencias = ref.watch(ticketUrgenciasProvider);
     final servicesState = ref.watch(servicesProvider);
+    final clientsState = ref.watch(clientsProvider);
+    final clientsById = <String, Client>{
+      for (final client in clientsState.clients) client.id.toString(): client,
+    };
     final filteredTickets = _filterTickets(
       ticketsState.tickets,
       filtersState,
+      clientsById,
     );
     final stats = _buildStats(ticketsState.tickets);
 
@@ -195,6 +203,7 @@ class AdminAllTicketsPageState extends ConsumerState<AdminAllTicketsPage> {
   List<Ticket> _filterTickets(
     List<Ticket> tickets,
     TicketsFiltersState filtersState,
+    Map<String, Client> clientsById,
   ) {
     return tickets.where((ticket) {
       final stateId = ticket.stateId ?? 1;
@@ -230,10 +239,11 @@ class AdminAllTicketsPageState extends ConsumerState<AdminAllTicketsPage> {
               ticketDate.isAfter(range.end));
 
       final query = filtersState.searchQuery.trim().toLowerCase();
+      final clientName = _resolveClientName(ticket, clientsById);
       final matchesSearch =
           query.isEmpty ||
           ticket.id.toLowerCase().contains(query) ||
-          ticket.userName.toLowerCase().contains(query) ||
+          clientName.toLowerCase().contains(query) ||
           ticket.title.toLowerCase().contains(query) ||
           ticket.description.toLowerCase().contains(query);
 
@@ -251,6 +261,37 @@ class AdminAllTicketsPageState extends ConsumerState<AdminAllTicketsPage> {
         final bDate = DateTime.tryParse(b.startDate) ?? DateTime.fromMillisecondsSinceEpoch(0);
         return bDate.compareTo(aDate);
       });
+  }
+
+  String _resolveClientName(Ticket ticket, Map<String, Client> clientsById) {
+    final explicit = ticket.userName.trim();
+    if (explicit.isNotEmpty) return explicit;
+    final metaName = _metadataValue(
+      ticket,
+      ['clientName', 'clienteNombre', 'nombre', 'cliente'],
+    );
+    if (metaName != null && metaName.trim().isNotEmpty) {
+      return metaName.trim();
+    }
+    final userId = ticket.userId.trim();
+    if (userId.isEmpty) return 'Sin nombre';
+    final client = clientsById[userId];
+    if (client != null) {
+      final name = client.name.trim();
+      if (name.isNotEmpty) return name;
+      if (client.email.trim().isNotEmpty) return client.email.trim();
+    }
+    return 'Cliente no encontrado';
+  }
+
+  String? _metadataValue(Ticket ticket, List<String> keys) {
+    for (final key in keys) {
+      final value = ticket.metadata[key];
+      if (value != null && value.toString().trim().isNotEmpty) {
+        return value.toString();
+      }
+    }
+    return null;
   }
 
   void _showFilterDialog(BuildContext context) {
@@ -626,23 +667,18 @@ class AdminTicketCard extends ConsumerStatefulWidget {
 }
 
 class _AdminTicketCardState extends ConsumerState<AdminTicketCard> {
-  late int _selectedStateId;
-  late int _selectedImportanceId;
-  late int _selectedUrgencyId;
-  late Ticket _ticket;
-
   bool get _hasAssignment =>
-      _ticket.assignedToId?.trim().isNotEmpty == true;
+      widget.ticket.assignedToId?.trim().isNotEmpty == true;
 
   String? _resolveOperatorName(
     Map<String, AdminUserModel> usersById,
   ) {
-    final explicitName = _ticket.assignedToName?.trim();
+    final explicitName = widget.ticket.assignedToName?.trim();
     if (explicitName != null && explicitName.isNotEmpty) {
       return explicitName;
     }
 
-    final assignedId = _ticket.assignedToId;
+    final assignedId = widget.ticket.assignedToId;
     if (assignedId == null || assignedId.isEmpty) return null;
 
     final user = usersById[assignedId];
@@ -650,15 +686,6 @@ class _AdminTicketCardState extends ConsumerState<AdminTicketCard> {
     final name = user.name?.trim();
     if (name != null && name.isNotEmpty) return name;
     return user.email;
-  }
-
-  @override
-  void initState() {
-    super.initState();
-    _ticket = widget.ticket;
-    _selectedStateId = widget.ticket.stateId ?? 1;
-    _selectedImportanceId = widget.ticket.importanceId ?? 1;
-    _selectedUrgencyId = widget.ticket.urgencyId ?? 1;
   }
 
   Future<void> _showAssignOperatorDialog(BuildContext context) async {
@@ -734,23 +761,12 @@ class _AdminTicketCardState extends ConsumerState<AdminTicketCard> {
                               final ok = await ref
                                   .read(ticketsProvider.notifier)
                                   .assignOperator(
-                                    ticket: _ticket,
+                                    ticket: widget.ticket,
                                     operatorId: operator.id,
                                     operatorName: operatorName,
                                   );
                               if (!context.mounted) return;
                               if (ok) {
-                                setState(() {
-                                  _ticket = _ticket.copyWith(
-                                    assignedToId: operator.id,
-                                    assignedToName: operatorName,
-                                    stateId: _ticket.stateId == null ||
-                                            _ticket.stateId == 1
-                                        ? 2
-                                        : _ticket.stateId,
-                                  );
-                                  _selectedStateId = _ticket.stateId ?? 2;
-                                });
                                 Navigator.pop(context);
                                 ScaffoldMessenger.of(context).showSnackBar(
                                   SnackBar(
@@ -802,23 +818,57 @@ class _AdminTicketCardState extends ConsumerState<AdminTicketCard> {
     }
   }
 
+  String _resolveClientName(Map<String, Client> clientsById) {
+    final explicit = widget.ticket.userName.trim();
+    if (explicit.isNotEmpty) return explicit;
+    final metaName = _metadataValue(
+      widget.ticket,
+      ['clientName', 'clienteNombre', 'nombre', 'cliente'],
+    );
+    if (metaName != null && metaName.trim().isNotEmpty) {
+      return metaName.trim();
+    }
+    final userId = widget.ticket.userId.trim();
+    if (userId.isEmpty) return 'Sin nombre';
+    final client = clientsById[userId];
+    if (client != null) {
+      final name = client.name.trim();
+      if (name.isNotEmpty) return name;
+      if (client.email.trim().isNotEmpty) return client.email.trim();
+    }
+    return 'Cliente no encontrado';
+  }
+
+  String? _metadataValue(Ticket ticket, List<String> keys) {
+    for (final key in keys) {
+      final value = ticket.metadata[key];
+      if (value != null && value.toString().trim().isNotEmpty) {
+        return value.toString();
+      }
+    }
+    return null;
+  }
+
   @override
   Widget build(BuildContext context) {
     final states = widget.ticketStates;
     final hasStates = states.isNotEmpty;
     final hasImportances = widget.ticketImportances.isNotEmpty;
     final hasUrgencies = widget.ticketUrgencies.isNotEmpty;
+    final currentStateId = widget.ticket.stateId ?? 1;
+    final currentImportanceId = widget.ticket.importanceId ?? 1;
+    final currentUrgencyId = widget.ticket.urgencyId ?? 1;
     final selectedStateName = states.isEmpty
         ? 'Estado'
         : states
             .firstWhere(
-              (state) => state.id == _selectedStateId,
+              (state) => state.id == currentStateId,
               orElse: () => states.first,
             )
             .name;
     final serviceName = widget.services
         .firstWhere(
-          (service) => int.tryParse(service.id) == _ticket.serviceId,
+          (service) => int.tryParse(service.id) == widget.ticket.serviceId,
           orElse: () => widget.services.isNotEmpty
               ? widget.services.first
               : Services(
@@ -834,13 +884,21 @@ class _AdminTicketCardState extends ConsumerState<AdminTicketCard> {
                 ),
         )
         .name;
-    final usersById = ref.watch(usersByIdProvider);
-    final resolvedOperatorName = _resolveOperatorName(usersById);
+    final operarios = ref.watch(operariosProvider);
+    final operariosById = {
+      for (final operario in operarios) operario.id: operario,
+    };
+    final resolvedOperatorName = _resolveOperatorName(operariosById);
     final assignmentLabel = resolvedOperatorName != null
         ? 'Asignado a: $resolvedOperatorName'
         : 'Sin asignar';
+    final clientsState = ref.watch(clientsProvider);
+    final clientsById = <String, Client>{
+      for (final client in clientsState.clients) client.id.toString(): client,
+    };
+    final clientName = _resolveClientName(clientsById);
     final canAssign = !_hasAssignment;
-    final canEdit = _selectedStateId != 4 && _selectedStateId != 5;
+    final canEdit = currentStateId != 4 && currentStateId != 5;
     return Card(
       margin: const EdgeInsets.only(bottom: 12),
       elevation: 2,
@@ -867,7 +925,7 @@ class _AdminTicketCardState extends ConsumerState<AdminTicketCard> {
                       children: [
                         StatusBadge(
                           label: selectedStateName,
-                          color: _getStatusColor(_selectedStateId),
+                          color: _getStatusColor(currentStateId),
                         ),
                         TypeBadge(
                           label: serviceName.isNotEmpty
@@ -878,7 +936,7 @@ class _AdminTicketCardState extends ConsumerState<AdminTicketCard> {
                     ),
                   ),
                   Text(
-                    'Ticket #${_ticket.id}',
+                    'Ticket #${widget.ticket.id}',
                     style: const TextStyle(color: Colors.grey, fontSize: 12),
                   ),
                 ],
@@ -899,7 +957,7 @@ class _AdminTicketCardState extends ConsumerState<AdminTicketCard> {
                   const SizedBox(width: 12),
                   Expanded(
                     child: DropdownButton<int>(
-                      value: hasStates ? _selectedStateId : null,
+                      value: hasStates ? currentStateId : null,
                       isExpanded: true,
                       items: states
                           .map(
@@ -913,14 +971,10 @@ class _AdminTicketCardState extends ConsumerState<AdminTicketCard> {
                           ? null
                           : (value) {
                               if (value == null) return;
-                              setState(() {
-                                _selectedStateId = value;
-                                _ticket = _ticket.copyWith(stateId: value);
-                              });
                               ref
                                   .read(ticketsProvider.notifier)
                                   .updateTicketPriority(
-                                    ticket: _ticket,
+                                    ticket: widget.ticket,
                                     stateId: value,
                                   );
                               ScaffoldMessenger.of(context).showSnackBar(
@@ -951,7 +1005,7 @@ class _AdminTicketCardState extends ConsumerState<AdminTicketCard> {
                   const SizedBox(width: 12),
                   Expanded(
                     child: DropdownButton<int>(
-                      value: hasImportances ? _selectedImportanceId : null,
+                      value: hasImportances ? currentImportanceId : null,
                       isExpanded: true,
                       items: widget.ticketImportances
                           .map(
@@ -965,14 +1019,10 @@ class _AdminTicketCardState extends ConsumerState<AdminTicketCard> {
                           ? null
                           : (value) {
                               if (value == null) return;
-                              setState(() {
-                                _selectedImportanceId = value;
-                                _ticket = _ticket.copyWith(importanceId: value);
-                              });
                               ref
                                   .read(ticketsProvider.notifier)
                                   .updateTicketPriority(
-                                    ticket: _ticket,
+                                    ticket: widget.ticket,
                                     importanceId: value,
                                   );
                             },
@@ -996,7 +1046,7 @@ class _AdminTicketCardState extends ConsumerState<AdminTicketCard> {
                   const SizedBox(width: 12),
                   Expanded(
                     child: DropdownButton<int>(
-                      value: hasUrgencies ? _selectedUrgencyId : null,
+                      value: hasUrgencies ? currentUrgencyId : null,
                       isExpanded: true,
                       items: widget.ticketUrgencies
                           .map(
@@ -1010,14 +1060,10 @@ class _AdminTicketCardState extends ConsumerState<AdminTicketCard> {
                           ? null
                           : (value) {
                               if (value == null) return;
-                              setState(() {
-                                _selectedUrgencyId = value;
-                                _ticket = _ticket.copyWith(urgencyId: value);
-                              });
                               ref
                                   .read(ticketsProvider.notifier)
                                   .updateTicketPriority(
-                                    ticket: _ticket,
+                                    ticket: widget.ticket,
                                     urgencyId: value,
                                   );
                             },
@@ -1027,7 +1073,7 @@ class _AdminTicketCardState extends ConsumerState<AdminTicketCard> {
               ),
               const SizedBox(height: 12),
               Text(
-                _ticket.title,
+                widget.ticket.title,
                 maxLines: 2,
                 overflow: TextOverflow.ellipsis,
                 style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
@@ -1039,7 +1085,7 @@ class _AdminTicketCardState extends ConsumerState<AdminTicketCard> {
                   const SizedBox(width: 4),
                   Expanded(
                     child: Text(
-                      'Cliente: ${_ticket.userName.isNotEmpty ? _ticket.userName : 'Sin nombre'}',
+                      'Cliente: ${clientName.isNotEmpty ? clientName : 'Sin nombre'}',
                       style: TextStyle(color: Colors.grey.shade600, fontSize: 14),
                       overflow: TextOverflow.ellipsis,
                     ),
@@ -1098,7 +1144,7 @@ class _AdminTicketCardState extends ConsumerState<AdminTicketCard> {
                     // ),
                   TextButton.icon(
                     onPressed: () {
-                      context.push('/admin-ticket/${_ticket.id}');
+                      context.push('/admin-ticket/${widget.ticket.id}');
                     },
                     icon: const Icon(Icons.visibility, size: 18),
                     label: const Text('Ver Detalle'),
@@ -1109,7 +1155,7 @@ class _AdminTicketCardState extends ConsumerState<AdminTicketCard> {
                   if (canEdit)
                     TextButton.icon(
                       onPressed: () {
-                        context.push('/admin-ticket/${_ticket.id}/edit');
+                        context.push('/admin-ticket/${widget.ticket.id}/edit');
                       },
                       icon: const Icon(Icons.edit, size: 18),
                       label: const Text('Editar'),

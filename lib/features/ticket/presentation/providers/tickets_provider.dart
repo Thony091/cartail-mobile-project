@@ -96,7 +96,9 @@ class TicketsNotifier extends StateNotifier<TicketsState> {
     required Ticket ticket,
     required int stateId,
   }) async {
-    final payload = _buildTicketPayload(ticket.copyWith(stateId: stateId));
+    final updated = ticket.copyWith(stateId: stateId);
+    _optimisticUpdate(updated);
+    final payload = _buildTicketPayload(updated);
     return createOrUpdateTicket(payload);
   }
 
@@ -106,13 +108,13 @@ class TicketsNotifier extends StateNotifier<TicketsState> {
     int? urgencyId,
     int? stateId,
   }) async {
-    final payload = _buildTicketPayload(
-      ticket.copyWith(
-        importanceId: importanceId ?? ticket.importanceId,
-        urgencyId: urgencyId ?? ticket.urgencyId,
-        stateId: stateId ?? ticket.stateId,
-      ),
+    final updated = ticket.copyWith(
+      importanceId: importanceId ?? ticket.importanceId,
+      urgencyId: urgencyId ?? ticket.urgencyId,
+      stateId: stateId ?? ticket.stateId,
     );
+    _optimisticUpdate(updated);
+    final payload = _buildTicketPayload(updated);
     return createOrUpdateTicket(payload);
   }
 
@@ -200,6 +202,16 @@ class TicketsNotifier extends StateNotifier<TicketsState> {
     final payload = TicketMapper.entityToJson(normalized);
     payload['id'] = ticket.id;
     return payload;
+  }
+
+  void _optimisticUpdate(Ticket ticket) {
+    final exists = state.tickets.any((item) => item.id == ticket.id);
+    if (!exists) return;
+    state = state.copyWith(
+      tickets: state.tickets
+          .map((item) => item.id == ticket.id ? ticket : item)
+          .toList(),
+    );
   }
 }
 

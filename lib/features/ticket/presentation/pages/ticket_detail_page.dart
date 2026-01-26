@@ -5,6 +5,8 @@ import 'package:intl/intl.dart';
 import '../../../../presentation/pages/auth/modern_scaffold_with_drawer.dart';
 import '../../../auth/data/models/admin_response_models.dart';
 import '../../../auth/presentation/providers/users_provider.dart';
+import '../../../client/domain/entities/client.dart';
+import '../../../client/presentation/providers/clients_provider.dart';
 import '../../../services/domain/entities/services.dart';
 import '../../../services/presentation/providers/services_provider.dart';
 import '../../../shared/domain/entities/state.dart' as lookup;
@@ -29,6 +31,7 @@ class _TicketDetailPageState extends ConsumerState<TicketDetailPage> {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
       ref.read(usersProvider.notifier).loadUsers();
+      ref.read(clientsProvider.notifier).getClients();
     });
   }
 
@@ -47,9 +50,17 @@ class _TicketDetailPageState extends ConsumerState<TicketDetailPage> {
       );
     }
 
-    final usersById = ref.watch(usersByIdProvider);
-    final operario = usersById[ticket.assignedToId ?? ''];
+    final operarios = ref.watch(operariosProvider);
+    final operariosById = {
+      for (final operario in operarios) operario.id: operario,
+    };
+    final operario = operariosById[ticket.assignedToId ?? ''];
     final operarioName = _resolveOperatorName(ticket, operario);
+    final clientsState = ref.watch(clientsProvider);
+    final clientsById = <String, Client>{
+      for (final client in clientsState.clients) client.id.toString(): client,
+    };
+    final clientName = _resolveClientName(ticket, clientsById);
     final estados = ref.watch(ticketEstadosProvider);
     final importancias = ref.watch(ticketImportanciasProvider);
     final urgencias = ref.watch(ticketUrgenciasProvider);
@@ -69,7 +80,7 @@ class _TicketDetailPageState extends ConsumerState<TicketDetailPage> {
           _SectionCard(
             title: ticket.title,
             children: [
-              _InfoRow(label: 'Cliente', value: ticket.userName),
+              _InfoRow(label: 'Cliente', value: clientName),
               _InfoRow(label: 'Descripción', value: ticket.description),
             ],
           ),
@@ -104,6 +115,37 @@ class _TicketDetailPageState extends ConsumerState<TicketDetailPage> {
     final name = operario.name?.trim();
     if (name != null && name.isNotEmpty) return name;
     return operario.email;
+  }
+
+  String _resolveClientName(Ticket ticket, Map<String, Client> clientsById) {
+    final explicit = ticket.userName.trim();
+    if (explicit.isNotEmpty) return explicit;
+    final metaName = _metadataValue(
+      ticket,
+      ['clientName', 'clienteNombre', 'nombre', 'cliente'],
+    );
+    if (metaName != null && metaName.trim().isNotEmpty) {
+      return metaName.trim();
+    }
+    final userId = ticket.userId.trim();
+    if (userId.isEmpty) return 'Sin nombre';
+    final client = clientsById[userId];
+    if (client != null) {
+      final name = client.name.trim();
+      if (name.isNotEmpty) return name;
+      if (client.email.trim().isNotEmpty) return client.email.trim();
+    }
+    return 'Cliente no encontrado';
+  }
+
+  String? _metadataValue(Ticket ticket, List<String> keys) {
+    for (final key in keys) {
+      final value = ticket.metadata[key];
+      if (value != null && value.toString().trim().isNotEmpty) {
+        return value.toString();
+      }
+    }
+    return null;
   }
 
   String? _lookupName(List<lookup.State> items, int? id) {

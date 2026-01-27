@@ -5,7 +5,10 @@ import '../../../../presentation/pages/auth/modern_scaffold_with_drawer.dart';
 import '../../../auth/data/models/admin_response_models.dart';
 import '../../../auth/presentation/providers/users_provider.dart';
 import '../../../shared/domain/entities/state.dart' as lookup;
+import '../../domain/entities/estado_ticket.dart';
+import '../../domain/entities/importancia_ticket.dart';
 import '../../domain/entities/ticket.dart';
+import '../../domain/entities/urgencia_ticket.dart';
 import '../providers/ticket_lookup_crud_providers.dart';
 import '../providers/tickets_provider.dart';
 
@@ -42,7 +45,7 @@ class _TicketEditPageState extends ConsumerState<TicketEditPage> {
   Widget build(BuildContext context) {
     final ticketsState = ref.watch(ticketsProvider);
     final ticket = ticketsState.tickets.cast<Ticket?>().firstWhere(
-          (t) => t?.id == widget.ticketId,
+          (t) => t?.id.toString() == widget.ticketId,
           orElse: () => null,
         );
     if (ticket == null) {
@@ -61,10 +64,10 @@ class _TicketEditPageState extends ConsumerState<TicketEditPage> {
     };
     final isCompleted = _isCompleted(ticket);
 
-    _stateId ??= ticket.stateId;
-    _importanceId ??= ticket.importanceId;
-    _urgencyId ??= ticket.urgencyId;
-    _assignedOperatorId ??= ticket.assignedToId;
+    _stateId ??= ticket.estado.id;
+    _importanceId ??= ticket.importancia.id;
+    _urgencyId ??= ticket.urgencia.id;
+    _assignedOperatorId ??= ticket.idUser;
     final assignedOperatorValue = operariosById.containsKey(_assignedOperatorId)
         ? _assignedOperatorId
         : null;
@@ -144,7 +147,7 @@ class _TicketEditPageState extends ConsumerState<TicketEditPage> {
   }
 
   bool _isCompleted(Ticket ticket) {
-    final stateId = ticket.stateId ?? 1;
+    final stateId = ticket.estado.id;
     return stateId == 4 || stateId == 5;
   }
 
@@ -186,17 +189,34 @@ class _TicketEditPageState extends ConsumerState<TicketEditPage> {
     }
 
     setState(() => _isSaving = true);
-    final operatorsById = ref.read(usersByIdProvider);
-    final assignedUser = _assignedOperatorId != null
-        ? operatorsById[_assignedOperatorId!]
-        : null;
+
+    final estados = ref.read(ticketEstadosProvider);
+    final importancias = ref.read(ticketImportanciasProvider);
+    final urgencias = ref.read(ticketUrgenciasProvider);
+    final estadoName = estados.isNotEmpty
+        ? estados.firstWhere(
+            (item) => item.id == _stateId,
+            orElse: () => estados.first,
+          ).name
+        : '';
+    final importanciaName = importancias.isNotEmpty
+        ? importancias.firstWhere(
+            (item) => item.id == _importanceId,
+            orElse: () => importancias.first,
+          ).name
+        : '';
+    final urgenciaName = urgencias.isNotEmpty
+        ? urgencias.firstWhere(
+            (item) => item.id == _urgencyId,
+            orElse: () => urgencias.first,
+          ).name
+        : '';
 
     final updatedTicket = ticket.copyWith(
-      assignedToId: _assignedOperatorId,
-      assignedToName: assignedUser != null ? _operatorName(assignedUser) : null,
-      stateId: _stateId,
-      importanceId: _importanceId,
-      urgencyId: _urgencyId,
+      idUser: _assignedOperatorId,
+      estado: EstadoTicket(id: _stateId!, nombre: estadoName),
+      importancia: ImportanciaTicket(id: _importanceId!, nombre: importanciaName),
+      urgencia: UrgenciaTicket(id: _urgencyId!, nombre: urgenciaName),
     );
 
     final ok = await ref.read(ticketsProvider.notifier).updateTicket(updatedTicket);

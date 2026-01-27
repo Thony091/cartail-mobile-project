@@ -16,11 +16,25 @@ class ReservationDatasourceImpl extends ReservationDatasource {
       baseUrl: Enviroment.baseUrl,
       headers: {
         // 'x-api-key': 'ZvHNth6qgZ6LNnwtXwJX75Jk8YlXEZxX2AZvOFSW',
-        // 'Authorization': 'Bearer $accessToken'
+        // 'Authorization': 'Bearer $accessToken',
         'Content-Type': 'application/json',
       },
-    ),
-  );
+      )
+    ) {
+      _attachAuthHeader();
+    }
+
+  void _attachAuthHeader() {
+    dio.interceptors.add(
+      InterceptorsWrapper(
+        onRequest: (options, handler) async {
+          String? token = accessToken.isNotEmpty ? accessToken : '';
+          options.headers['Authorization'] = 'Bearer $token';
+          return handler.next(options);
+        },
+      ),
+    );
+  }
 
   @override
   Future<Reservation> createUpdateReservation(

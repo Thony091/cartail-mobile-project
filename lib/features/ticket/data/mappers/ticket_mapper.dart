@@ -1,59 +1,54 @@
+import '../../domain/entities/estado_ticket.dart';
+import '../../domain/entities/importancia_ticket.dart';
 import '../../domain/entities/ticket.dart';
+import '../../domain/entities/urgencia_ticket.dart';
 
 class TicketMapper {
-  static Ticket jsonToEntity(Map<String, dynamic> json) => Ticket(
-    id: json['id']?.toString() ?? '',
-    userId: json['id_cliente']?.toString() ??
-        json['idCliente']?.toString() ??
-        json['userId']?.toString() ??
-        '',
-    userName: json['clienteNombre'] as String? ??
-        json['userName'] as String? ??
-        '',
-    type: TicketType.fromJson(json['type'] as String? ?? 'reservation'),
-    status: _statusFromId(
-      _parseInt(json['id_estado'] ?? json['idEstado'] ?? json['stateId']),
-    ),
-    assignedToId: json['id_user']?.toString() ?? json['assignedToId']?.toString(),
-    assignedToName: json['assignedToName'] as String?,
-    createdAt: json['createdAt'] != null
-      ? DateTime.parse(json['createdAt'] as String)
-      : DateTime.now(),
-    updatedAt: json['updatedAt'] != null
-      ? DateTime.parse(json['updatedAt'] as String)
-      : null,
-    title: json['nombre'] as String? ?? json['title'] as String? ?? '',
-    description: json['description'] as String? ?? '',
-    startDate: json['desde'] as String? ?? '',
-    endDate: json['hasta'] as String? ?? '',
-    serviceId: _parseInt(
-      json['id_servicio'] ?? json['idServicio'] ?? json['serviceId'],
-    ),
-    stateId: _parseInt(
-      json['id_estado'] ?? json['idEstado'] ?? json['stateId'],
-    ),
-    importanceId: _parseInt(
-      json['id_importancia'] ?? json['idImportancia'] ?? json['importanceId'],
-    ),
-    urgencyId: _parseInt(
-      json['id_urgencia'] ?? json['idUrgencia'] ?? json['urgencyId'],
-    ),
-    metadata: json['metadata'] as Map<String, dynamic>? ?? {},
-  );
+  static Ticket jsonToEntity(Map<String, dynamic> json) {
+    final estado = _parseEstado(json);
+    final importancia = _parseImportancia(json);
+    final urgencia = _parseUrgencia(json);
+
+    return Ticket(
+      id: _parseInt(json['id']) ?? 0,
+      nombre: json['nombre'] as String? ??
+          json['title'] as String? ??
+          json['name'] as String? ??
+          '',
+      description: json['description'] as String? ?? json['descripcion'] as String? ?? '',
+      desde: _parseDate(json['desde'] ?? json['startDate']),
+      hasta: _parseDate(json['hasta'] ?? json['endDate']),
+      createdAt: _parseDate(json['createdAt']) ?? DateTime.now(),
+      updatedAt: _parseDate(json['updatedAt']) ?? DateTime.now(),
+      idServicio: _parseInt(json['idServicio'] ?? json['id_servicio']) ?? 0,
+      idUser: json['idUser']?.toString() ??
+          json['id_user']?.toString() ??
+          json['userId']?.toString(),
+      idReserva: json['idReserva']?.toString() ??
+          json['id_reserva']?.toString() ??
+          json['reservationId']?.toString() ??
+          '',
+      estado: estado,
+      importancia: importancia,
+      urgencia: urgencia,
+    );
+  }
 
   static Map<String, dynamic> entityToJson(Ticket ticket) => {
-    'id': ticket.id,
-    'id_user': ticket.assignedToId ?? ticket.userId,
-    'nombre': ticket.title,
-    'description': ticket.description,
-    'desde': ticket.startDate,
-    'hasta': ticket.endDate,
-    'id_servicio': ticket.serviceId,
-    'id_estado': ticket.stateId,
-    'id_importancia': ticket.importanceId,
-    'id_urgencia': ticket.urgencyId,
-    'metadata': ticket.metadata,
-  };
+        'id': ticket.id,
+        'nombre': ticket.nombre,
+        'description': ticket.description,
+        'desde': ticket.desde?.toIso8601String(),
+        'hasta': ticket.hasta?.toIso8601String(),
+        'createdAt': ticket.createdAt.toIso8601String(),
+        'updatedAt': ticket.updatedAt.toIso8601String(),
+        'idServicio': ticket.idServicio,
+        'idUser': ticket.idUser,
+        'idReserva': ticket.idReserva,
+        'idEstado': ticket.estado.id,
+        'idImportancia': ticket.importancia.id,
+        'idUrgencia': ticket.urgencia.id,
+      };
 
   static int? _parseInt(dynamic value) {
     if (value == null) return null;
@@ -64,20 +59,48 @@ class TicketMapper {
     }
   }
 
-  static TicketStatus _statusFromId(int? id) {
-    switch (id) {
-      case 1:
-        return TicketStatus.pending;
-      case 2:
-        return TicketStatus.assigned;
-      case 3:
-        return TicketStatus.inProgress;
-      case 4:
-        return TicketStatus.completed;
-      case 5:
-        return TicketStatus.completed;
-      default:
-        return TicketStatus.pending;
+  static DateTime? _parseDate(dynamic value) {
+    if (value == null) return null;
+    if (value is DateTime) return value;
+    if (value is String && value.trim().isNotEmpty) {
+      return DateTime.tryParse(value);
     }
+    return null;
+  }
+
+  static EstadoTicket _parseEstado(Map<String, dynamic> json) {
+    final data = json['estado'];
+    final id = _parseInt(
+      data is Map ? data['id'] ?? data['idEstado'] : json['id_estado'] ?? json['idEstado'],
+    );
+    final nombre = data is Map
+        ? (data['nombre'] as String? ?? data['name'] as String?)
+        : (json['estadoNombre'] as String? ?? json['estado_nombre'] as String?);
+    return EstadoTicket(id: id ?? 1, nombre: nombre ?? '');
+  }
+
+  static ImportanciaTicket _parseImportancia(Map<String, dynamic> json) {
+    final data = json['importancia'];
+    final id = _parseInt(
+      data is Map
+          ? data['id'] ?? data['idImportancia']
+          : json['id_importancia'] ?? json['idImportancia'],
+    );
+    final nombre = data is Map
+        ? (data['nombre'] as String? ?? data['name'] as String?)
+        : (json['importanciaNombre'] as String? ??
+            json['importancia_nombre'] as String?);
+    return ImportanciaTicket(id: id ?? 1, nombre: nombre ?? '');
+  }
+
+  static UrgenciaTicket _parseUrgencia(Map<String, dynamic> json) {
+    final data = json['urgencia'];
+    final id = _parseInt(
+      data is Map ? data['id'] ?? data['idUrgencia'] : json['id_urgencia'] ?? json['idUrgencia'],
+    );
+    final nombre = data is Map
+        ? (data['nombre'] as String? ?? data['name'] as String?)
+        : (json['urgenciaNombre'] as String? ?? json['urgencia_nombre'] as String?);
+    return UrgenciaTicket(id: id ?? 1, nombre: nombre ?? '');
   }
 }

@@ -7,6 +7,9 @@ import '../../../auth/data/models/admin_response_models.dart';
 import '../../../auth/presentation/providers/users_provider.dart';
 import '../../../client/domain/entities/client.dart';
 import '../../../client/presentation/providers/clients_provider.dart';
+import '../../../reservation/domain/entities/reservation.dart';
+import '../../../reservation/presentation/providers/reservation_derived_providers.dart';
+import '../../../reservation/presentation/providers/reservation_provider.dart';
 import '../../../services/domain/entities/services.dart';
 import '../../../services/presentation/providers/services_provider.dart';
 import '../../../shared/domain/entities/state.dart' as lookup;
@@ -32,6 +35,7 @@ class _TicketDetailPageState extends ConsumerState<TicketDetailPage> {
     WidgetsBinding.instance.addPostFrameCallback((_) {
       ref.read(usersProvider.notifier).loadUsers();
       ref.read(clientsProvider.notifier).getClients();
+      ref.read(reservationProvider.notifier).getReservations();
     });
   }
 
@@ -39,7 +43,7 @@ class _TicketDetailPageState extends ConsumerState<TicketDetailPage> {
   Widget build(BuildContext context) {
     final ticketsState = ref.watch(ticketsProvider);
     final ticket = ticketsState.tickets.cast<Ticket?>().firstWhere(
-          (t) => t?.id == widget.ticketId,
+          (t) => t?.id.toString() == widget.ticketId,
           orElse: () => null,
         );
 
@@ -54,22 +58,29 @@ class _TicketDetailPageState extends ConsumerState<TicketDetailPage> {
     final operariosById = {
       for (final operario in operarios) operario.id: operario,
     };
-    final operario = operariosById[ticket.assignedToId ?? ''];
+    final operario = operariosById[ticket.idUser ?? ''];
     final operarioName = _resolveOperatorName(ticket, operario);
     final clientsState = ref.watch(clientsProvider);
+    final reservationsById = ref.watch(reservationsByIdProvider);
     final clientsById = <String, Client>{
       for (final client in clientsState.clients) client.id.toString(): client,
     };
-    final clientName = _resolveClientName(ticket, clientsById);
+    final clientName = _resolveClientName(ticket, clientsById, reservationsById);
     final estados = ref.watch(ticketEstadosProvider);
     final importancias = ref.watch(ticketImportanciasProvider);
     final urgencias = ref.watch(ticketUrgenciasProvider);
-    final estado = _lookupName(estados, ticket.stateId);
-    final importancia = _lookupName(importancias, ticket.importanceId);
-    final urgencia = _lookupName(urgencias, ticket.urgencyId);
+    final estado = ticket.estado.nombre.isNotEmpty
+        ? ticket.estado.nombre
+        : _lookupName(estados, ticket.estado.id);
+    final importancia = ticket.importancia.nombre.isNotEmpty
+        ? ticket.importancia.nombre
+        : _lookupName(importancias, ticket.importancia.id);
+    final urgencia = ticket.urgencia.nombre.isNotEmpty
+        ? ticket.urgencia.nombre
+        : _lookupName(urgencias, ticket.urgencia.id);
     final serviceName = _resolveServiceName(
       ref.watch(servicesProvider).services,
-      ticket.serviceId,
+      ticket.idServicio,
     );
 
     return ModernScaffoldWithDrawer(
@@ -78,7 +89,7 @@ class _TicketDetailPageState extends ConsumerState<TicketDetailPage> {
         padding: const EdgeInsets.all(16),
         children: [
           _SectionCard(
-            title: ticket.title,
+            title: ticket.nombre,
             children: [
               _InfoRow(label: 'Cliente', value: clientName),
               _InfoRow(label: 'Descripción', value: ticket.description),
@@ -95,8 +106,8 @@ class _TicketDetailPageState extends ConsumerState<TicketDetailPage> {
               ),
               _InfoRow(label: 'Urgencia', value: urgencia ?? 'Sin urgencia'),
               _InfoRow(label: 'Servicio', value: serviceName),
-              _InfoRow(label: 'Desde', value: _formatDate(ticket.startDate)),
-              _InfoRow(label: 'Hasta', value: _formatDate(ticket.endDate)),
+              _InfoRow(label: 'Desde', value: _formatDate(ticket.desde)),
+              _InfoRow(label: 'Hasta', value: _formatDate(ticket.hasta)),
             ],
           ),
         ],
@@ -105,10 +116,8 @@ class _TicketDetailPageState extends ConsumerState<TicketDetailPage> {
   }
 
   String _resolveOperatorName(Ticket ticket, AdminUserModel? operario) {
-    final explicit = ticket.assignedToName?.trim();
-    if (explicit != null && explicit.isNotEmpty) return explicit;
     if (operario == null) {
-      return ticket.assignedToId?.isNotEmpty == true
+      return ticket.idUser?.isNotEmpty == true
           ? 'Operario no encontrado'
           : 'Sin asignar';
     }
@@ -117,17 +126,18 @@ class _TicketDetailPageState extends ConsumerState<TicketDetailPage> {
     return operario.email;
   }
 
-  String _resolveClientName(Ticket ticket, Map<String, Client> clientsById) {
-    final explicit = ticket.userName.trim();
-    if (explicit.isNotEmpty) return explicit;
-    final metaName = _metadataValue(
-      ticket,
-      ['clientName', 'clienteNombre', 'nombre', 'cliente'],
-    );
-    if (metaName != null && metaName.trim().isNotEmpty) {
-      return metaName.trim();
+  String _resolveClientName(
+    Ticket ticket,
+    Map<String, Client> clientsById,
+    Map<String, Reservation> reservationsById,
+  ) {
+    final reservation = reservationsById[ticket.idReserva];
+    if (reservation != null) {
+      final name = reservation.name.trim();
+      if (name.isNotEmpty) return name;
+      if (reservation.email.trim().isNotEmpty) return reservation.email.trim();
     }
-    final userId = ticket.userId.trim();
+    final userId = ticket.idUser?.trim() ?? '';
     if (userId.isEmpty) return 'Sin nombre';
     final client = clientsById[userId];
     if (client != null) {
@@ -136,16 +146,6 @@ class _TicketDetailPageState extends ConsumerState<TicketDetailPage> {
       if (client.email.trim().isNotEmpty) return client.email.trim();
     }
     return 'Cliente no encontrado';
-  }
-
-  String? _metadataValue(Ticket ticket, List<String> keys) {
-    for (final key in keys) {
-      final value = ticket.metadata[key];
-      if (value != null && value.toString().trim().isNotEmpty) {
-        return value.toString();
-      }
-    }
-    return null;
   }
 
   String? _lookupName(List<lookup.State> items, int? id) {
@@ -168,13 +168,12 @@ class _TicketDetailPageState extends ConsumerState<TicketDetailPage> {
         .name;
   }
 
-  String _formatDate(String dateString) {
-    if (dateString.isEmpty) return '-';
+  String _formatDate(DateTime? date) {
+    if (date == null) return '-';
     try {
-      final date = DateTime.parse(dateString);
       return DateFormat('dd/MM/yyyy HH:mm').format(date);
     } catch (e) {
-      return dateString;
+      return date.toString();
     }
   }
 }

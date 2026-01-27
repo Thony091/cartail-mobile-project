@@ -3,6 +3,9 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:portafolio_project/features/client/domain/entities/client.dart';
 import 'package:portafolio_project/features/client/presentation/providers/clients_provider.dart';
+import 'package:portafolio_project/features/reservation/domain/entities/reservation.dart';
+import 'package:portafolio_project/features/reservation/presentation/providers/reservation_derived_providers.dart';
+import 'package:portafolio_project/features/reservation/presentation/providers/reservation_provider.dart';
 import '../../../../presentation/pages/auth/modern_scaffold_with_drawer.dart';
 import 'widgets/ticket_widgets.dart';
 import '../providers/tickets_provider.dart';
@@ -34,6 +37,7 @@ class AdminAllTicketsPageState extends ConsumerState<AdminAllTicketsPage> {
     WidgetsBinding.instance.addPostFrameCallback((_) {
       ref.read(usersProvider.notifier).loadUsers();
       ref.read(clientsProvider.notifier).getClients();
+      ref.read(reservationProvider.notifier).getReservations();
       ref.read(ticketEstadosCrudProvider.notifier).load();
       ref.read(ticketImportanciasCrudProvider.notifier).load();
       ref.read(ticketUrgenciasCrudProvider.notifier).load();
@@ -57,6 +61,7 @@ class AdminAllTicketsPageState extends ConsumerState<AdminAllTicketsPage> {
     final urgencias = ref.watch(ticketUrgenciasProvider);
     final servicesState = ref.watch(servicesProvider);
     final clientsState = ref.watch(clientsProvider);
+    final reservationsById = ref.watch(reservationsByIdProvider);
     final clientsById = <String, Client>{
       for (final client in clientsState.clients) client.id.toString(): client,
     };
@@ -64,6 +69,7 @@ class AdminAllTicketsPageState extends ConsumerState<AdminAllTicketsPage> {
       ticketsState.tickets,
       filtersState,
       clientsById,
+      reservationsById,
     );
     final stats = _buildStats(ticketsState.tickets);
 
@@ -183,7 +189,7 @@ class AdminAllTicketsPageState extends ConsumerState<AdminAllTicketsPage> {
     int completed = 0;
 
     for (final ticket in tickets) {
-      final stateId = ticket.stateId ?? 1;
+      final stateId = ticket.estado.id;
       if (stateId == 1) {
         pending++;
       } else if (stateId == 3) {
@@ -204,9 +210,10 @@ class AdminAllTicketsPageState extends ConsumerState<AdminAllTicketsPage> {
     List<Ticket> tickets,
     TicketsFiltersState filtersState,
     Map<String, Client> clientsById,
+    Map<String, Reservation> reservationsById,
   ) {
     return tickets.where((ticket) {
-      final stateId = ticket.stateId ?? 1;
+      final stateId = ticket.estado.id;
       final matchesStatus = switch (filtersState.filterStatus) {
         'pending' => stateId == 1,
         'assigned' => stateId == 2,
@@ -215,36 +222,31 @@ class AdminAllTicketsPageState extends ConsumerState<AdminAllTicketsPage> {
         _ => true,
       };
 
-      final matchesType = switch (filtersState.filterType) {
-        'reservation' => ticket.type == TicketType.reservation,
-        'purchase' => ticket.type == TicketType.purchase,
-        'order' => ticket.type == TicketType.order,
-        _ => true,
-      };
+      final matchesType = true;
 
       final matchesState =
-          filtersState.stateId == null || ticket.stateId == filtersState.stateId;
+          filtersState.stateId == null || ticket.estado.id == filtersState.stateId;
       final matchesImportance = filtersState.importanceId == null ||
-          ticket.importanceId == filtersState.importanceId;
+          ticket.importancia.id == filtersState.importanceId;
       final matchesUrgency = filtersState.urgencyId == null ||
-          ticket.urgencyId == filtersState.urgencyId;
+          ticket.urgencia.id == filtersState.urgencyId;
       final matchesService = filtersState.serviceId == null ||
-          ticket.serviceId == filtersState.serviceId;
+          ticket.idServicio == filtersState.serviceId;
 
       final range = filtersState.dateRange;
-      final ticketDate = DateTime.tryParse(ticket.startDate);
+      final ticketDate = ticket.desde ?? ticket.createdAt;
       final matchesDate = range == null || ticketDate == null
           ? true
           : !(ticketDate.isBefore(range.start) ||
               ticketDate.isAfter(range.end));
 
       final query = filtersState.searchQuery.trim().toLowerCase();
-      final clientName = _resolveClientName(ticket, clientsById);
+      final clientName = _resolveClientName(ticket, clientsById, reservationsById);
       final matchesSearch =
           query.isEmpty ||
-          ticket.id.toLowerCase().contains(query) ||
+          ticket.id.toString().contains(query) ||
           clientName.toLowerCase().contains(query) ||
-          ticket.title.toLowerCase().contains(query) ||
+          ticket.nombre.toLowerCase().contains(query) ||
           ticket.description.toLowerCase().contains(query);
 
       return matchesStatus &&
@@ -257,23 +259,24 @@ class AdminAllTicketsPageState extends ConsumerState<AdminAllTicketsPage> {
           matchesDate;
     }).toList()
       ..sort((a, b) {
-        final aDate = DateTime.tryParse(a.startDate) ?? DateTime.fromMillisecondsSinceEpoch(0);
-        final bDate = DateTime.tryParse(b.startDate) ?? DateTime.fromMillisecondsSinceEpoch(0);
+        final aDate = a.desde ?? DateTime.fromMillisecondsSinceEpoch(0);
+        final bDate = b.desde ?? DateTime.fromMillisecondsSinceEpoch(0);
         return bDate.compareTo(aDate);
       });
   }
 
-  String _resolveClientName(Ticket ticket, Map<String, Client> clientsById) {
-    final explicit = ticket.userName.trim();
-    if (explicit.isNotEmpty) return explicit;
-    final metaName = _metadataValue(
-      ticket,
-      ['clientName', 'clienteNombre', 'nombre', 'cliente'],
-    );
-    if (metaName != null && metaName.trim().isNotEmpty) {
-      return metaName.trim();
+  String _resolveClientName(
+    Ticket ticket,
+    Map<String, Client> clientsById,
+    Map<String, Reservation> reservationsById,
+  ) {
+    final reservation = reservationsById[ticket.idReserva];
+    if (reservation != null) {
+      final name = reservation.name.trim();
+      if (name.isNotEmpty) return name;
+      if (reservation.email.trim().isNotEmpty) return reservation.email.trim();
     }
-    final userId = ticket.userId.trim();
+    final userId = ticket.idUser?.trim() ?? '';
     if (userId.isEmpty) return 'Sin nombre';
     final client = clientsById[userId];
     if (client != null) {
@@ -282,16 +285,6 @@ class AdminAllTicketsPageState extends ConsumerState<AdminAllTicketsPage> {
       if (client.email.trim().isNotEmpty) return client.email.trim();
     }
     return 'Cliente no encontrado';
-  }
-
-  String? _metadataValue(Ticket ticket, List<String> keys) {
-    for (final key in keys) {
-      final value = ticket.metadata[key];
-      if (value != null && value.toString().trim().isNotEmpty) {
-        return value.toString();
-      }
-    }
-    return null;
   }
 
   void _showFilterDialog(BuildContext context) {
@@ -573,10 +566,10 @@ class AdminTicketsList extends StatelessWidget {
       return const Center(child: Text('No hay tickets'));
     }
     final unassigned = tickets
-        .where((ticket) => ticket.assignedToId == null || ticket.assignedToId!.isEmpty)
+        .where((ticket) => ticket.idUser == null || ticket.idUser!.isEmpty)
         .toList();
     final assigned = tickets
-        .where((ticket) => ticket.assignedToId != null && ticket.assignedToId!.isNotEmpty)
+        .where((ticket) => ticket.idUser != null && ticket.idUser!.isNotEmpty)
         .toList();
 
     return ListView(
@@ -668,17 +661,12 @@ class AdminTicketCard extends ConsumerStatefulWidget {
 
 class _AdminTicketCardState extends ConsumerState<AdminTicketCard> {
   bool get _hasAssignment =>
-      widget.ticket.assignedToId?.trim().isNotEmpty == true;
+      widget.ticket.idUser?.trim().isNotEmpty == true;
 
   String? _resolveOperatorName(
     Map<String, AdminUserModel> usersById,
   ) {
-    final explicitName = widget.ticket.assignedToName?.trim();
-    if (explicitName != null && explicitName.isNotEmpty) {
-      return explicitName;
-    }
-
-    final assignedId = widget.ticket.assignedToId;
+    final assignedId = widget.ticket.idUser;
     if (assignedId == null || assignedId.isEmpty) return null;
 
     final user = usersById[assignedId];
@@ -807,28 +795,17 @@ class _AdminTicketCardState extends ConsumerState<AdminTicketCard> {
     }
   }
 
-  String _getTypeLabel(TicketType type) {
-    switch (type) {
-      case TicketType.reservation:
-        return 'Reserva';
-      case TicketType.purchase:
-        return 'Compra';
-      case TicketType.order:
-        return 'Pedido';
+  String _resolveClientName(
+    Map<String, Client> clientsById,
+    Map<String, Reservation> reservationsById,
+  ) {
+    final reservation = reservationsById[widget.ticket.idReserva];
+    if (reservation != null) {
+      final name = reservation.name.trim();
+      if (name.isNotEmpty) return name;
+      if (reservation.email.trim().isNotEmpty) return reservation.email.trim();
     }
-  }
-
-  String _resolveClientName(Map<String, Client> clientsById) {
-    final explicit = widget.ticket.userName.trim();
-    if (explicit.isNotEmpty) return explicit;
-    final metaName = _metadataValue(
-      widget.ticket,
-      ['clientName', 'clienteNombre', 'nombre', 'cliente'],
-    );
-    if (metaName != null && metaName.trim().isNotEmpty) {
-      return metaName.trim();
-    }
-    final userId = widget.ticket.userId.trim();
+    final userId = widget.ticket.idUser?.trim() ?? '';
     if (userId.isEmpty) return 'Sin nombre';
     final client = clientsById[userId];
     if (client != null) {
@@ -839,25 +816,15 @@ class _AdminTicketCardState extends ConsumerState<AdminTicketCard> {
     return 'Cliente no encontrado';
   }
 
-  String? _metadataValue(Ticket ticket, List<String> keys) {
-    for (final key in keys) {
-      final value = ticket.metadata[key];
-      if (value != null && value.toString().trim().isNotEmpty) {
-        return value.toString();
-      }
-    }
-    return null;
-  }
-
   @override
   Widget build(BuildContext context) {
     final states = widget.ticketStates;
     final hasStates = states.isNotEmpty;
     final hasImportances = widget.ticketImportances.isNotEmpty;
     final hasUrgencies = widget.ticketUrgencies.isNotEmpty;
-    final currentStateId = widget.ticket.stateId ?? 1;
-    final currentImportanceId = widget.ticket.importanceId ?? 1;
-    final currentUrgencyId = widget.ticket.urgencyId ?? 1;
+    final currentStateId = widget.ticket.estado.id;
+    final currentImportanceId = widget.ticket.importancia.id;
+    final currentUrgencyId = widget.ticket.urgencia.id;
     final selectedStateName = states.isEmpty
         ? 'Estado'
         : states
@@ -868,7 +835,7 @@ class _AdminTicketCardState extends ConsumerState<AdminTicketCard> {
             .name;
     final serviceName = widget.services
         .firstWhere(
-          (service) => int.tryParse(service.id) == widget.ticket.serviceId,
+          (service) => int.tryParse(service.id) == widget.ticket.idServicio,
           orElse: () => widget.services.isNotEmpty
               ? widget.services.first
               : Services(
@@ -893,10 +860,11 @@ class _AdminTicketCardState extends ConsumerState<AdminTicketCard> {
         ? 'Asignado a: $resolvedOperatorName'
         : 'Sin asignar';
     final clientsState = ref.watch(clientsProvider);
+    final reservationsById = ref.watch(reservationsByIdProvider);
     final clientsById = <String, Client>{
       for (final client in clientsState.clients) client.id.toString(): client,
     };
-    final clientName = _resolveClientName(clientsById);
+    final clientName = _resolveClientName(clientsById, reservationsById);
     final canAssign = !_hasAssignment;
     final canEdit = currentStateId != 4 && currentStateId != 5;
     return Card(
@@ -928,9 +896,7 @@ class _AdminTicketCardState extends ConsumerState<AdminTicketCard> {
                           color: _getStatusColor(currentStateId),
                         ),
                         TypeBadge(
-                          label: serviceName.isNotEmpty
-                              ? serviceName
-                              : _getTypeLabel(widget.ticket.type),
+                          label: serviceName.isNotEmpty ? serviceName : 'Servicio',
                         ),
                       ],
                     ),
@@ -971,11 +937,18 @@ class _AdminTicketCardState extends ConsumerState<AdminTicketCard> {
                           ? null
                           : (value) {
                               if (value == null) return;
+                              final stateName = states
+                                  .firstWhere(
+                                    (s) => s.id == value,
+                                    orElse: () => states.first,
+                                  )
+                                  .name;
                               ref
                                   .read(ticketsProvider.notifier)
                                   .updateTicketPriority(
                                     ticket: widget.ticket,
                                     stateId: value,
+                                    stateName: stateName,
                                   );
                               ScaffoldMessenger.of(context).showSnackBar(
                                 SnackBar(
@@ -1019,11 +992,18 @@ class _AdminTicketCardState extends ConsumerState<AdminTicketCard> {
                           ? null
                           : (value) {
                               if (value == null) return;
+                              final importanceName = widget.ticketImportances
+                                  .firstWhere(
+                                    (s) => s.id == value,
+                                    orElse: () => widget.ticketImportances.first,
+                                  )
+                                  .name;
                               ref
                                   .read(ticketsProvider.notifier)
                                   .updateTicketPriority(
                                     ticket: widget.ticket,
                                     importanceId: value,
+                                    importanceName: importanceName,
                                   );
                             },
                     ),
@@ -1060,11 +1040,18 @@ class _AdminTicketCardState extends ConsumerState<AdminTicketCard> {
                           ? null
                           : (value) {
                               if (value == null) return;
+                              final urgencyName = widget.ticketUrgencies
+                                  .firstWhere(
+                                    (s) => s.id == value,
+                                    orElse: () => widget.ticketUrgencies.first,
+                                  )
+                                  .name;
                               ref
                                   .read(ticketsProvider.notifier)
                                   .updateTicketPriority(
                                     ticket: widget.ticket,
                                     urgencyId: value,
+                                    urgencyName: urgencyName,
                                   );
                             },
                     ),
@@ -1073,7 +1060,7 @@ class _AdminTicketCardState extends ConsumerState<AdminTicketCard> {
               ),
               const SizedBox(height: 12),
               Text(
-                widget.ticket.title,
+                widget.ticket.nombre,
                 maxLines: 2,
                 overflow: TextOverflow.ellipsis,
                 style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600),

@@ -61,7 +61,7 @@ class OperatorTicketProgressNotifier
     Ticket ticket,
     TicketChecklistUsecase usecase,
   ) {
-    final stateId = ticket.stateId ?? 1;
+    final stateId = ticket.estado.id;
     final template = usecase.templateForState(stateId);
     final checked = <int>{};
     final autoComments = usecase.buildAutoComments(template, checked);
@@ -112,7 +112,7 @@ class OperatorTicketProgressNotifier
     required String operatorName,
   }) async {
     final validationError = usecase.validateTransition(
-      fromStateId: ticket.stateId ?? 1,
+      fromStateId: ticket.estado.id,
       toStateId: state.stateId,
       checkedIndices: state.checkedItems,
       template: state.template,

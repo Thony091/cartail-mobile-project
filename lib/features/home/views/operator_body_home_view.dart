@@ -23,12 +23,14 @@ class OperatorBodyHomeView extends ConsumerWidget {
     final assignedTickets = operatorId == null
         ? const <Ticket>[]
         : ticketsState.tickets
-            .where((ticket) => ticket.assignedToId == operatorId)
+            .where((ticket) => ticket.idUser == operatorId)
             .toList();
     final assignedInProgress =
-        assignedTickets.where((ticket) => ticket.isInProgress).length;
+        assignedTickets.where((ticket) => ticket.estado.id == 3).length;
     final assignedCompleted =
-        assignedTickets.where((ticket) => ticket.isCompleted).length;
+        assignedTickets
+            .where((ticket) => ticket.estado.id == 4 || ticket.estado.id == 5)
+            .length;
     final workInProgress =
         worksState.works.where((work) => work.isActive).length;
     final workCompleted =
@@ -301,11 +303,13 @@ class _AssignedTicketsCard extends StatelessWidget {
                         ),
                       ),
                       title: Text(
-                        ticket.title,
+                        ticket.nombre,
                         style: const TextStyle(fontWeight: FontWeight.w600),
                       ),
                       subtitle: Text(
-                        '${ticket.type.name.capitalizeFirst} · ${ticket.status.name.capitalizeFirst}',
+                        ticket.estado.nombre.isNotEmpty
+                            ? ticket.estado.nombre
+                            : 'Estado ${ticket.estado.id}',
                       ),
                       trailing: const Icon(
                         Icons.arrow_forward_ios,

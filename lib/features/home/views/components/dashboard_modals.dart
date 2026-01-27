@@ -467,9 +467,13 @@ class TicketsDetailModal extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final ticketState = ref.watch(ticketsProvider);
     final totalTickets = ticketState.tickets.length;
-    final completedTickets = ticketState.tickets.where((t) => t.isCompleted).length;
-    final inProgressTickets = ticketState.tickets.where((t) => t.isInProgress).length;
-    final pendingTickets = ticketState.tickets.where((t) => t.isPending).length;
+    final completedTickets = ticketState.tickets
+        .where((t) => t.estado.id == 4 || t.estado.id == 5)
+        .length;
+    final inProgressTickets =
+        ticketState.tickets.where((t) => t.estado.id == 3).length;
+    final pendingTickets =
+        ticketState.tickets.where((t) => t.estado.id == 1).length;
 
     return Dialog(
       backgroundColor: Colors.transparent,

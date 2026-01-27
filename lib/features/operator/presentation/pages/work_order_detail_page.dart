@@ -50,7 +50,7 @@ class _WorkOrderDetailPageState extends ConsumerState<WorkOrderDetailPage>
         break;
       }
     }
-    final stateId = ticket?.stateId ?? 1;
+    final stateId = ticket?.estado.id ?? 1;
     final checklistState = ref.watch(operatorChecklistControllerProvider(stateId));
     final checklistController =
         ref.read(operatorChecklistControllerProvider(stateId).notifier);
@@ -203,7 +203,7 @@ class _WorkOrderDetailPageState extends ConsumerState<WorkOrderDetailPage>
                   ),
                   const SizedBox(height: 12),
                   Text(
-                    ticket.title.isNotEmpty ? ticket.title : 'Trabajo asignado',
+                    ticket.nombre.isNotEmpty ? ticket.nombre : 'Trabajo asignado',
                     style: const TextStyle(
                       fontSize: 22,
                       fontWeight: FontWeight.w700,
@@ -222,9 +222,7 @@ class _WorkOrderDetailPageState extends ConsumerState<WorkOrderDetailPage>
                       ),
                       const SizedBox(width: 6),
                       Text(
-                        ticket.userName.isNotEmpty
-                            ? ticket.userName
-                            : 'Cliente sin nombre',
+                        _clientDisplayName(ticket),
                         style: const TextStyle(
                           fontSize: 14,
                           color: Colors.white70,
@@ -549,27 +547,11 @@ class _StatusBadge extends StatelessWidget {
   }
 }
 
-String? _metadataValue(Ticket ticket, List<String> keys) {
-  for (final key in keys) {
-    final value = ticket.metadata[key];
-    if (value != null && value.toString().trim().isNotEmpty) {
-      return value.toString();
-    }
+String _clientDisplayName(Ticket ticket) {
+  if (ticket.idReserva.trim().isNotEmpty) {
+    return 'Reserva ${ticket.idReserva}';
   }
-  return null;
-}
-
-List<String> _metadataList(Ticket ticket, List<String> keys) {
-  for (final key in keys) {
-    final value = ticket.metadata[key];
-    if (value is List) {
-      return value.map((item) => item.toString()).toList();
-    }
-    if (value is String && value.trim().isNotEmpty) {
-      return [value];
-    }
-  }
-  return const [];
+  return 'Cliente sin nombre';
 }
 
 class _OptionTile extends StatelessWidget {
@@ -610,10 +592,9 @@ class _DetailsTab extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final services = _metadataList(ticket, ['services', 'servicios']);
-    final parts = _metadataList(ticket, ['parts', 'repuestos', 'materiales']);
-    final estimatedCost =
-        _metadataValue(ticket, ['estimatedCost', 'cost', 'costo']);
+    const services = <String>[];
+    const parts = <String>[];
+    final String? estimatedCost = null;
     return SingleChildScrollView(
       padding: const EdgeInsets.all(20),
       child: Column(
@@ -665,8 +646,6 @@ class _ClientInfoCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final phone = _metadataValue(ticket, ['clientPhone', 'telefono', 'phone']);
-    final email = _metadataValue(ticket, ['clientEmail', 'email']);
     return ModernCard(
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -698,9 +677,7 @@ class _ClientInfoCard extends StatelessWidget {
                       ),
                     ),
                     Text(
-                      ticket.userName.isNotEmpty
-                          ? ticket.userName
-                          : 'Cliente sin nombre',
+                      _clientDisplayName(ticket),
                       style: const TextStyle(
                         fontSize: 18,
                         fontWeight: FontWeight.w700,
@@ -715,22 +692,13 @@ class _ClientInfoCard extends StatelessWidget {
           const SizedBox(height: 16),
           const Divider(height: 1),
           const SizedBox(height: 16),
-          if (phone != null)
-            _ContactRow(
-              icon: Icons.phone,
-              label: 'Telefono',
-              value: phone,
-              color: const Color(0xFF27ae60),
+          const Text(
+            'Contacto no disponible',
+            style: TextStyle(
+              fontSize: 12,
+              color: Color(0xFF95a5a6),
             ),
-          if (email != null) ...[
-            const SizedBox(height: 12),
-            _ContactRow(
-              icon: Icons.email,
-              label: 'Email',
-              value: email,
-              color: const Color(0xFF3498db),
-            ),
-          ],
+          ),
         ],
       ),
     );
@@ -981,7 +949,7 @@ class _TimelineTab extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final history = ticket.metadata['history'];
+    const history = <Map<String, dynamic>>[];
     return SingleChildScrollView(
       padding: const EdgeInsets.all(20),
       child: Column(
@@ -996,12 +964,9 @@ class _TimelineTab extends StatelessWidget {
             ),
           ),
           const SizedBox(height: 20),
-          if (history is List && history.isNotEmpty)
+          if (history.isNotEmpty)
             Column(
               children: history.map((entry) {
-                if (entry is! Map<String, dynamic>) {
-                  return const SizedBox.shrink();
-                }
                 final label = entry['label']?.toString() ??
                     entry['state']?.toString() ??
                     'Estado';
@@ -1318,8 +1283,7 @@ class _NotesTab extends StatelessWidget {
           _NoteSection(
             title: 'Notas del Operario',
             icon: Icons.engineering,
-            note: _metadataValue(ticket, ['operatorNotes', 'notes', 'operatorNote']) ??
-                'Sin notas adicionales',
+            note: 'Sin notas adicionales',
             color: const Color(0xFF3498db),
           ),
 
@@ -1329,8 +1293,7 @@ class _NotesTab extends StatelessWidget {
           _NoteSection(
             title: 'Instrucciones del Cliente',
             icon: Icons.person,
-            note: _metadataValue(ticket, ['clientNotes', 'clientNote']) ??
-                'Sin instrucciones especiales',
+            note: 'Sin instrucciones especiales',
             color: const Color(0xFF27ae60),
           ),
 
@@ -1455,7 +1418,7 @@ class _StatusProgressSection extends StatelessWidget {
               ),
             ],
           ),
-          if (ticket.startDate.isNotEmpty) ...[
+          if (ticket.desde != null) ...[
             const SizedBox(height: 12),
             Row(
               mainAxisAlignment: MainAxisAlignment.center,
@@ -1467,7 +1430,7 @@ class _StatusProgressSection extends StatelessWidget {
                 ),
                 const SizedBox(width: 6),
                 Text(
-                  'Inicio: ${ticket.startDate}',
+                  'Inicio: ${ticket.desde}',
                   style: const TextStyle(
                     fontSize: 13,
                     color: Color(0xFF7f8c8d),

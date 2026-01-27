@@ -8,6 +8,9 @@ import 'package:portafolio_project/features/client/domain/entities/client.dart';
 import 'package:portafolio_project/features/client/presentation/providers/clients_provider.dart';
 import 'package:portafolio_project/features/service_tracking/presentation/widgets/service_tracking_widgets.dart';
 import 'package:portafolio_project/features/ticket/presentation/providers/tickets_provider.dart';
+import 'package:portafolio_project/features/reservation/domain/entities/reservation.dart';
+import 'package:portafolio_project/features/reservation/presentation/providers/reservation_derived_providers.dart';
+import 'package:portafolio_project/features/reservation/presentation/providers/reservation_provider.dart';
 
 import '../../domain/entities/service_status.dart';
 import 'package:portafolio_project/features/ticket/domain/entities/ticket.dart';
@@ -30,6 +33,9 @@ class _MyServicesPageState extends ConsumerState<MyServicesPage>
   void initState() {
     super.initState();
     _tabController = TabController(length: 3, vsync: this);
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      ref.read(reservationProvider.notifier).getReservations();
+    });
   }
 
   @override
@@ -43,12 +49,14 @@ class _MyServicesPageState extends ConsumerState<MyServicesPage>
     final authState = ref.watch(betterAuthProvider);
     final ticketsState = ref.watch(ticketsProvider);
     final clientsState = ref.watch(clientsProvider);
+    final reservationsById = ref.watch(reservationsByIdProvider);
     final userId = authState.session?.user.id;
     final userEmail = authState.session?.user.email;
     final clientId = _resolveClientId(clientsState.clients, userEmail);
 
     final services = _buildUserServices(
       ticketsState.tickets,
+      reservationsById: reservationsById,
       userId: userId,
       userEmail: userEmail,
       clientId: clientId,
@@ -144,6 +152,7 @@ class _MyServicesPageState extends ConsumerState<MyServicesPage>
 
   List<UserServiceRequest> _buildUserServices(
     List<Ticket> tickets, {
+    required Map<String, Reservation> reservationsById,
     required String? userId,
     required String? userEmail,
     required String? clientId,
@@ -153,35 +162,38 @@ class _MyServicesPageState extends ConsumerState<MyServicesPage>
         .where(
           (ticket) => _isTicketForUser(
             ticket,
+            reservationsById: reservationsById,
             userId: userId,
             userEmail: userEmail,
             clientId: clientId,
           ),
         )
-        .map(_ticketToServiceRequest)
+        .map((ticket) => _ticketToServiceRequest(
+              ticket,
+              reservationsById: reservationsById,
+            ))
         .toList();
   }
 
   bool _isTicketForUser(
     Ticket ticket, {
+    required Map<String, Reservation> reservationsById,
     required String? userId,
     required String? userEmail,
     required String? clientId,
   }) {
-    final ticketUserId = ticket.userId.trim();
-    if (userId != null && ticketUserId == userId) return true;
-    if (clientId != null && ticketUserId == clientId) return true;
-
-    final metaClientId =
-        _metadataValue(ticket, ['clientId', 'idCliente', 'id_cliente']);
-    if (metaClientId != null && clientId != null && metaClientId == clientId) {
+    final reservation = reservationsById[ticket.idReserva];
+    if (reservation == null) return false;
+    if (userEmail != null &&
+        reservation.email.toLowerCase().trim() ==
+            userEmail.toLowerCase().trim()) {
       return true;
     }
-
-    final metaEmail =
-        _metadataValue(ticket, ['clientEmail', 'email', 'correo']);
-    if (metaEmail != null && userEmail != null) {
-      return metaEmail.toLowerCase().trim() == userEmail.toLowerCase().trim();
+    if (clientId != null && reservation.clientId?.toString() == clientId) {
+      return true;
+    }
+    if (userId != null && reservation.clientId?.toString() == userId) {
+      return true;
     }
 
     return false;
@@ -198,37 +210,27 @@ class _MyServicesPageState extends ConsumerState<MyServicesPage>
     return null;
   }
 
-  String? _metadataValue(Ticket ticket, List<String> keys) {
-    for (final key in keys) {
-      final value = ticket.metadata[key];
-      if (value != null && value.toString().trim().isNotEmpty) {
-        return value.toString();
-      }
-    }
-    return null;
-  }
-
-  UserServiceRequest _ticketToServiceRequest(Ticket ticket) {
-    final status = _mapTicketState(ticket.stateId);
-    final metadata = ticket.metadata;
+  UserServiceRequest _ticketToServiceRequest(
+    Ticket ticket, {
+    required Map<String, Reservation> reservationsById,
+  }) {
+    final status = _mapTicketState(ticket.estado.id);
+    final reservation = reservationsById[ticket.idReserva];
     final vehicle = UserVehicleInfo(
-      brand: metadata['vehicleBrand']?.toString() ?? 'Toyota',
-      model: metadata['vehicleModel']?.toString() ?? 'Corolla',
-      year: metadata['vehicleYear'] is int
-          ? metadata['vehicleYear'] as int
-          : 2022,
-      licensePlate: metadata['licensePlate']?.toString() ?? '----',
-      color: metadata['vehicleColor']?.toString() ?? 'Gris',
+      brand: 'Toyota',
+      model: 'Corolla',
+      year: 2022,
+      licensePlate: reservation?.vehiclePlate ?? '----',
+      color: 'Gris',
     );
     final List<String> included = [];
-    if (metadata['includedItems'] is List) {
-      included.addAll(List<String>.from(metadata['includedItems'] as List));
-    }
 
     return UserServiceRequest(
-      id: ticket.id,
-      orderNumber: metadata['orderNumber']?.toString() ?? ticket.id,
-      serviceName: ticket.title.isNotEmpty ? ticket.title : 'Servicio técnico',
+      id: ticket.id.toString(),
+      orderNumber: ticket.idReserva.isNotEmpty ? ticket.idReserva : ticket.id.toString(),
+      serviceName: reservation?.serviceName.isNotEmpty == true
+          ? reservation!.serviceName
+          : ticket.nombre,
       serviceDescription: ticket.description,
       includedItems: included,
       vehicle: vehicle,
@@ -237,24 +239,17 @@ class _MyServicesPageState extends ConsumerState<MyServicesPage>
         StatusUpdate(
           status: status,
           timestamp: ticket.createdAt,
-          message: ticket.metadata['statusNote']?.toString(),
+          message: null,
         ),
       ],
       requestedAt: ticket.createdAt,
-      estimatedCompletionDate: metadata['estimatedCompletion'] is String
-          ? DateTime.tryParse(metadata['estimatedCompletion'] as String)
+      estimatedCompletionDate: null,
+      estimatedCost: 0,
+      finalCost: null,
+      workshopPhone: '+56 2 0000 0000',
+      assignedOperatorName: ticket.idUser != null && ticket.idUser!.isNotEmpty
+          ? 'Operario ${ticket.idUser}'
           : null,
-      estimatedCost: metadata['estimatedCost'] is int
-          ? metadata['estimatedCost'] as int
-          : 0,
-      finalCost: metadata['finalCost'] is int
-          ? metadata['finalCost'] as int
-          : null,
-      workshopPhone: metadata['workshopPhone']?.toString() ?? '+56 2 0000 0000',
-      assignedOperatorName: ticket.assignedToName ??
-          (ticket.assignedToId != null && ticket.assignedToId!.isNotEmpty
-              ? 'Operario ${ticket.assignedToId}'
-              : null),
     );
   }
 

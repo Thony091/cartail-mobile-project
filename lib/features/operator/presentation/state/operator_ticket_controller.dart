@@ -32,45 +32,10 @@ class OperatorTicketController {
           );
     }
 
-    final updatedTicket = _appendComment(
-      ticket: ticket,
-      comment: notes.trim(),
-      authorId: authorId,
-      authorName: authorName,
-    ).copyWith(stateId: nextStateId);
-
-    return ref.read(ticketsProvider.notifier).updateTicket(updatedTicket);
-  }
-
-  Ticket _appendComment({
-    required Ticket ticket,
-    required String comment,
-    required String authorId,
-    required String authorName,
-  }) {
-    final now = DateTime.now().toIso8601String();
-    final existing = ticket.metadata['comments'];
-    final List<Map<String, dynamic>> comments = [];
-    if (existing is List) {
-      for (final item in existing) {
-        if (item is Map<String, dynamic>) {
-          comments.add(Map<String, dynamic>.from(item));
-        }
-      }
-    }
-    comments.add({
-      'message': comment,
-      'authorId': authorId,
-      'authorName': authorName,
-      'createdAt': now,
-    });
-
-    return ticket.copyWith(
-      metadata: {
-        ...ticket.metadata,
-        'comments': comments,
-      },
-    );
+    return ref.read(ticketsProvider.notifier).updateTicketStatus(
+          ticket: ticket,
+          stateId: nextStateId,
+        );
   }
 }
 

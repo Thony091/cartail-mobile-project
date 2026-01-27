@@ -1,7 +1,10 @@
 import 'package:dio/dio.dart';
 
 import '../../../../config/config.dart';
+import '../../domain/entities/estado_ticket.dart';
+import '../../domain/entities/importancia_ticket.dart';
 import '../../domain/entities/ticket.dart';
+import '../../domain/entities/urgencia_ticket.dart';
 import '../mappers/ticket_mapper.dart';
 import 'ticket_datasource.dart';
 
@@ -90,15 +93,19 @@ class TicketDatasourceImpl extends TicketDatasource {
 
   Ticket _emptyTicket() {
     return Ticket(
-      id: '0',
-      userId: '',
-      userName: '',
-      type: TicketType.reservation,
-      status: TicketStatus.pending,
-      createdAt: DateTime.now(),
-      title: '',
+      id: 0,
+      nombre: '',
       description: '',
-      metadata: const {},
+      desde: null,
+      hasta: null,
+      createdAt: DateTime.now(),
+      updatedAt: DateTime.now(),
+      idServicio: 1,
+      idUser: null,
+      idReserva: '',
+      estado: EstadoTicket(id: 1, nombre: ''),
+      importancia: ImportanciaTicket(id: 1, nombre: ''),
+      urgencia: UrgenciaTicket(id: 1, nombre: ''),
     );
   }
 

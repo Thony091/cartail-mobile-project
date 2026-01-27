@@ -7,6 +7,9 @@ import '../../domain/entities/ticket.dart';
 import '../../domain/repositories/ticket_repository.dart';
 import '../../../../presentation/presentation_container.dart';
 import '../../data/mappers/ticket_mapper.dart';
+import '../../domain/entities/estado_ticket.dart';
+import '../../domain/entities/importancia_ticket.dart';
+import '../../domain/entities/urgencia_ticket.dart';
 
 final ticketsProvider = StateNotifierProvider<TicketsNotifier, TicketsState>((ref) {
   final ticketRepository = ref.watch(ticketsRepositoryProvider);
@@ -43,7 +46,7 @@ class TicketsNotifier extends StateNotifier<TicketsState> {
     try {
       await ticketRepository.deleteTicket(id);
       state = state.copyWith(
-        tickets: state.tickets.where((ticket) => ticket.id != id).toList(),
+        tickets: state.tickets.where((ticket) => ticket.id.toString() != id).toList(),
       );
     } catch (e) {
       print(e);
@@ -81,12 +84,12 @@ class TicketsNotifier extends StateNotifier<TicketsState> {
     required String operatorId,
     required String operatorName,
   }) async {
-    final stateId = ticket.stateId == null || ticket.stateId == 1 ? 2 : ticket.stateId;
+    final stateId = ticket.estado.id == 1 ? 2 : ticket.estado.id;
+    final nextEstado = EstadoTicket(id: stateId, nombre: ticket.estado.nombre);
     final payload = _buildTicketPayload(
       ticket.copyWith(
-        assignedToId: operatorId,
-        assignedToName: operatorName,
-        stateId: stateId,
+        idUser: operatorId,
+        estado: nextEstado,
       ),
     );
     return createOrUpdateTicket(payload);
@@ -95,8 +98,14 @@ class TicketsNotifier extends StateNotifier<TicketsState> {
   Future<bool> updateTicketStatus({
     required Ticket ticket,
     required int stateId,
+    String? stateName,
   }) async {
-    final updated = ticket.copyWith(stateId: stateId);
+    final updated = ticket.copyWith(
+      estado: EstadoTicket(
+        id: stateId,
+        nombre: stateName ?? ticket.estado.nombre,
+      ),
+    );
     _optimisticUpdate(updated);
     final payload = _buildTicketPayload(updated);
     return createOrUpdateTicket(payload);
@@ -107,11 +116,23 @@ class TicketsNotifier extends StateNotifier<TicketsState> {
     int? importanceId,
     int? urgencyId,
     int? stateId,
+    String? importanceName,
+    String? urgencyName,
+    String? stateName,
   }) async {
     final updated = ticket.copyWith(
-      importanceId: importanceId ?? ticket.importanceId,
-      urgencyId: urgencyId ?? ticket.urgencyId,
-      stateId: stateId ?? ticket.stateId,
+      importancia: ImportanciaTicket(
+        id: importanceId ?? ticket.importancia.id,
+        nombre: importanceName ?? ticket.importancia.nombre,
+      ),
+      urgencia: UrgenciaTicket(
+        id: urgencyId ?? ticket.urgencia.id,
+        nombre: urgencyName ?? ticket.urgencia.nombre,
+      ),
+      estado: EstadoTicket(
+        id: stateId ?? ticket.estado.id,
+        nombre: stateName ?? ticket.estado.nombre,
+      ),
     );
     _optimisticUpdate(updated);
     final payload = _buildTicketPayload(updated);
@@ -124,27 +145,12 @@ class TicketsNotifier extends StateNotifier<TicketsState> {
     required String authorId,
     required String authorName,
   }) async {
-    final now = DateTime.now().toIso8601String();
-    final existing = ticket.metadata['comments'];
-    final List<Map<String, dynamic>> comments = [];
-    if (existing is List) {
-      for (final item in existing) {
-        if (item is Map<String, dynamic>) {
-          comments.add(Map<String, dynamic>.from(item));
-        }
-      }
-    }
-    comments.add({
-      'message': comment,
-      'authorId': authorId,
-      'authorName': authorName,
-      'createdAt': now,
-    });
+    final trimmed = comment.trim();
+    if (trimmed.isEmpty) return true;
     final updatedTicket = ticket.copyWith(
-      metadata: {
-        ...ticket.metadata,
-        'comments': comments,
-      },
+      description: ticket.description.isEmpty
+          ? trimmed
+          : '${ticket.description}\n\n$trimmed',
     );
     return updateTicket(updatedTicket);
   }
@@ -156,48 +162,28 @@ class TicketsNotifier extends StateNotifier<TicketsState> {
     required String authorId,
     required String authorName,
   }) async {
-    final now = DateTime.now().toIso8601String();
-    final existing = ticket.metadata['comments'];
-    final List<Map<String, dynamic>> merged = [];
-    if (existing is List) {
-      for (final item in existing) {
-        if (item is Map<String, dynamic>) {
-          merged.add(Map<String, dynamic>.from(item));
-        }
-      }
-    }
-    for (final comment in comments) {
-      final trimmed = comment.trim();
-      if (trimmed.isEmpty) continue;
-      merged.add({
-        'message': trimmed,
-        'authorId': authorId,
-        'authorName': authorName,
-        'createdAt': now,
-      });
-    }
-
-    final updatedTicket = ticket.copyWith(
-      stateId: stateId,
-      metadata: {
-        ...ticket.metadata,
-        'comments': merged,
-      },
+    final updated = ticket.copyWith(
+      estado: EstadoTicket(id: stateId, nombre: ticket.estado.nombre),
     );
-    return updateTicket(updatedTicket);
+    return updateTicket(updated);
   }
 
   Map<String, dynamic> _buildTicketPayload(Ticket ticket) {
     final now = DateTime.now();
-    final fallbackDate =
-        '${now.year.toString().padLeft(4, '0')}-${now.month.toString().padLeft(2, '0')}-${now.day.toString().padLeft(2, '0')}';
+    final fallbackDate = DateTime(now.year, now.month, now.day);
     final normalized = ticket.copyWith(
-      startDate: ticket.startDate.isNotEmpty ? ticket.startDate : fallbackDate,
-      endDate: ticket.endDate.isNotEmpty ? ticket.endDate : fallbackDate,
-      serviceId: ticket.serviceId ?? 1,
-      stateId: ticket.stateId ?? 1,
-      importanceId: ticket.importanceId ?? 1,
-      urgencyId: ticket.urgencyId ?? 1,
+      desde: ticket.desde ?? fallbackDate,
+      hasta: ticket.hasta ?? fallbackDate,
+      idServicio: ticket.idServicio == 0 ? 1 : ticket.idServicio,
+      estado: ticket.estado.id == 0
+          ? EstadoTicket(id: 1, nombre: ticket.estado.nombre)
+          : ticket.estado,
+      importancia: ticket.importancia.id == 0
+          ? ImportanciaTicket(id: 1, nombre: ticket.importancia.nombre)
+          : ticket.importancia,
+      urgencia: ticket.urgencia.id == 0
+          ? UrgenciaTicket(id: 1, nombre: ticket.urgencia.nombre)
+          : ticket.urgencia,
     );
     final payload = TicketMapper.entityToJson(normalized);
     payload['id'] = ticket.id;

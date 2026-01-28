@@ -2,34 +2,29 @@ import '../../domain/entities/ticket.dart';
 import '../../domain/repositories/ticket_repository.dart';
 import '../datasources/ticket_datasource.dart';
 
-class TicketRepositoryImpl extends TicketRepository {
-  TicketRepositoryImpl({
-    required TicketDatasource remoteDatasource,
-  }) : _remoteDatasource = remoteDatasource;
+class TicketRepositoryRemoteImpl extends TicketRepository {
+  TicketRepositoryRemoteImpl({required TicketDatasource remoteDatasource})
+      : _remoteDatasource = remoteDatasource;
 
   final TicketDatasource _remoteDatasource;
 
   @override
   Future<List<Ticket>> getTickets() {
-    print('🌐 TicketRepositoryImpl.getTickets() - Fetching from remote API');
     return _remoteDatasource.getTickets();
   }
 
   @override
   Future<Ticket> getTicketById(String id) {
-    print('🌐 TicketRepositoryImpl.getTicketById() - Fetching ticket $id from remote API');
     return _remoteDatasource.getTicketById(id);
   }
 
   @override
   Future<Ticket> createUpdateTicket(Map<String, dynamic> ticketSimilar) {
-    print('🌐 TicketRepositoryImpl.createUpdateTicket() - Syncing to remote API');
     return _remoteDatasource.createUpdateTicket(ticketSimilar);
   }
 
   @override
   Future<void> deleteTicket(String id) {
-    print('🌐 TicketRepositoryImpl.deleteTicket() - Deleting from remote API');
     return _remoteDatasource.deleteTicket(id);
   }
 }

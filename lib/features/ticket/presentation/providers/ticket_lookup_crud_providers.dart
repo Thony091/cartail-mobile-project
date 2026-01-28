@@ -1,14 +1,7 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:portafolio_project/features/auth/presentation/providers/better_auth_provider.dart';
 
-import '../../../../core/providers/isar_service_provider.dart';
 import '../../../shared/domain/entities/state.dart' as lookup;
-import '../../data/datasources/local/ticket_estado_local_datasource.dart';
-import '../../data/datasources/local/ticket_estado_local_datasource_impl.dart';
-import '../../data/datasources/local/ticket_importancia_local_datasource.dart';
-import '../../data/datasources/local/ticket_importancia_local_datasource_impl.dart';
-import '../../data/datasources/local/ticket_urgencia_local_datasource.dart';
-import '../../data/datasources/local/ticket_urgencia_local_datasource_impl.dart';
 import '../../data/datasources/ticket_lookup_crud_datasource_impl.dart';
 import '../../data/repositories/ticket_lookup_crud_repository_impl.dart';
 import '../../domain/repositories/ticket_lookup_crud_repository.dart';
@@ -131,7 +124,8 @@ TicketLookupCrudRepository _buildLookupRepository(
   );
 }
 
-final ticketEstadosRepositoryProvider = Provider<TicketLookupCrudRepository>((ref) {
+final ticketEstadosRepositoryProvider =
+    Provider<TicketLookupCrudRepository>((ref) {
   return _buildLookupRepository(ref, path: '/estado-ticket');
 });
 
@@ -152,29 +146,7 @@ final _ticketImportanciasCrudProvider =
   return TicketLookupCrudNotifier(repo)..load();
 });
 
-// Local datasources por tipo
-final ticketEstadoLocalDatasourceProvider =
-    Provider<TicketEstadoLocalDatasource>((ref) {
-  return TicketEstadoLocalDatasourceImpl(
-    isarService: ref.watch(isarServiceProvider),
-  );
-});
-
-final ticketImportanciaLocalDatasourceProvider =
-    Provider<TicketImportanciaLocalDatasource>((ref) {
-  return TicketImportanciaLocalDatasourceImpl(
-    isarService: ref.watch(isarServiceProvider),
-  );
-});
-
-final ticketUrgenciaLocalDatasourceProvider =
-    Provider<TicketUrgenciaLocalDatasource>((ref) {
-  return TicketUrgenciaLocalDatasourceImpl(
-    isarService: ref.watch(isarServiceProvider),
-  );
-});
-
-// Repositories offline-first por tipo (si local vacío, va a remoto)
+// Repositories remotos por tipo (sin cache local)
 final ticketEstadoRepositoryProvider =
     Provider<TicketEstadoRepository>((ref) {
   final accessToken = ref.watch(betterAuthProvider).token ?? '';
@@ -183,7 +155,6 @@ final ticketEstadoRepositoryProvider =
       path: '/estado-ticket',
       accessToken: accessToken,
     ),
-    localDatasource: ref.watch(ticketEstadoLocalDatasourceProvider),
   );
 });
 
@@ -195,7 +166,6 @@ final ticketImportanciaRepositoryProvider =
       path: '/importancia-ticket',
       accessToken: accessToken,
     ),
-    localDatasource: ref.watch(ticketImportanciaLocalDatasourceProvider),
   );
 });
 
@@ -207,7 +177,6 @@ final ticketUrgenciaRepositoryProvider =
       path: '/urgencia-ticket',
       accessToken: accessToken,
     ),
-    localDatasource: ref.watch(ticketUrgenciaLocalDatasourceProvider),
   );
 });
 

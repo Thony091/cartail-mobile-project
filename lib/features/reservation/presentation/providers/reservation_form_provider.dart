@@ -160,22 +160,35 @@ class ReservationFormNotifier extends StateNotifier<ReservationFormState>{
 
       state = state.copyWith( isPosting: true );
 
-      final clientId = await _ensureClientId();
-      if (clientId == null) {
-        final userData = ref.read(betterAuthProvider).user;
-        final needsClientInfo = userData == null ||
-            (userData.name?.isEmpty ?? true) ||
-            userData.email.isEmpty;
+      final authState = ref.read(betterAuthProvider);
+      final authUser = authState.user;
+      final isAuthenticated = authState.isAuthenticated;
 
-        final errorMsg = needsClientInfo
-            ? 'Debes completar nombre y correo electrónico'
-            : 'No se pudo crear el cliente';
+      String? userId;
+      int? clientId;
 
-        state = state.copyWith(
-          isPosting: false,
-          errorMessage: errorMsg,
-        );
-        return null;
+      if (isAuthenticated && authUser != null) {
+        userId = authUser.id;
+        clientId = null;
+      } else {
+        userId = null;
+        clientId = await _ensureClientId();
+        if (clientId == null) {
+          final userData = authUser;
+          final needsClientInfo = userData == null ||
+              (userData.name?.isEmpty ?? true) ||
+              userData.email.isEmpty;
+
+          final errorMsg = needsClientInfo
+              ? 'Debes completar nombre y correo electrónico'
+              : 'No se pudo crear el cliente';
+
+          state = state.copyWith(
+            isPosting: false,
+            errorMessage: errorMsg,
+          );
+          return null;
+        }
       }
 
       final slotRepository = ref.read(slotRepositoryProvider);
@@ -199,6 +212,7 @@ class ReservationFormNotifier extends StateNotifier<ReservationFormState>{
         'idImportancia': state.importanceId,
         'idUrgencia': state.urgencyId,
         'idCliente': clientId,
+        'usuarioId': userId,
         'idSlot': slot.id,
       };
 
@@ -229,6 +243,7 @@ class ReservationFormNotifier extends StateNotifier<ReservationFormState>{
           endTimeEstimated: slot.endTime,
           customerNotes: state.customerNotes.value,
           mechanicNotes: state.mechanicNotes.value,
+          idTransaccion: '',
           reminder: state.reminder,
           statusId: state.statusId,
           serviceId: int.tryParse(state.serviceId),

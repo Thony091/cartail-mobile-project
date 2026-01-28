@@ -32,6 +32,7 @@ class WorkNotifier extends StateNotifier<WorkState>{
       name: '',
       description: '',
       image: ''
+      
     );
   }
 

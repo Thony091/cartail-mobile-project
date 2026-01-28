@@ -7,6 +7,8 @@ import 'package:portafolio_project/features/auth/presentation/providers/users_pr
 import 'package:portafolio_project/features/client/presentation/providers/clients_provider.dart';
 import 'package:portafolio_project/features/reservation/domain/entities/reservation.dart';
 import 'package:portafolio_project/features/reservation/presentation/providers/reservation_derived_providers.dart';
+import 'package:portafolio_project/features/shared/domain/entities/state.dart'
+    as lookup;
 import '../../../../presentation/pages/auth/modern_scaffold_with_drawer.dart';
 import '../providers/ticket_lookup_crud_providers.dart';
 import 'widgets/ticket_widgets.dart';
@@ -351,7 +353,7 @@ class _OperatorTicketCardState extends ConsumerState<OperatorTicketCard> {
     }
     final currentStateId = widget.ticket.estado.id;
     final statesAsync = ref.watch(ticketEstadosProvider);
-    final states = statesAsync.maybeWhen(
+    final List<lookup.State> states = statesAsync.maybeWhen(
       data: (items) => items,
       orElse: () => const [],
     );
@@ -704,7 +706,7 @@ class _OperatorTicketCardState extends ConsumerState<OperatorTicketCard> {
     String clientName,
   ) async {
     final statesAsync = ref.read(ticketEstadosProvider);
-    final states = statesAsync.maybeWhen(
+    final List<lookup.State> states = statesAsync.maybeWhen(
       data: (items) => items,
       orElse: () => const [],
     );
@@ -913,11 +915,15 @@ class _OperatorTicketCardState extends ConsumerState<OperatorTicketCard> {
                                   );
                                   if (!context.mounted) return;
                                   if (ok) {
+                                    await ref
+                                        .read(ticketsProvider.notifier)
+                                        .getTickets();
                                     Navigator.pop(context);
                                     ScaffoldMessenger.of(context).showSnackBar(
                                       const SnackBar(
                                         content:
                                             Text('Avance actualizado correctamente'),
+                                        backgroundColor: Color(0xFF27ae60),
                                       ),
                                     );
                                   }

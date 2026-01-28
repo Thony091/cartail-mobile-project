@@ -12,6 +12,7 @@ class ReservationModel {
   final String endTimeEstimated;
   final String customerNotes;
   final String mechanicNotes;
+  final String idTransaccion;
   final bool reminder;
   final int? statusId;
   final int? serviceId;
@@ -31,6 +32,7 @@ class ReservationModel {
     required this.customerNotes,
     required this.mechanicNotes,
     required this.reminder,
+    required this.idTransaccion,
     this.statusId,
     this.serviceId,
     this.clientId,
@@ -63,6 +65,7 @@ class ReservationModel {
           json['idServicio']?.toString() ??
           '',
       vehiclePlate: json['patenteVehiculo'] as String? ?? '',
+      idTransaccion: json['idTransaccion'] as String? ?? '',
       endTimeEstimated: json['horaFinEstimada'] as String? ?? '',
       customerNotes: json['notasCliente'] as String? ?? '',
       mechanicNotes: json['notasMecanico'] as String? ?? '',
@@ -102,6 +105,7 @@ class ReservationModel {
       email: email,
       reservationDate: reservationDate,
       reservationTime: reservationTime,
+      idTransaccion: idTransaccion,
       serviceName: serviceName,
       vehiclePlate: vehiclePlate,
       endTimeEstimated: endTimeEstimated,
@@ -127,6 +131,7 @@ class ReservationModel {
       vehiclePlate: reservation.vehiclePlate,
       endTimeEstimated: reservation.endTimeEstimated,
       customerNotes: reservation.customerNotes,
+      idTransaccion: reservation.idTransaccion,
       mechanicNotes: reservation.mechanicNotes,
       reminder: reservation.reminder,
       statusId: reservation.statusId,

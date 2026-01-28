@@ -90,6 +90,7 @@ class ModernConfigWorksPageState extends ConsumerState<ModernConfigWorksPage> {
       floatingActionButton: ModernFloatingActionButton(
         tooltip: 'Crear Trabajo',
         icon: Icons.add,
+        size: 48,
         onPressed: () => context.push('/work-edit/new'),
       ),
     );

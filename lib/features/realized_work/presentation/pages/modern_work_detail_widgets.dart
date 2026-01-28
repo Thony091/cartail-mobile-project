@@ -443,7 +443,7 @@ class WorkBasicInfo extends ConsumerWidget {
   }
 }
 
-class WorkDescription extends ConsumerWidget {
+class WorkDescription extends ConsumerStatefulWidget {
   final bool isEditMode;
   final String workId;
   final Works work;
@@ -456,9 +456,34 @@ class WorkDescription extends ConsumerWidget {
   });
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final workForm = ref.watch(workFormProvider(work));
-    final workFormNotifier = ref.read(workFormProvider(work).notifier);
+  ConsumerState<WorkDescription> createState() => _WorkDescriptionState();
+}
+
+class _WorkDescriptionState extends ConsumerState<WorkDescription> {
+  late TextEditingController _descriptionController;
+
+  @override
+  void initState() {
+    super.initState();
+    // Initialize with empty controller - will be populated in build
+    _descriptionController = TextEditingController();
+  }
+
+  @override
+  void dispose() {
+    _descriptionController.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final workForm = ref.watch(workFormProvider(widget.work));
+    final workFormNotifier = ref.read(workFormProvider(widget.work).notifier);
+
+    // Set initial value only once on first build
+    if (_descriptionController.text.isEmpty && workForm.description.value.isNotEmpty) {
+      _descriptionController.text = workForm.description.value;
+    }
 
     return ModernCard(
       child: Padding(
@@ -485,11 +510,11 @@ class WorkDescription extends ConsumerWidget {
               ],
             ),
             const SizedBox(height: 16),
-            if (isEditMode)
+            if (widget.isEditMode)
               ModernInputField(
                 label: 'Descripción',
                 hint: 'Describe los trabajos realizados...',
-                initialValue: workForm.description.value,
+                controller: _descriptionController,
                 onChanged: workFormNotifier.onDescriptionChange,
                 maxLines: 6,
                 errorMessage: workForm.descriptionError,
@@ -510,7 +535,7 @@ class WorkDescription extends ConsumerWidget {
   }
 }
 
-class WorkTestimonialAndRating extends ConsumerWidget {
+class WorkTestimonialAndRating extends ConsumerStatefulWidget {
   final bool isEditMode;
   final String workId;
   final Works work;
@@ -523,9 +548,34 @@ class WorkTestimonialAndRating extends ConsumerWidget {
   });
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final workForm = ref.watch(workFormProvider(work));
-    final workFormNotifier = ref.read(workFormProvider(work).notifier);
+  ConsumerState<WorkTestimonialAndRating> createState() => _WorkTestimonialAndRatingState();
+}
+
+class _WorkTestimonialAndRatingState extends ConsumerState<WorkTestimonialAndRating> {
+  late TextEditingController _testimonialController;
+
+  @override
+  void initState() {
+    super.initState();
+    // Initialize with empty controller - will be populated in build
+    _testimonialController = TextEditingController();
+  }
+
+  @override
+  void dispose() {
+    _testimonialController.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final workForm = ref.watch(workFormProvider(widget.work));
+    final workFormNotifier = ref.read(workFormProvider(widget.work).notifier);
+
+    // Set initial value only once on first build
+    if (_testimonialController.text.isEmpty && workForm.testimonial.value.isNotEmpty) {
+      _testimonialController.text = workForm.testimonial.value;
+    }
 
     return ModernCard(
       child: Padding(
@@ -552,12 +602,12 @@ class WorkTestimonialAndRating extends ConsumerWidget {
               ],
             ),
             const SizedBox(height: 16),
-            if (isEditMode)
+            if (widget.isEditMode)
               ModernInputField(
                 label: 'Testimonio',
                 hint: 'Comentario del cliente',
                 maxLines: 4,
-                initialValue: workForm.testimonial.value,
+                controller: _testimonialController,
                 errorMessage: workForm.testimonialError,
                 onChanged: workFormNotifier.onTestimonialChange,
               )
@@ -576,7 +626,7 @@ class WorkTestimonialAndRating extends ConsumerWidget {
                 const Icon(Icons.star, color: Color(0xFFf1c40f)),
                 const SizedBox(width: 8),
                 Expanded(
-                  child: isEditMode
+                  child: widget.isEditMode
                       ? Container(
                           padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
                           decoration: BoxDecoration(

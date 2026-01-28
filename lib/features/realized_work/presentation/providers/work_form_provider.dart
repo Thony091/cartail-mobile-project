@@ -23,12 +23,12 @@ class WorkFormNotifier extends StateNotifier<WorkFormState>{
   WorkFormNotifier({
     this.onSubmitCallback,
     required Works work,
-  }): super( 
+  }): super(
     WorkFormState(
       id: work.id,
       title: Name.dirty( work.name ),
-      description: Description.dirty(work.description),
-      testimonial: Description.dirty(work.testimonial),
+      description: work.description.isEmpty ? const Description.pure() : Description.dirty(work.description),
+      testimonial: work.testimonial.isEmpty ? const Description.pure() : Description.dirty(work.testimonial),
       rating: work.rating == 0 ? 1 : work.rating,
       isFeatured: work.isFeatured,
       isActive: work.isActive,
@@ -36,7 +36,7 @@ class WorkFormNotifier extends StateNotifier<WorkFormState>{
       vehicleModelId: work.vehicleModelId ?? 1,
       beforeImage: WorkImagen.dirty(work.beforeImage.isNotEmpty ? work.beforeImage : work.image),
       afterImage: WorkImagen.dirty(work.afterImage.isNotEmpty ? work.afterImage : work.image),
-    ) 
+    )
   );
 
   onTitleChange( String value ) {

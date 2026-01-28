@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:portafolio_project/features/auth/presentation/providers/admin_auth_provider.dart';
+import 'package:portafolio_project/features/auth/presentation/providers/users_provider.dart';
 import 'package:portafolio_project/features/home/views/components/components.dart';
 import 'package:portafolio_project/features/message/presentation/providers/messages_provider.dart';
 import 'package:portafolio_project/features/services/presentation/providers/services_provider.dart';
@@ -18,6 +19,13 @@ class AdminBodyHomeView extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    // Cargar usuarios si no se han cargado aún
+    final usersState = ref.watch(usersProvider);
+    if (!usersState.hasLoaded && !usersState.isLoading) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        ref.read(usersProvider.notifier).loadUsers();
+      });
+    }
 
     final serviceState = ref.watch( servicesProvider );
     final messageState = ref.watch( messagesProvider );
@@ -26,6 +34,7 @@ class AdminBodyHomeView extends ConsumerWidget {
     final worksState = ref.watch( worksProvider );
     final vehiclesState = ref.watch( vehiclesProvider );
     final slotsState = ref.watch( slotsProvider );
+    final operariosState = ref.watch( operariosProvider );
 
     return Padding(
       padding: const EdgeInsets.all(20),
@@ -92,6 +101,8 @@ class AdminBodyHomeView extends ConsumerWidget {
                         ref.refresh(vehiclesProvider);
                         // ignore: unused_result
                         ref.refresh(slotsProvider);
+                        // ignore: unused_result
+                        ref.read(usersProvider.notifier).loadUsers(force: true);
                       },
                       icon: const Icon(Icons.refresh),
                       label: const Text('Refrescar'),
@@ -184,12 +195,12 @@ class AdminBodyHomeView extends ConsumerWidget {
                   ),
                 ),
                 const SizedBox(width: 16),
-                const Expanded(
+                Expanded(
                   child: StatCardWidget(
-                    value: '0',
+                    value: operariosState.length.toString(),
                     label: 'Operarios',
                     icon: Icons.people,
-                    color: Color(0xFF16a085),
+                    color: const Color(0xFF16a085),
                     modalType: DashboardModalType.operators,
                   ),
                 ),

@@ -5,6 +5,10 @@ import 'package:go_router/go_router.dart';
 import 'package:url_launcher/url_launcher.dart';
 import '../../domain/entities/service_status.dart';
 import '../widgets/service_tracking_widgets.dart';
+import '../../../ticket/presentation/providers/tickets_provider.dart';
+import '../../../reservation/presentation/providers/reservation_derived_providers.dart';
+import '../../../ticket/domain/entities/ticket.dart';
+import '../../../reservation/domain/entities/reservation.dart';
 
 /// Página de detalle del servicio para el usuario
 class ServiceTrackingDetailPage extends ConsumerStatefulWidget {
@@ -23,17 +27,99 @@ class ServiceTrackingDetailPage extends ConsumerStatefulWidget {
 
 class _ServiceTrackingDetailPageState
     extends ConsumerState<ServiceTrackingDetailPage> {
-  // TODO: Reemplazar con datos del provider
   late UserServiceRequest _service;
 
   @override
   void initState() {
     super.initState();
-    _loadService();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _loadService();
+    });
   }
 
   void _loadService() {
-    _service = _getMockService();
+    try {
+      // Obtener datos reales del ticket
+      final ticketsState = ref.read(ticketsProvider);
+      final enrichedReservationsById = ref.read(enrichedReservationsByIdProvider);
+
+      // Encontrar el ticket que corresponde a este servicio
+      Ticket? ticket;
+      try {
+        ticket = ticketsState.tickets.firstWhere(
+          (t) => t.id.toString() == widget.serviceId,
+        );
+      } catch (e) {
+        ticket = null;
+      }
+
+      if (ticket != null) {
+        // Obtener la reserva asociada
+        final reservation = enrichedReservationsById[ticket.idReserva];
+        // Convertir ticket y reserva a UserServiceRequest
+        _service = _ticketToServiceRequest(ticket, reservation);
+      } else {
+        // Si no hay ticket real, usar mock como fallback
+        _service = _getMockService();
+      }
+      setState(() {});
+    } catch (e) {
+      // Fallback a mock en caso de error
+      _service = _getMockService();
+      setState(() {});
+    }
+  }
+
+  UserServiceRequest _ticketToServiceRequest(
+    Ticket ticket,
+    Reservation? reservation,
+  ) {
+    final status = _mapTicketState(ticket.estado.id);
+    return UserServiceRequest(
+      id: ticket.id.toString(),
+      orderNumber: ticket.idReserva.isNotEmpty ? ticket.idReserva : ticket.id.toString(),
+      serviceName: ticket.nombre,
+      serviceDescription: ticket.description,
+      includedItems: [],
+      vehicle: UserVehicleInfo(
+        brand: 'Vehículo',
+        model: reservation?.vehiclePlate ?? '----',
+        year: DateTime.now().year,
+        licensePlate: reservation?.vehiclePlate ?? '----',
+        color: 'No especificado',
+      ),
+      currentStatus: status,
+      statusHistory: [
+        StatusUpdate(
+          status: status,
+          timestamp: ticket.createdAt,
+          message: null,
+        ),
+      ],
+      requestedAt: ticket.createdAt,
+      estimatedCompletionDate: ticket.hasta,
+      estimatedCost: 0,
+      workshopPhone: '+56 2 0000 0000',
+      assignedOperatorName: ticket.idUser != null && ticket.idUser!.isNotEmpty
+          ? 'Operario ${ticket.idUser}'
+          : null,
+    );
+  }
+
+  ServiceStatus _mapTicketState(int? stateId) {
+    switch (stateId) {
+      case 1:
+        return ServiceStatus.received;
+      case 2:
+        return ServiceStatus.inProgress;
+      case 3:
+        return ServiceStatus.ready;
+      case 4:
+      case 5:
+        return ServiceStatus.delivered;
+      default:
+        return ServiceStatus.received;
+    }
   }
 
   @override

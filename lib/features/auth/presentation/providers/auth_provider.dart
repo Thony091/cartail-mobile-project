@@ -2,27 +2,26 @@ import 'package:firebase_auth/firebase_auth.dart' as firebase_auth;
 import 'package:flutter/widgets.dart';
 import 'package:portafolio_project/config/config.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:portafolio_project/features/auth/presentation/providers/better_auth_provider.dart';
 import '../../../user/data/errors/auth_errors.dart';
-import '../../../user/data/repositories/user_repository_impl.dart';
 import '../../../user/domain/entities/user.dart';
 import '../../../user/domain/entities/user_role.dart';
-import '../../../user/domain/repositories/user_repository.dart';
 import '../../../shared/presentation/shared/shared.dart';
 
 /// Proveedor de estado para la gestión de la autenticación.
 final authProvider = StateNotifierProvider<AuthNotifier, AuthState>((ref) {
-  final authRepository = UserRepositoryImpl();
+  final userRepository = ref.watch(betterAuthProvider);
   final keyValueStorageService = KeyValueStorageServiceImpl();
 
   return AuthNotifier(
-    authRepository: authRepository,
+    authRepository: userRepository,
     keyValueStorageService: keyValueStorageService,
   );
 });
 
 /// Clase notificadora de estado para la gestión de la autenticación.
 class AuthNotifier extends StateNotifier<AuthState> {
-  final UserRepository authRepository;
+  final dynamic authRepository;
   final KeyValueStorageService keyValueStorageService;
 
   AuthNotifier({

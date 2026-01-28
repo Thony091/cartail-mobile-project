@@ -4,8 +4,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:portafolio_project/features/auth/presentation/providers/better_auth_provider.dart';
-import 'package:portafolio_project/features/client/domain/entities/client.dart';
-import 'package:portafolio_project/features/client/presentation/providers/clients_provider.dart';
 import 'package:portafolio_project/features/service_tracking/presentation/widgets/service_tracking_widgets.dart';
 import 'package:portafolio_project/features/ticket/presentation/providers/tickets_provider.dart';
 import 'package:portafolio_project/features/reservation/domain/entities/reservation.dart';
@@ -46,24 +44,31 @@ class _MyServicesPageState extends ConsumerState<MyServicesPage>
 
   @override
   Widget build(BuildContext context) {
-    final authState = ref.watch(betterAuthProvider);
     final ticketsState = ref.watch(ticketsProvider);
-    final clientsState = ref.watch(clientsProvider);
-    final reservationsById = ref.watch(reservationsByIdProvider);
-    final userId = authState.session?.user.id;
-    final userEmail = authState.session?.user.email;
-    final clientId = _resolveClientId(clientsState.clients, userEmail);
+    final reservationList = ref.watch(reservationProvider);
+    final userReservationIds = ref.watch(userReservationIdsProvider);
+    final userId = ref.watch(betterAuthProvider);
+    final enrichedReservationsById = ref.watch(enrichedReservationsByIdProvider);
+
+    // DEBUG: Log all data arriving
+    print('\n🔍 MyServicesPage DEBUG:');
+    print('  🎫 Tickets: ${ticketsState.tickets.length} total');
+    print('  👤 User reservation IDs: $userReservationIds');
+    print('  📋 Enriched Reservations available: ${enrichedReservationsById.length}');
 
     final services = _buildUserServices(
       ticketsState.tickets,
-      reservationsById: reservationsById,
-      userId: userId,
-      userEmail: userEmail,
-      clientId: clientId,
+      userReservationIds: userReservationIds,
+      enrichedReservationsById: enrichedReservationsById,
     );
+
+    print('  ✅ Services built: ${services.length} total');
+
     final activeServices = services.where((s) => s.isActive).toList();
     final readyServices = services.where((s) => s.isReady).toList();
     final completedServices = services.where((s) => s.isCompleted).toList();
+
+    print('  📊 Breakdown - Active: ${activeServices.length}, Ready: ${readyServices.length}, Completed: ${completedServices.length}\n');
 
     return Scaffold(
       backgroundColor: const Color(0xFFf8fafc),
@@ -152,70 +157,35 @@ class _MyServicesPageState extends ConsumerState<MyServicesPage>
 
   List<UserServiceRequest> _buildUserServices(
     List<Ticket> tickets, {
-    required Map<String, Reservation> reservationsById,
-    required String? userId,
-    required String? userEmail,
-    required String? clientId,
+    required Set<String> userReservationIds,
+    required Map<String, Reservation> enrichedReservationsById,
   }) {
-    if (userId == null && userEmail == null && clientId == null) return [];
-    return tickets
-        .where(
-          (ticket) => _isTicketForUser(
-            ticket,
-            reservationsById: reservationsById,
-            userId: userId,
-            userEmail: userEmail,
-            clientId: clientId,
-          ),
-        )
+    if (userReservationIds.isEmpty) {
+      print('  ❌ No user reservation IDs available');
+      return [];
+    }
+
+    print('  🔎 Filtering ${tickets.length} tickets by user reservation IDs: $userReservationIds');
+    final filtered = tickets
+        .where((ticket) => userReservationIds.contains(ticket.idReserva))
+        .toList();
+
+    print('  ✅ Filtered: ${filtered.length} matching tickets');
+
+    return filtered
         .map((ticket) => _ticketToServiceRequest(
               ticket,
-              reservationsById: reservationsById,
+              enrichedReservationsById: enrichedReservationsById,
             ))
         .toList();
   }
 
-  bool _isTicketForUser(
-    Ticket ticket, {
-    required Map<String, Reservation> reservationsById,
-    required String? userId,
-    required String? userEmail,
-    required String? clientId,
-  }) {
-    final reservation = reservationsById[ticket.idReserva];
-    if (reservation == null) return false;
-    if (userEmail != null &&
-        reservation.email.toLowerCase().trim() ==
-            userEmail.toLowerCase().trim()) {
-      return true;
-    }
-    if (clientId != null && reservation.clientId?.toString() == clientId) {
-      return true;
-    }
-    if (userId != null && reservation.clientId?.toString() == userId) {
-      return true;
-    }
-
-    return false;
-  }
-
-  String? _resolveClientId(List<Client> clients, String? email) {
-    if (email == null || email.trim().isEmpty) return null;
-    final lower = email.toLowerCase().trim();
-    for (final client in clients) {
-      if (client.email.toLowerCase().trim() == lower) {
-        return client.id.toString();
-      }
-    }
-    return null;
-  }
-
   UserServiceRequest _ticketToServiceRequest(
     Ticket ticket, {
-    required Map<String, Reservation> reservationsById,
+    required Map<String, Reservation> enrichedReservationsById,
   }) {
     final status = _mapTicketState(ticket.estado.id);
-    final reservation = reservationsById[ticket.idReserva];
+    final reservation = enrichedReservationsById[ticket.idReserva];
     final vehicle = UserVehicleInfo(
       brand: 'Toyota',
       model: 'Corolla',

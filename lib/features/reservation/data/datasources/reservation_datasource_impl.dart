@@ -1,4 +1,5 @@
 import 'package:dio/dio.dart';
+import 'package:flutter/foundation.dart';
 
 import '../../../../config/config.dart';
 import '../../../services/data/errors/service_errors.dart';
@@ -142,6 +143,7 @@ class ReservationDatasourceImpl extends ReservationDatasource {
         reservationDate: '',
         reservationTime: '',
         serviceName: '',
+        idTransaccion: '',
       );
       if (response.statusCode == 200) {
         final data = _extractData(response.data);
@@ -161,22 +163,67 @@ class ReservationDatasourceImpl extends ReservationDatasource {
   @override
   Future<List<Reservation>> getReservations() async {
     try {
+      if (kDebugMode) {
+        print('\x1B[36m');
+        print('═══════════════════════════════════════════════════════');
+        print('[ReservationDatasource] 🔵 INICIANDO: GET /reserva');
+        print('═══════════════════════════════════════════════════════');
+        print('\x1B[0m');
+      }
+
       final response = await dio.get('/reserva');
+
+      if (kDebugMode) {
+        print('\x1B[36m');
+        print('Status Code: ${response.statusCode}');
+        print('Response: ${response.data}');
+        print('\x1B[0m');
+      }
+
       final List<Reservation> reservations = [];
 
       if (response.statusCode == 200) {
         final data = _extractData(response.data);
         if (data is List) {
-          for (final reservation in data) {
+          if (kDebugMode) {
+            print('\x1B[36m[ReservationDatasource] Total items en lista: ${data.length}\x1B[0m');
+          }
+
+          for (int i = 0; i < data.length; i++) {
+            final reservation = data[i];
             if (reservation is Map<String, dynamic>) {
-              reservations.add(ReservationMapper.jsonToEntity(reservation));
+              try {
+                reservations.add(ReservationMapper.jsonToEntity(reservation));
+              } catch (e) {
+                if (kDebugMode) {
+                  print('\x1B[31m');
+                  print('ERROR mapeando reserva #$i: $e');
+                  print('JSON: $reservation');
+                  print('\x1B[0m');
+                }
+                // Continúa con la siguiente reserva en lugar de fallar completamente
+              }
             }
           }
         }
       }
+
+      if (kDebugMode) {
+        print('\x1B[32m');
+        print('═══════════════════════════════════════════════════════');
+        print('[ReservationDatasource] ✅ Reservas obtenidas: ${reservations.length}');
+        print('═══════════════════════════════════════════════════════');
+        print('\x1B[0m');
+      }
+
       return reservations;
     } catch (e) {
-      throw Exception('Error al obtener las reservas');
+      if (kDebugMode) {
+        print('\x1B[31m');
+        print('[ReservationDatasource] ❌ ERROR al obtener reservas: $e');
+        print('\x1B[0m');
+      }
+      throw Exception('Error al obtener las reservas: $e');
     }
   }
 
@@ -239,7 +286,14 @@ class ReservationDatasourceImpl extends ReservationDatasource {
     data['recordatorio'] = data['recordatorio'] ?? true;
     data['idEstado'] = _parseInt(data['idEstado'], defaultValue: 1);
     data['idServicio'] = _parseInt(data['idServicio'], defaultValue: 1);
-    data['idCliente'] = _parseInt(data['idCliente'], defaultValue: 1);
+    if (data.containsKey('idCliente')) {
+      final rawClientId = data['idCliente'];
+      if (rawClientId == null || rawClientId.toString().trim().isEmpty) {
+        data['idCliente'] = null;
+      } else {
+        data['idCliente'] = _parseInt(rawClientId, defaultValue: 1);
+      }
+    }
     if (data.containsKey('idImportancia')) {
       data['idImportancia'] = _parseInt(data['idImportancia'], defaultValue: 1);
     }

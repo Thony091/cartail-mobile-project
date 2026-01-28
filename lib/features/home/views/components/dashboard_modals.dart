@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:portafolio_project/features/auth/presentation/providers/users_provider.dart' hide usersProvider;
 import 'package:portafolio_project/features/message/presentation/providers/messages_provider.dart';
 import 'package:portafolio_project/features/reservation/presentation/providers/reservation_provider.dart';
 import 'package:portafolio_project/features/services/presentation/providers/services_provider.dart';
@@ -788,6 +789,10 @@ class OperatorsDetailModal extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final operariosState = ref.watch(operariosProvider);
+    final totalOperarios = operariosState.length;
+    final activosOperarios = operariosState.where((op) => !op.isCurrentlyBanned).length;
+
     return Dialog(
       backgroundColor: Colors.transparent,
       child: Container(
@@ -847,14 +852,14 @@ class OperatorsDetailModal extends ConsumerWidget {
                 children: [
                   _buildStatRow(
                     'Total de Operarios',
-                    '0',
+                    totalOperarios.toString(),
                     Icons.person,
                     const Color(0xFF16a085),
                   ),
                   const SizedBox(height: 16),
                   _buildStatRow(
                     'Operarios Activos',
-                    '0',
+                    activosOperarios.toString(),
                     Icons.check_circle,
                     const Color(0xFF27ae60),
                   ),

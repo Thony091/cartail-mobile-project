@@ -5,6 +5,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../presentation/pages/auth/modern_scaffold_with_drawer.dart';
 import 'modern_config_reservations_widgets.dart';
 import '../providers/reservation_provider.dart';
+import '../providers/reservation_derived_providers.dart';
 import '../../domain/entities/reservation.dart';
 
 class ModernConfigReservationsPage extends ConsumerStatefulWidget {
@@ -37,8 +38,8 @@ class ModernConfigReservationsPageState
 
   @override
   Widget build(BuildContext context) {
-    final reservationState = ref.watch(reservationProvider);
-    final List<Reservation> reservations = reservationState.reservations;
+    // Usar reservas enriquecidas con datos del cliente
+    final List<Reservation> reservations = ref.watch(enrichedReservationsProvider);
     final int totalReservations = reservations.length;
     final int todayReservations =
         reservations.where((r) => _isToday(r.reservationDate)).length;
@@ -159,6 +160,7 @@ class ModernConfigReservationsPageState
 
     return RefreshIndicator(
       onRefresh: () async {
+        // Refresca las reservas (enriquecimiento ocurre automáticamente)
         await ref.read(reservationProvider.notifier).getReservations();
       },
       child: ListView.builder(

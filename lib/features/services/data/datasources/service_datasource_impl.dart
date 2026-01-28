@@ -109,18 +109,30 @@ class ServicesDatasourceImpl extends ServicesDatasource {
           : '/servicio/$serviceId';
       serviceSimilar.remove('id');
 
-      // Procesar las imágenes (convertir a Base64 si son locales)
+      // Procesar las imágenes (convertir a Base64 solo si son locales)
+      // El servidor maneja imágenes HTTP/HTTPS directamente
       if (serviceSimilar.containsKey('images') &&
           serviceSimilar['images'] is List) {
         final images = (serviceSimilar['images'] as List)
             .whereType<String>()
             .toList();
-        final convertedImages = await _encodeImageCandidates(images);
-        if (convertedImages.isNotEmpty) {
-          // El backend espera 'imagen' (singular) con la primera imagen
-          serviceSimilar['imagen'] = convertedImages.first;
+
+        // Separar imágenes del servidor (HTTP/HTTPS) de imágenes locales
+        final remoteImages = images
+            .where((img) => img.startsWith('http'))
+            .toList();
+        final localImages = images
+            .where((img) => !img.startsWith('http'))
+            .toList();
+
+        // Convertir imágenes locales a Base64
+        final convertedLocalImages = await _encodeImageCandidates(localImages);
+
+        // Combinar todas las imágenes (servidor + convertidas)
+        final allImages = [...remoteImages, ...convertedLocalImages];
+        if (allImages.isNotEmpty) {
+          serviceSimilar['images'] = allImages;
         }
-        serviceSimilar.remove('images');
       }
 
       final response = await dio.request(

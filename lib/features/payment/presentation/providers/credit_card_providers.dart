@@ -1,43 +1,16 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:uuid/uuid.dart';
 
-import '../../../../config/services/storage/encryption_service.dart';
-import '../../../../config/services/storage/isar_service.dart';
-import '../../data/datasources/credit_card_local_datasource.dart';
-import '../../data/datasources/credit_card_local_datasource_impl.dart';
-import '../../data/repositories/credit_card_repository_impl.dart';
 import '../../domain/entities/credit_card.dart';
 import '../../domain/repositories/credit_card_repository.dart';
 
-// ========== SERVICE PROVIDERS ==========
-
-/// Provider del servicio de encriptación
-final encryptionServiceProvider = Provider<EncryptionService>((ref) {
-  return EncryptionService();
-});
-
-/// Provider del servicio de Isar
-final isarServiceProvider = Provider<IsarService>((ref) {
-  return IsarService();
-});
-
-// ========== DATASOURCE PROVIDERS ==========
-
-/// Provider del datasource local de tarjetas
-final creditCardLocalDatasourceProvider = Provider<CreditCardLocalDatasource>((ref) {
-  return CreditCardLocalDatasourceImpl(
-    isarService: ref.watch(isarServiceProvider),
-    encryptionService: ref.watch(encryptionServiceProvider),
-  );
-});
-
 // ========== REPOSITORY PROVIDERS ==========
 
-/// Provider del repositorio de tarjetas
+/// Provider del repositorio de tarjetas (remote-only)
 final creditCardRepositoryProvider = Provider<CreditCardRepository>((ref) {
-  return CreditCardRepositoryImpl(
-    localDatasource: ref.watch(creditCardLocalDatasourceProvider),
-  );
+  // Nota: CreditCard management is now remote-only
+  // Local storage is disabled per migration away from Isar
+  throw UnimplementedError('Credit card repository requires remote implementation');
 });
 
 // ========== STATE PROVIDERS ==========

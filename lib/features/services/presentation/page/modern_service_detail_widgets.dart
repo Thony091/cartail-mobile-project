@@ -1041,7 +1041,7 @@ class ServiceActionButtons extends ConsumerWidget {
                           ? 'Servicio creado exitosamente'
                           : 'Cambios guardados exitosamente',
                       ),
-                      backgroundColor: const Color(0xFF27ae60),
+                      backgroundColor: const Color(0xFF2ecc71),
                       duration: const Duration(seconds: 2),
                     ),
                   );

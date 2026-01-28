@@ -7,6 +7,14 @@ import 'package:portafolio_project/features/home/views/admin_body_home_view.dart
 import 'package:portafolio_project/features/home/views/operator_body_home_view.dart';
 import 'package:portafolio_project/features/home/views/user_body_home_view.dart';
 import 'package:portafolio_project/presentation/pages/auth/modern_scaffold_with_drawer.dart';
+import 'package:portafolio_project/features/services/presentation/providers/services_provider.dart';
+import 'package:portafolio_project/features/category/presentation/providers/categories_provider.dart';
+import 'package:portafolio_project/features/message/presentation/providers/messages_provider.dart';
+import 'package:portafolio_project/features/reservation/presentation/providers/reservation_provider.dart';
+import 'package:portafolio_project/features/ticket/presentation/providers/tickets_provider.dart';
+import 'package:portafolio_project/features/realized_work/presentation/providers/works_provider.dart';
+import 'package:portafolio_project/features/vehicle/presentation/providers/vehicles_provider.dart';
+import 'package:portafolio_project/features/slot/presentation/providers/slots_provider.dart';
 
 class ModernHomePage extends ConsumerStatefulWidget {
   static const name = 'ModernHomePage';
@@ -19,6 +27,44 @@ class ModernHomePage extends ConsumerStatefulWidget {
 
 class ModernHomePageState extends ConsumerState<ModernHomePage> {
   late final ProviderSubscription _authListener;
+
+  Future<void> _refreshHome() async {
+    final authState = ref.read(betterAuthProvider);
+    if (!authState.isAuthenticated) {
+      await Future.wait([
+        ref.read(servicesProvider.notifier).getServices(),
+        ref.read(categoriesProvider.notifier).getCategories(),
+      ]);
+      return;
+    }
+
+    if (authState.isAdmin) {
+      await Future.wait([
+        ref.read(servicesProvider.notifier).getServices(),
+        ref.read(messagesProvider.notifier).getMessages(),
+        ref.read(reservationProvider.notifier).getReservations(),
+        ref.read(ticketsProvider.notifier).getTickets(),
+        ref.read(worksProvider.notifier).getWorks(),
+        ref.read(vehiclesProvider.notifier).getVehicles(),
+        ref.read(slotsProvider.notifier).getSlots(),
+        ref.read(categoriesProvider.notifier).getCategories(),
+      ]);
+      return;
+    }
+
+    if (authState.isOperator) {
+      await Future.wait([
+        ref.read(ticketsProvider.notifier).getTickets(),
+        ref.read(worksProvider.notifier).getWorks(),
+      ]);
+      return;
+    }
+
+    await Future.wait([
+      ref.read(servicesProvider.notifier).getServices(),
+      ref.read(categoriesProvider.notifier).getCategories(),
+    ]);
+  }
 
   @override
   void initState() {
@@ -71,20 +117,24 @@ class ModernHomePageState extends ConsumerState<ModernHomePage> {
               ],
             ),
           ),
-          child: SingleChildScrollView(
-            keyboardDismissBehavior: 
-              ScrollViewKeyboardDismissBehavior.onDrag,
-            child: Column(
-              children: [
-                if (authState.isAuthenticated)
-                  authState.isAdmin
-                    ? const AdminBodyHomeView()
-                    : authState.isOperator
-                      ? const OperatorBodyHomeView()
-                      : const UserBodyHomeView()
-                else
-                  const UserBodyHomeView(),
-              ],
+          child: RefreshIndicator(
+            onRefresh: _refreshHome,
+            child: SingleChildScrollView(
+              keyboardDismissBehavior: 
+                ScrollViewKeyboardDismissBehavior.onDrag,
+              physics: const AlwaysScrollableScrollPhysics(),
+              child: Column(
+                children: [
+                  if (authState.isAuthenticated)
+                    authState.isAdmin
+                      ? const AdminBodyHomeView()
+                      : authState.isOperator
+                        ? const OperatorBodyHomeView()
+                        : const UserBodyHomeView()
+                  else
+                    const UserBodyHomeView(),
+                ],
+              ),
             ),
           ),
         ),

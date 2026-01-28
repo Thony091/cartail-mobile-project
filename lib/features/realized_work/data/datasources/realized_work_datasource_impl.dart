@@ -21,7 +21,7 @@ class RealizedWorkDatasourceImpl extends RealizedWorkDatasource {
             baseUrl: Enviroment.baseUrl,
             headers: {
               // 'x-api-key': 'ZvHNth6qgZ6LNnwtXwJX75Jk8YlXEZxX2AZvOFSW',
-              // 'Authorization': 'Bearer $accessToken'
+              'Authorization': 'Bearer $accessToken'
             },
           ),
         );

@@ -8,7 +8,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'config/config.dart';
 import 'config/services/storage/encryption_service.dart';
-import 'config/services/storage/isar_service.dart';
 import 'config/theme/theme_provider.dart';
 import 'core/logging/logger_service.dart';
 import 'presentation/widgets/connectivity_banner.dart';
@@ -49,13 +48,9 @@ void main() async {
     return true;
   };
 
-  /// Initialize Encryption Service (for sensitive data) - Servicios locales
+  /// Initialize Encryption Service (for sensitive data)
   final encryptionService = EncryptionService();
   await encryptionService.init();
-
-  /// Initialize Isar Database (for local storage)
-  final isarService = IsarService();
-  await isarService.init();
 
   runApp(const ProviderScope(child: MainApp()));
 }
@@ -96,9 +91,9 @@ class MainApp extends ConsumerWidget {
               children: [
                 child!,
                 // Debug FAB button (solo en debug mode)
-                DebugFabButton(
-                  onTap: () => appRouter.push('/debug/connectivity'),
-                ),
+                // DebugFabButton(
+                //   onTap: () => appRouter.push('/debug/connectivity'),
+                // ),
               ],
             ),
           ),

@@ -5,10 +5,9 @@ import '../../config/theme/modern_app_theme.dart';
 import '../../core/connectivity/connectivity_providers.dart';
 import '../../core/connectivity/connectivity_status.dart';
 import '../../core/logging/logger_providers.dart';
-import '../../core/sync/sync_queue_processor.dart';
 
-/// Dashboard para monitorear conectividad y sincronización
-/// Muestra estado actual, eventos recientes, y logs
+/// Dashboard para monitorear conectividad
+/// Muestra estado actual y logs
 class ConnectivityMonitoringDashboard extends ConsumerStatefulWidget {
   const ConnectivityMonitoringDashboard({super.key});
 
@@ -21,12 +20,11 @@ class _ConnectivityMonitoringDashboardState
     extends ConsumerState<ConnectivityMonitoringDashboard>
     with SingleTickerProviderStateMixin {
   late TabController _tabController;
-  final List<SyncQueueEvent> _syncEvents = [];
 
   @override
   void initState() {
     super.initState();
-    _tabController = TabController(length: 3, vsync: this);
+    _tabController = TabController(length: 2, vsync: this);
   }
 
   @override
@@ -44,7 +42,6 @@ class _ConnectivityMonitoringDashboardState
           controller: _tabController,
           tabs: const [
             Tab(text: 'Status'),
-            Tab(text: 'Sync Events'),
             Tab(text: 'Logs'),
           ],
         ),
@@ -53,7 +50,6 @@ class _ConnectivityMonitoringDashboardState
         controller: _tabController,
         children: [
           _buildStatusTab(),
-          _buildSyncEventsTab(),
           _buildLogsTab(),
         ],
       ),
@@ -251,63 +247,6 @@ class _ConnectivityMonitoringDashboardState
     if (rate < 0.2) return ModernAppTheme.successGreen;
     if (rate < 0.5) return ModernAppTheme.warningOrange;
     return ModernAppTheme.dangerRed;
-  }
-
-  Widget _buildSyncEventsTab() {
-    return StreamBuilder<SyncQueueEvent>(
-      stream: const Stream.empty(), // Will be connected in real app
-      builder: (context, snapshot) => Padding(
-        padding: const EdgeInsets.all(ModernAppTheme.paddingMedium),
-        child: _syncEvents.isEmpty
-            ? const Center(child: Text('No sync events yet'))
-            : ListView.builder(
-                itemCount: _syncEvents.length,
-                itemBuilder: (context, index) {
-                  final event = _syncEvents[index];
-                  return _buildSyncEventCard(event);
-                },
-              ),
-      ),
-    );
-  }
-
-  Widget _buildSyncEventCard(SyncQueueEvent event) {
-    late final IconData icon;
-    late final Color color;
-    late final String title;
-    late final String subtitle;
-
-    if (event is SyncQueueStarted) {
-      icon = Icons.hourglass_top_rounded;
-      color = ModernAppTheme.primaryBlue;
-      title = 'Sync Started';
-      subtitle = '${event.pendingCount} items pending';
-    } else if (event is SyncQueueItemSynced) {
-      icon = Icons.check_circle_rounded;
-      color = ModernAppTheme.successGreen;
-      title = 'Item Synced';
-      subtitle = 'ID: ${event.syncId.substring(0, 8)}...';
-    } else if (event is SyncQueueItemFailed) {
-      icon = Icons.error_rounded;
-      color = event.isRetryable ? ModernAppTheme.warningOrange : ModernAppTheme.dangerRed;
-      title = event.isRetryable ? 'Item Failed (Retrying)' : 'Item Failed (Permanent)';
-      subtitle = event.error.substring(0, (event.error.length > 50 ? 50 : event.error.length));
-    } else if (event is SyncQueueCompleted) {
-      icon = Icons.check_rounded;
-      color = ModernAppTheme.successGreen;
-      title = 'Sync Complete';
-      subtitle = '${event.syncedCount} synced, ${event.failedCount} failed';
-    }
-
-    return Card(
-      margin: const EdgeInsets.only(bottom: ModernAppTheme.paddingSmall),
-      child: ListTile(
-        leading: Icon(icon, color: color),
-        title: Text(title),
-        subtitle: Text(subtitle, maxLines: 1, overflow: TextOverflow.ellipsis),
-        trailing: const Icon(Icons.chevron_right),
-      ),
-    );
   }
 
   Widget _buildLogsTab() {

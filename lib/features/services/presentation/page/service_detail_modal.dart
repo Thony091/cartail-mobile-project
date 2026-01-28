@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import '../../../shared/presentation/shared/widgets/widgets.dart';
 import 'modern_service_widgets.dart';
+import 'service_image_utils.dart';
 import '../../domain/entities/services.dart';
 
 class ServiceDetailModal extends StatelessWidget {
@@ -118,14 +119,16 @@ class ServiceDetailModal extends StatelessWidget {
   }
 
   Widget _buildHeader() {
-    if (service.images.isNotEmpty) {
+    // Usar helper para encontrar primera imagen válida
+    final firstImage = firstValidNetworkImage(service.images);
+    if (firstImage != null) {
       return ClipRRect(
         borderRadius: BorderRadius.circular(16),
         child: AspectRatio(
           aspectRatio: 16 / 9,
           child: FadeInImage(
             placeholder: const AssetImage('assets/loaders/loader2.gif'),
-            image: NetworkImage(service.images.first),
+            image: NetworkImage(firstImage),
             fit: BoxFit.cover,
             fadeInDuration: const Duration(milliseconds: 300),
           ),

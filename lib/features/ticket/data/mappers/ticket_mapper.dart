@@ -21,8 +21,8 @@ class TicketMapper {
           json['name'] as String? ??
           '',
       description: json['description'] as String? ?? json['descripcion'] as String? ?? '',
-      desde: _parseDate(json['desde'] ?? json['startDate']),
-      hasta: _parseDate(json['hasta'] ?? json['endDate']),
+      desde: _parseDate(json['desde'] ?? json['start_date']),
+      hasta: _parseDate(json['hasta'] ?? json['end_date']),
       createdAt: _parseDate(json['createdAt'] ?? json['created_at']) ?? DateTime.now(),
       updatedAt: _parseDate(json['updatedAt'] ?? json['updated_at']) ?? DateTime.now(),
       idServicio: _parseInt(json['idServicio'] ?? json['id_servicio']) ?? 0,
@@ -45,14 +45,14 @@ class TicketMapper {
         'description': ticket.description,
         'desde': ticket.desde?.toIso8601String(),
         'hasta': ticket.hasta?.toIso8601String(),
-        'createdAt': ticket.createdAt.toIso8601String(),
-        'updatedAt': ticket.updatedAt.toIso8601String(),
-        'idServicio': ticket.idServicio,
-        'idUser': ticket.idUser,
-        'idReserva': ticket.idReserva,
-        'idEstado': ticket.estado.id,
-        'idImportancia': ticket.importancia.id,
-        'idUrgencia': ticket.urgencia.id,
+        'created_at': ticket.createdAt.toIso8601String(),
+        'updated_at': ticket.updatedAt.toIso8601String(),
+        'id_servicio': ticket.idServicio,
+        'id_user': ticket.idUser,
+        'id_reserva': ticket.idReserva,
+        'id_estado': ticket.estado.id,
+        'id_importancia': ticket.importancia.id,
+        'id_urgencia': ticket.urgencia.id,
       };
 
   static int? _parseInt(dynamic value) {

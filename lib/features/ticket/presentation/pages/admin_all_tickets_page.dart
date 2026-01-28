@@ -767,11 +767,15 @@ class _AdminTicketCardState extends ConsumerState<AdminTicketCard> {
                                   );
                               if (!context.mounted) return;
                               if (ok) {
+                                await ref
+                                    .read(ticketsProvider.notifier)
+                                    .getTickets();
                                 Navigator.pop(context);
                                 ScaffoldMessenger.of(context).showSnackBar(
                                   SnackBar(
                                     content: Text(
                                         'Ticket asignado a $operatorName'),
+                                    backgroundColor: const Color(0xFF27ae60),
                                   ),
                                 );
                               }
@@ -947,7 +951,7 @@ class _AdminTicketCardState extends ConsumerState<AdminTicketCard> {
                           .toList(),
                       onChanged: !hasStates
                           ? null
-                          : (value) {
+                          : (value) async {
                               if (value == null) return;
                               final stateName = states
                                   .firstWhere(
@@ -955,20 +959,27 @@ class _AdminTicketCardState extends ConsumerState<AdminTicketCard> {
                                     orElse: () => states.first,
                                   )
                                   .name;
-                              ref
+                              final ok = await ref
                                   .read(ticketsProvider.notifier)
                                   .updateTicketPriority(
                                     ticket: widget.ticket,
                                     stateId: value,
                                     stateName: stateName,
                                   );
-                              ScaffoldMessenger.of(context).showSnackBar(
-                                SnackBar(
-                                  content: Text(
-                                    'Estado actualizado a ${states.firstWhere((s) => s.id == value, orElse: () => states.first).name}',
+                              if (!context.mounted) return;
+                              if (ok) {
+                                await ref
+                                    .read(ticketsProvider.notifier)
+                                    .getTickets();
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  SnackBar(
+                                    content: Text(
+                                      'Estado actualizado a $stateName',
+                                    ),
+                                    backgroundColor: const Color(0xFF27ae60),
                                   ),
-                                ),
-                              );
+                                );
+                              }
                             },
                     ),
                   ),
@@ -1002,7 +1013,7 @@ class _AdminTicketCardState extends ConsumerState<AdminTicketCard> {
                           .toList(),
                       onChanged: !hasImportances
                           ? null
-                          : (value) {
+                          : (value) async {
                               if (value == null) return;
                               final importanceName = widget.ticketImportances
                                   .firstWhere(
@@ -1010,13 +1021,27 @@ class _AdminTicketCardState extends ConsumerState<AdminTicketCard> {
                                     orElse: () => widget.ticketImportances.first,
                                   )
                                   .name;
-                              ref
+                              final ok = await ref
                                   .read(ticketsProvider.notifier)
                                   .updateTicketPriority(
                                     ticket: widget.ticket,
                                     importanceId: value,
                                     importanceName: importanceName,
                                   );
+                              if (!context.mounted) return;
+                              if (ok) {
+                                await ref
+                                    .read(ticketsProvider.notifier)
+                                    .getTickets();
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  SnackBar(
+                                    content: Text(
+                                      'Importancia actualizada a $importanceName',
+                                    ),
+                                    backgroundColor: const Color(0xFF27ae60),
+                                  ),
+                                );
+                              }
                             },
                     ),
                   ),
@@ -1050,7 +1075,7 @@ class _AdminTicketCardState extends ConsumerState<AdminTicketCard> {
                           .toList(),
                       onChanged: !hasUrgencies
                           ? null
-                          : (value) {
+                          : (value) async {
                               if (value == null) return;
                               final urgencyName = widget.ticketUrgencies
                                   .firstWhere(
@@ -1058,13 +1083,27 @@ class _AdminTicketCardState extends ConsumerState<AdminTicketCard> {
                                     orElse: () => widget.ticketUrgencies.first,
                                   )
                                   .name;
-                              ref
+                              final ok = await ref
                                   .read(ticketsProvider.notifier)
                                   .updateTicketPriority(
                                     ticket: widget.ticket,
                                     urgencyId: value,
                                     urgencyName: urgencyName,
                                   );
+                              if (!context.mounted) return;
+                              if (ok) {
+                                await ref
+                                    .read(ticketsProvider.notifier)
+                                    .getTickets();
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  SnackBar(
+                                    content: Text(
+                                      'Urgencia actualizada a $urgencyName',
+                                    ),
+                                    backgroundColor: const Color(0xFF27ae60),
+                                  ),
+                                );
+                              }
                             },
                     ),
                   ),

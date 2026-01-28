@@ -236,11 +236,9 @@ class ServiceFormNotifier extends StateNotifier<ServiceFormState>{
       serviceSimilar['duracion_minutos'] = state.durationMinutes.toString();
     }
 
-    final images = _sanitizeImages(state.images)
-        .where(
-          (image) => !image.startsWith('http') && !image.startsWith('https'),
-        )
-        .toList();
+    // Enviar TODAS las imágenes (servidor + locales)
+    // El servidor maneja qué hacer con cada una
+    final images = _sanitizeImages(state.images);
     if (images.isNotEmpty) {
       serviceSimilar['images'] = images;
     }

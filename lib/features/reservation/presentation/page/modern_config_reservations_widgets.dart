@@ -67,6 +67,30 @@ class ReservationCard extends StatelessWidget {
     required this.onEdit,
   });
 
+  /// Extrae el primer carácter del nombre de forma segura
+  String _getInitial() {
+    if (reservation.name.isEmpty) {
+      return '?';
+    }
+    return reservation.name[0].toUpperCase();
+  }
+
+  /// Obtiene el nombre a mostrar, con fallback
+  String _getDisplayName() {
+    if (reservation.name.isEmpty) {
+      return 'Sin nombre (${reservation.vehiclePlate})';
+    }
+    return reservation.name;
+  }
+
+  /// Obtiene el nombre del servicio a mostrar, con fallback
+  String _getServiceName() {
+    if (reservation.serviceName.isEmpty) {
+      return 'Servicio no especificado';
+    }
+    return reservation.serviceName;
+  }
+
   @override
   Widget build(BuildContext context) {
     const accentColor = Color(0xFF3498db);
@@ -106,7 +130,7 @@ class ReservationCard extends StatelessWidget {
                     ),
                     child: Center(
                       child: Text(
-                        reservation.name[0].toUpperCase(),
+                        _getInitial(),
                         style: const TextStyle(
                           fontSize: 20,
                           fontWeight: FontWeight.w700,
@@ -124,7 +148,7 @@ class ReservationCard extends StatelessWidget {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
-                          reservation.name,
+                          _getDisplayName(),
                           style: const TextStyle(
                             fontSize: 16,
                             fontWeight: FontWeight.w600,
@@ -133,7 +157,7 @@ class ReservationCard extends StatelessWidget {
                         ),
                         const SizedBox(height: 4),
                         Text(
-                          reservation.serviceName,
+                          _getServiceName(),
                           style: const TextStyle(
                             fontSize: 14,
                             color: Color(0xFF7f8c8d),
@@ -193,15 +217,15 @@ class ReservationCard extends StatelessWidget {
                     ),
                   ),
                   const SizedBox(width: 12),
-                  Expanded(
-                    child: ModernButton(
-                      text: 'Editar',
-                      icon: Icons.edit,
-                      style: ModernButtonStyle.primary,
-                      onPressed: onEdit,
-                      height: 40,
-                    ),
-                  ),
+                  // Expanded(
+                  //   child: ModernButton(
+                  //     text: 'Editar',
+                  //     icon: Icons.edit,
+                  //     style: ModernButtonStyle.primary,
+                  //     onPressed: onEdit,
+                  //     height: 40,
+                  //   ),
+                  // ),
                 ],
               ),
             ],
@@ -360,6 +384,14 @@ class ReservationDetailDialog extends StatelessWidget {
 
   const ReservationDetailDialog({super.key, required this.reservation});
 
+  /// Extrae el primer carácter del nombre de forma segura
+  String _getInitial() {
+    if (reservation.name.isEmpty) {
+      return '?';
+    }
+    return reservation.name[0].toUpperCase();
+  }
+
   @override
   Widget build(BuildContext context) {
     return AlertDialog(
@@ -383,7 +415,7 @@ class ReservationDetailDialog extends StatelessWidget {
               ),
               child: Center(
                 child: Text(
-                  reservation.name[0].toUpperCase(),
+                  _getInitial(),
                   style: const TextStyle(
                     fontSize: 32,
                     fontWeight: FontWeight.w700,
@@ -403,12 +435,12 @@ class ReservationDetailDialog extends StatelessWidget {
             ),
           ),
           const SizedBox(height: 16),
-          _buildDetailRow('Cliente:', reservation.name),
-          _buildDetailRow('Email:', reservation.email),
-          _buildDetailRow('RUT:', reservation.rut),
-          _buildDetailRow('Servicio:', reservation.serviceName),
-          _buildDetailRow('Fecha:', reservation.reservationDate),
-          _buildDetailRow('Hora:', reservation.reservationTime),
+          _buildDetailRow('Cliente:', reservation.name.isEmpty ? '(Sin nombre)' : reservation.name),
+          _buildDetailRow('Email:', reservation.email.isEmpty ? '(No especificado)' : reservation.email),
+          _buildDetailRow('RUT:', reservation.rut.isEmpty ? '(No especificado)' : reservation.rut),
+          _buildDetailRow('Servicio:', reservation.serviceName.isEmpty ? '(No especificado)' : reservation.serviceName),
+          _buildDetailRow('Fecha:', reservation.reservationDate.isEmpty ? '(No especificado)' : reservation.reservationDate),
+          _buildDetailRow('Hora:', reservation.reservationTime.isEmpty ? '(No especificado)' : reservation.reservationTime),
           const SizedBox(height: 24),
           SizedBox(
             width: double.infinity,

@@ -9,6 +9,8 @@ enum DashboardModalType {
   tickets,
   messages,
   operators,
+  slots,
+  vehicles,
 }
 
 class StatCardWidget extends StatelessWidget {
@@ -50,7 +52,14 @@ class StatCardWidget extends StatelessWidget {
         modal = const MessagesDetailModal();
         break;
       case DashboardModalType.operators:
-        return; // Disabled for now
+        modal = const OperatorsDetailModal();
+        break;
+      case DashboardModalType.slots:
+        modal = const SlotsDetailModal();
+        break;
+      case DashboardModalType.vehicles:
+        modal = const VehiclesDetailModal();
+        break;
     }
 
     showDialog(

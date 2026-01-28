@@ -115,10 +115,10 @@ class ModernServiceDetailPageState
                 dragStartBehavior: DragStartBehavior.down,
                 physics: const BouncingScrollPhysics(),
                 padding: EdgeInsets.only(
-                  left: 16,
-                  right: 16,
-                  top: isEditMode ? 8 : 0,
-                  bottom: isEditMode ? 100 : 20,
+                  left: 20,
+                  right: 20,
+                  top: isEditMode ? 16 : 20,
+                  bottom: isEditMode ? 120 : 32,
                 ),
                 child: Form(
                   key: _formKey,
@@ -191,201 +191,87 @@ class ModernServiceDetailPageState
                       // Galería de imágenes con diseño mejorado
                       FadeInDown(
                         duration: const Duration(milliseconds: 600),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            if (isEditMode)
-                              const Padding(
-                                padding: EdgeInsets.only(bottom: 10, left: 4),
-                                child: Row(
-                                  children: [
-                                    Icon(
-                                      Icons.image_outlined,
-                                      color: Color(0xFF667eea),
-                                      size: 20,
-                                    ),
-                                    SizedBox(width: 8),
-                                    Text(
-                                      'Imagen del Servicio',
-                                      style: TextStyle(
-                                        fontSize: 16,
-                                        fontWeight: FontWeight.w600,
-                                        color: Color(0xFF2c3e50),
-                                      ),
-                                    ),
-                                    SizedBox(width: 4),
-                                    Text(
-                                      '*',
-                                      style: TextStyle(
-                                        color: Color(0xFFe74c3c),
-                                        fontSize: 16,
-                                        fontWeight: FontWeight.bold,
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                              ),
-                            ServiceImageGallery(
-                              service: service,
-                              isEditMode: isEditMode,
-                            ),
-                          ],
+                        child: _SectionCard(
+                          title: 'Imagen del Servicio',
+                          icon: Icons.image_outlined,
+                          showHeader: isEditMode,
+                          delay: 0,
+                          child: ServiceImageGallery(
+                            service: service,
+                            isEditMode: isEditMode,
+                          ),
                         ),
                       ),
 
-                      SizedBox(height: isEditMode ? 28 : 24),
+                      const SizedBox(height: 20),
 
-                      // Información básica con header
+                      // Información básica
                       FadeInUp(
                         delay: const Duration(milliseconds: 100),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            if (isEditMode)
-                              const Padding(
-                                padding: EdgeInsets.only(bottom: 12, left: 4),
-                                child: Row(
-                                  children: [
-                                    Icon(
-                                      Icons.edit_note,
-                                      color: Color(0xFF667eea),
-                                      size: 20,
-                                    ),
-                                    SizedBox(width: 8),
-                                    Text(
-                                      'Información Básica',
-                                      style: TextStyle(
-                                        fontSize: 16,
-                                        fontWeight: FontWeight.w600,
-                                        color: Color(0xFF2c3e50),
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                              ),
-                            ServiceBasicInfo(
-                              serviceId: widget.serviceId,
-                              service: service,
-                              isEditMode: isEditMode,
-                            ),
-                          ],
+                        child: _SectionCard(
+                          title: 'Información Básica',
+                          icon: Icons.edit_note,
+                          showHeader: isEditMode,
+                          delay: 100,
+                          child: ServiceBasicInfo(
+                            serviceId: widget.serviceId,
+                            service: service,
+                            isEditMode: isEditMode,
+                          ),
                         ),
                       ),
 
-                      SizedBox(height: isEditMode ? 24 : 20),
+                      const SizedBox(height: 20),
 
-                      // Descripción con header
+                      // Descripción
                       FadeInUp(
                         delay: const Duration(milliseconds: 200),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            if (isEditMode)
-                              const Padding(
-                                padding: EdgeInsets.only(bottom: 12, left: 4),
-                                child: Row(
-                                  children: [
-                                    Icon(
-                                      Icons.description_outlined,
-                                      color: Color(0xFF667eea),
-                                      size: 20,
-                                    ),
-                                    SizedBox(width: 8),
-                                    Text(
-                                      'Descripción',
-                                      style: TextStyle(
-                                        fontSize: 16,
-                                        fontWeight: FontWeight.w600,
-                                        color: Color(0xFF2c3e50),
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                              ),
-                            ServiceDescription(
-                              isEditMode: isEditMode,
-                              serviceId: widget.serviceId,
-                              service: service,
-                            ),
-                          ],
+                        child: _SectionCard(
+                          title: 'Descripción',
+                          icon: Icons.description_outlined,
+                          showHeader: isEditMode,
+                          delay: 200,
+                          child: ServiceDescription(
+                            isEditMode: isEditMode,
+                            serviceId: widget.serviceId,
+                            service: service,
+                          ),
                         ),
                       ),
 
-                      SizedBox(height: isEditMode ? 24 : 20),
+                      const SizedBox(height: 20),
 
-                      // Detalles del servicio con header
+                      // Detalles del servicio
                       FadeInUp(
                         delay: const Duration(milliseconds: 300),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            if (isEditMode)
-                              const Padding(
-                                padding: EdgeInsets.only(bottom: 12, left: 4),
-                                child: Row(
-                                  children: [
-                                    Icon(
-                                      Icons.attach_money,
-                                      color: Color(0xFF667eea),
-                                      size: 20,
-                                    ),
-                                    SizedBox(width: 8),
-                                    Text(
-                                      'Precios y Detalles',
-                                      style: TextStyle(
-                                        fontSize: 16,
-                                        fontWeight: FontWeight.w600,
-                                        color: Color(0xFF2c3e50),
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                              ),
-                            ServiceDetailsSection(
-                              isEditMode: isEditMode,
-                              serviceId: widget.serviceId,
-                              service: service,
-                            ),
-                          ],
+                        child: _SectionCard(
+                          title: 'Precios y Detalles',
+                          icon: Icons.attach_money,
+                          showHeader: isEditMode,
+                          delay: 300,
+                          child: ServiceDetailsSection(
+                            isEditMode: isEditMode,
+                            serviceId: widget.serviceId,
+                            service: service,
+                          ),
                         ),
                       ),
 
-                      SizedBox(height: isEditMode ? 24 : 20),
+                      const SizedBox(height: 20),
 
-                      // Categoría con header
+                      // Categoría
                       FadeInUp(
                         delay: const Duration(milliseconds: 400),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            if (isEditMode)
-                              const Padding(
-                                padding: EdgeInsets.only(bottom: 12, left: 4),
-                                child: Row(
-                                  children: [
-                                    Icon(
-                                      Icons.category_outlined,
-                                      color: Color(0xFF667eea),
-                                      size: 20,
-                                    ),
-                                    SizedBox(width: 8),
-                                    Text(
-                                      'Categoría',
-                                      style: TextStyle(
-                                        fontSize: 16,
-                                        fontWeight: FontWeight.w600,
-                                        color: Color(0xFF2c3e50),
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                              ),
-                            CategorySelector(
-                              serviceId: widget.serviceId,
-                              service: service,
-                              isEditMode: isEditMode,
-                            ),
-                          ],
+                        child: _SectionCard(
+                          title: 'Categoría',
+                          icon: Icons.category_outlined,
+                          showHeader: isEditMode,
+                          delay: 400,
+                          child: CategorySelector(
+                            serviceId: widget.serviceId,
+                            service: service,
+                            isEditMode: isEditMode,
+                          ),
                         ),
                       ),
 
@@ -437,6 +323,93 @@ class ModernServiceDetailPageState
                 ),
               ),
             ),
+    );
+  }
+}
+
+/// Widget reutilizable para secciones con header consistente
+class _SectionCard extends StatelessWidget {
+  final String title;
+  final IconData icon;
+  final Widget child;
+  final bool showHeader;
+  final int delay;
+
+  const _SectionCard({
+    required this.title,
+    required this.icon,
+    required this.child,
+    this.showHeader = true,
+    this.delay = 0,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(
+          color: const Color(0xFFe2e8f0),
+          width: 1,
+        ),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.04),
+            blurRadius: 8,
+            offset: const Offset(0, 2),
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          if (showHeader) ...[
+            Padding(
+              padding: const EdgeInsets.all(16),
+              child: Row(
+                children: [
+                  Container(
+                    padding: const EdgeInsets.all(8),
+                    decoration: BoxDecoration(
+                      color: const Color(0xFF667eea).withValues(alpha: 0.1),
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    child: Icon(
+                      icon,
+                      color: const Color(0xFF667eea),
+                      size: 20,
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Text(
+                      title,
+                      style: const TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.w600,
+                        color: Color(0xFF2c3e50),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            const Divider(
+              height: 1,
+              color: Color(0xFFe2e8f0),
+            ),
+            Padding(
+              padding: const EdgeInsets.all(16),
+              child: child,
+            ),
+          ] else
+            Padding(
+              padding: const EdgeInsets.all(16),
+              child: child,
+            ),
+        ],
+      ),
     );
   }
 }

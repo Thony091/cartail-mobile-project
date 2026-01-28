@@ -173,7 +173,10 @@ class ServicesDatasourceImpl extends ServicesDatasource {
   @override
   Future<Services> getServiceById(String id) async {
     try {
-      final response = await dio.get('/servicio/$id');
+      debugPrint('🔍 Fetching service with ID: "$id" (length: ${id.length}, trimmed: "${id.trim()}")');
+      final url = '/servicio/${id.trim()}';
+      debugPrint('📡 Request URL: $url');
+      final response = await dio.get(url);
       Services service = Services(
         id: '',
         name: '',
@@ -194,9 +197,13 @@ class ServicesDatasourceImpl extends ServicesDatasource {
       }
       return service;
     } on DioException catch (e) {
-      if (e.response!.statusCode == 404) throw ServiceNotFound();
+      debugPrint('❌ DioException fetching service $id: ${e.response?.statusCode}');
+      debugPrint('📋 Response: ${e.response?.data}');
+      debugPrint('🔗 Request URL: ${e.requestOptions.path}');
+      if (e.response?.statusCode == 404) throw ServiceNotFound();
       throw e;
     } catch (e) {
+      debugPrint('❌ Error fetching service $id: $e');
       throw e;
     }
   }

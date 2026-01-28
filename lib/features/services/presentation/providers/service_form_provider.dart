@@ -202,18 +202,38 @@ class ServiceFormNotifier extends StateNotifier<ServiceFormState>{
       return false;
     }
 
+    // Validar precios
+    final minPrice = state.minPrice.value;
+    final maxPrice = state.maxPrice.value;
+
+    if (minPrice <= 0 || maxPrice <= 0) {
+      state = state.copyWith(
+        isLoading: false,
+        errorMessage: 'Los precios deben ser mayores a 0',
+      );
+      return false;
+    }
+
+    if (minPrice > maxPrice) {
+      state = state.copyWith(
+        isLoading: false,
+        errorMessage: 'El precio mínimo no puede ser mayor al máximo',
+      );
+      return false;
+    }
+
     final serviceSimilar = {
       'id': ( state.id == 'new' ) ? null : state.id,
-      'nombre': state.name.value,
-      'descripcion': state.description.value,
-      'precio_min': state.minPrice.value,
-      'precio_max': state.maxPrice.value,
+      'nombre': state.name.value.trim(),
+      'descripcion': state.description.value.trim(),
+      'precio_min': minPrice.toString(),
+      'precio_max': maxPrice.toString(),
       'activo': state.isActive,
       'requiere_reserva': state.requiresReservation,
     };
 
     if (state.durationMinutes != 0) {
-      serviceSimilar['duracion_minutos'] = state.durationMinutes;
+      serviceSimilar['duracion_minutos'] = state.durationMinutes.toString();
     }
 
     final images = _sanitizeImages(state.images)
@@ -227,7 +247,7 @@ class ServiceFormNotifier extends StateNotifier<ServiceFormState>{
 
     // Agregar id_categoria si está disponible
     if (state.categoryId != null) {
-      serviceSimilar['id_categoria'] = state.categoryId;
+      serviceSimilar['id_categoria'] = state.categoryId.toString();
     }
 
     try {

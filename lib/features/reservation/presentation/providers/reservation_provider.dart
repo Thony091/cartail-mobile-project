@@ -1,32 +1,23 @@
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:portafolio_project/features/auth/auth.dart';
-
-import '../../data/datasources/reservation_datasource_impl.dart';
-import '../../data/repositories/reservation_repository_impl.dart';
 import '../../domain/entities/reservation.dart';
 import '../../domain/repositories/reservation_repository.dart';
+import 'reservation_repository_provider.dart';
 
-final reservationProvider = StateNotifierProvider<ReservationNotifier, ReservartionState>((ref) {
-
-  final reservationRepository = ReservationRepositoryImpl( 
-    ReservationDatasourceImpl(
-      accessToken: ref.watch( betterAuthProvider ).token ?? ''
-    ) 
-  );
-
+final reservationProvider =
+    StateNotifierProvider<ReservationNotifier, ReservationState>((ref) {
   return ReservationNotifier(
-    reservationRepository: reservationRepository
+    reservationRepository: ref.watch(reservationRepositoryProvider),
   );
 });
 
-class ReservationNotifier extends StateNotifier<ReservartionState>{
+class ReservationNotifier extends StateNotifier<ReservationState> {
 
   final ReservationRepository reservationRepository;
 
   ReservationNotifier({
     required this.reservationRepository
-  }) : super(ReservartionState()){
+  }) : super(ReservationState()) {
     getReservations();
   }
   
@@ -94,23 +85,23 @@ class ReservationNotifier extends StateNotifier<ReservartionState>{
 
 }
 
-class ReservartionState {
+class ReservationState {
 
   final List<Reservation> reservations;
   final bool isLoading;
   final String error;
 
-  ReservartionState({
+  ReservationState({
     this.reservations = const [],
     this.isLoading = false,
     this.error = ''
   });
 
-  ReservartionState copyWith({
+  ReservationState copyWith({
     List<Reservation>? reservations,
     bool? isLoading,
     String? error
-  }) => ReservartionState(
+  }) => ReservationState(
     reservations: reservations ?? this.reservations,
     isLoading: isLoading ?? this.isLoading,
     error: error ?? this.error

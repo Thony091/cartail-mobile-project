@@ -1,8 +1,10 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:portafolio_project/config/services/firebase/analytics_service.dart';
 import 'package:portafolio_project/presentation/pages/auth/cart-shop/modern_cart_page.dart';
 import 'package:portafolio_project/presentation/pages/auth/modern_check_auth_status_screen.dart';
+import 'package:portafolio_project/presentation/widgets/connectivity_monitoring_dashboard.dart';
 import 'package:portafolio_project/features/reservation/presentation/page/modern_config_reservations_page.dart';
 import 'package:portafolio_project/features/services/presentation/page/modern_config_services_page.dart';
 import 'package:portafolio_project/features/user/presentation/profile/modern_edit_profile.dart';
@@ -409,6 +411,14 @@ final goRouterProvider = Provider((ref) {
         builder: (context, state) =>
             VehicleReceptionPage(orderId: state.params['id'] ?? 'no-id'),
       ),
+
+      //* Debug - Connectivity Monitor (Debug mode only)
+      if (kDebugMode)
+        GoRoute(
+          path: '/debug/connectivity',
+          name: 'ConnectivityMonitoringDashboard',
+          builder: (context, state) => const ConnectivityMonitoringDashboard(),
+        ),
     ],
 
     redirect: (context, state) {

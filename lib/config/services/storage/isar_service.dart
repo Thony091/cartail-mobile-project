@@ -1,6 +1,8 @@
 import 'package:isar_community/isar.dart';
 import 'package:path_provider/path_provider.dart';
 import '../../../features/payment/data/models/credit_card_model.dart';
+import '../../../features/shared/data/models/isar_domain_models.dart';
+import '../../../features/sync_queue/data/models/sync_queue_item_model.dart';
 
 /// Servicio singleton para gestionar la base de datos Isar
 class IsarService {
@@ -28,6 +30,13 @@ class IsarService {
     _isar = await Isar.open(
       [
         CreditCardModelSchema,
+        UserModelSchema,
+        ServiceModelSchema,
+        VehicleModelSchema,
+        SlotModelSchema,
+        ReservationModelSchema,
+        TicketModelSchema,
+        SyncQueueItemModelSchema,
         // Aquí se pueden agregar más esquemas en el futuro
       ],
       directory: dir.path,

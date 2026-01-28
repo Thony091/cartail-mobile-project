@@ -9,7 +9,6 @@ import 'package:portafolio_project/features/services/presentation/providers/serv
 import 'package:portafolio_project/features/shared/presentation/shared/widgets/modern_button.dart';
 import 'package:portafolio_project/features/shared/presentation/shared/widgets/modern_card.dart';
 import '../../../shared/presentation/shared/services/camera/camera_gallery_service_impl.dart';
-import 'service_image_utils.dart';
 
 class ServiceImageGallery extends ConsumerWidget {
   final Services service;
@@ -35,28 +34,77 @@ class ServiceImageGallery extends ConsumerWidget {
   }
 
   Widget _buildImageWidget(String imagePath) {
+    if (imagePath.trim().isEmpty) {
+      return const Center(
+        child: Icon(Icons.image_not_supported, size: 64, color: Colors.grey),
+      );
+    }
+
     // Verificar si es una URL o una ruta local
-    if (isValidNetworkImageUrl(imagePath)) {
+    final isUrl = imagePath.startsWith('http://') || imagePath.startsWith('https://');
+
+    if (isUrl) {
       return Image.network(
         imagePath,
         fit: BoxFit.cover,
         width: double.infinity,
         height: double.infinity,
+        loadingBuilder: (context, child, loadingProgress) {
+          if (loadingProgress == null) return child;
+          return Center(
+            child: CircularProgressIndicator(
+              value: loadingProgress.expectedTotalBytes != null
+                  ? loadingProgress.cumulativeBytesLoaded /
+                      loadingProgress.expectedTotalBytes!
+                  : null,
+            ),
+          );
+        },
         errorBuilder: (context, error, stackTrace) {
-          return const Center(
-            child: Icon(Icons.broken_image, size: 64, color: Colors.grey),
+          return Center(
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                const Icon(Icons.broken_image, size: 64, color: Colors.grey),
+                const SizedBox(height: 8),
+                Padding(
+                  padding: const EdgeInsets.all(16),
+                  child: Text(
+                    'Error al cargar: ${imagePath.substring(0, 50)}...',
+                    textAlign: TextAlign.center,
+                    style: const TextStyle(fontSize: 12, color: Colors.grey),
+                  ),
+                ),
+              ],
+            ),
           );
         },
       );
     }
+
+    // Ruta local
     return Image.file(
       File(imagePath),
       fit: BoxFit.cover,
       width: double.infinity,
       height: double.infinity,
       errorBuilder: (context, error, stackTrace) {
-        return const Center(
-          child: Icon(Icons.broken_image, size: 64, color: Colors.grey),
+        return Center(
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              const Icon(Icons.broken_image, size: 64, color: Colors.grey),
+              const SizedBox(height: 8),
+              Padding(
+                padding: const EdgeInsets.all(16),
+                child: Text(
+                  'Archivo no encontrado: $imagePath',
+                  textAlign: TextAlign.center,
+                  style: const TextStyle(fontSize: 12, color: Colors.grey),
+                ),
+              ),
+            ],
+          ),
         );
       },
     );
@@ -66,10 +114,19 @@ class ServiceImageGallery extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
 
     final size = MediaQuery.of(context).size;
+
+    // Obtener imágenes del formulario
     final selectedImages = ref.watch(
       serviceFormProvider(service).select((state) => state.images),
     );
-    final displayImages = selectedImages
+
+    // Fallback a imágenes del servicio si el formulario está vacío
+    // Esto asegura que las imágenes de la base de datos se muestren
+    final imagesToDisplay = selectedImages.isNotEmpty
+        ? selectedImages
+        : service.images;
+
+    final displayImages = imagesToDisplay
         .where((image) => image.trim().isNotEmpty)
         .toList();
     return ModernCard(

@@ -74,17 +74,22 @@ class VehicleFormNotifier extends StateNotifier<VehicleFormState> {
 
   Future<bool> onFormSubmit() async {
     _touchEverything();
-    if (!state.isFormValid) return false;
+
+    // Verificar si el formulario es válido
+    if (!state.isFormValid) {
+      return false;
+    }
+
     if (onSubmitCallback == null) return false;
 
     state = state.copyWith(isLoading: true);
 
     final vehicleSimilar = {
       'id': (state.id == 'new') ? null : state.id,
-      'marca': state.brand.value,
-      'modelo': state.model.value,
-      'anio': state.year.value,
-      'trim': state.trim.value,
+      'marca': state.brand.value.trim(),
+      'modelo': state.model.value.trim(),
+      'anio': state.year.value.trim(),
+      'trim': state.trim.value.trim(),
     };
 
     try {

@@ -48,6 +48,14 @@ class ModernVehicleDetailPageState extends ConsumerState<ModernVehicleDetailPage
       );
     }
 
+    final isNewVehicle = widget.vehicleId == 'new';
+
+    // Para nuevo vehículo, usamos directamente el formulario
+    if (isNewVehicle) {
+      return _buildNewVehicleForm(context, ref);
+    }
+
+    // Para vehículos existentes, cargamos desde el provider
     final vehicleState = ref.watch(vehicleProvider(widget.vehicleId));
     final vehicle = vehicleState.vehicle;
 
@@ -59,27 +67,35 @@ class ModernVehicleDetailPageState extends ConsumerState<ModernVehicleDetailPage
     }
 
     if (vehicle == null) {
-      return const ModernScaffoldWithDrawer(
+      return  ModernScaffoldWithDrawer(
         title: 'Error',
-        body: Center(child: Text('No se pudo cargar el modelo de vehículo')),
+        body: Center(
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              const Icon(Icons.error_outline, size: 48, color: Color(0xFFe74c3c)),
+              const SizedBox(height: 16),
+              const Text('No se pudo cargar el modelo de vehículo'),
+              const SizedBox(height: 16),
+              ElevatedButton(
+                onPressed: () => context.pop(),
+                child: const Text('Volver'),
+              ),
+            ],
+          ),
+        ),
       );
     }
 
-    final isNewVehicle = widget.vehicleId == 'new';
-
     return ModernScaffoldWithDrawer(
-      title: isNewVehicle
-          ? 'Crear Modelo'
-          : _isEditMode
-              ? 'Editar Modelo'
-              : 'Detalles del Modelo',
+      title: _isEditMode ? 'Editar Modelo' : 'Detalles del Modelo',
       appBarActions: [
-        if (!isNewVehicle && !_isEditMode)
+        if (!_isEditMode)
           IconButton(
             icon: const Icon(Icons.edit, color: Colors.white),
             onPressed: () => setState(() => _isEditMode = true),
           ),
-        if (_isEditMode && !isNewVehicle)
+        if (_isEditMode)
           IconButton(
             icon: const Icon(Icons.close, color: Colors.white),
             onPressed: () => setState(() => _isEditMode = false),
@@ -91,7 +107,7 @@ class ModernVehicleDetailPageState extends ConsumerState<ModernVehicleDetailPage
             begin: Alignment.topCenter,
             end: Alignment.bottomCenter,
             colors: [
-              const Color(0xFF667eea).withOpacity(0.1),
+              const Color(0xFF667eea).withValues(alpha: 0.1),
               const Color(0xFFf8fafc),
             ],
           ),
@@ -113,6 +129,45 @@ class ModernVehicleDetailPageState extends ConsumerState<ModernVehicleDetailPage
     );
   }
 
+  Widget _buildNewVehicleForm(BuildContext context, WidgetRef ref) {
+    final emptyVehicle = Vehicle(
+      id: 0,
+      brand: '',
+      model: '',
+      year: '',
+      trim: '',
+    );
+
+    return ModernScaffoldWithDrawer(
+      title: 'Crear Modelo',
+      body: Container(
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            begin: Alignment.topCenter,
+            end: Alignment.bottomCenter,
+            colors: [
+              const Color(0xFF667eea).withValues(alpha: 0.1),
+              const Color(0xFFf8fafc),
+            ],
+          ),
+        ),
+        child: SingleChildScrollView(
+          padding: const EdgeInsets.all(20),
+          child: Form(
+            key: _formKey,
+            child: _VehicleForm(
+              vehicle: emptyVehicle,
+              isEditMode: true,
+              isSaving: _isSaving,
+              onSave: _saveVehicle,
+              onCancel: () => context.pop(),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
   Future<void> _saveVehicle(VehicleFormNotifier notifier) async {
     if (_isSaving) return;
 
@@ -124,18 +179,14 @@ class ModernVehicleDetailPageState extends ConsumerState<ModernVehicleDetailPage
 
     setState(() => _isSaving = false);
 
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(
-          isSaved ? 'Modelo guardado' : 'No se pudo guardar el modelo',
-        ),
-        backgroundColor: isSaved
-            ? const Color(0xFF27ae60)
-            : const Color(0xFFe74c3c),
-      ),
-    );
-
     if (isSaved) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Modelo guardado exitosamente'),
+          backgroundColor: Color(0xFF27ae60),
+          duration: Duration(seconds: 2),
+        ),
+      );
       context.pop();
     }
   }

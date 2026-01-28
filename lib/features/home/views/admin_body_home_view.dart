@@ -10,6 +10,7 @@ import 'package:portafolio_project/features/shared/presentation/shared/shared.da
 import 'package:portafolio_project/features/ticket/presentation/providers/tickets_provider.dart';
 import 'package:portafolio_project/features/reservation/presentation/providers/reservation_provider.dart';
 import 'package:portafolio_project/features/realized_work/presentation/providers/works_provider.dart';
+import 'package:portafolio_project/features/vehicle/presentation/providers/vehicles_provider.dart';
 
 class AdminBodyHomeView extends ConsumerWidget {
   const AdminBodyHomeView({super.key});
@@ -22,7 +23,7 @@ class AdminBodyHomeView extends ConsumerWidget {
     final reservationState = ref.watch( reservationProvider );
     final ticketState = ref.watch( ticketsProvider );
     final worksState = ref.watch( worksProvider );
-    final userListState = ref.watch( adminUsersListProvider.notifier );
+    final vehiclesState = ref.watch( vehiclesProvider );
 
     return Padding(
       padding: const EdgeInsets.all(20),
@@ -149,14 +150,42 @@ class AdminBodyHomeView extends ConsumerWidget {
                   ),
                 ),
                 const SizedBox(width: 16),
-                const Expanded(
+                Expanded(
                   child: StatCardWidget(
                     value: '0',
                     label: 'Operarios',
                     icon: Icons.people,
-                    color: Color(0xFF16a085),
+                    color: const Color(0xFF16a085),
                     modalType: DashboardModalType.operators,
-                    isEnabled: false,
+                  ),
+                ),
+              ],
+            ),
+          ),
+
+          const SizedBox(height: 16),
+
+          FadeInUp(
+            delay: const Duration(milliseconds: 400),
+            child: Row(
+              children: [
+                Expanded(
+                  child: StatCardWidget(
+                    value: vehiclesState.vehicles.length.toString(),
+                    label: 'Vehículos',
+                    icon: Icons.directions_car,
+                    color: const Color(0xFF8e44ad),
+                    modalType: DashboardModalType.vehicles,
+                  ),
+                ),
+                const SizedBox(width: 16),
+                const Expanded(
+                  child: StatCardWidget(
+                    value: '0',
+                    label: 'Espacios',
+                    icon: Icons.schedule,
+                    color: Color(0xFF2980b9),
+                    modalType: DashboardModalType.slots,
                   ),
                 ),
               ],
@@ -264,16 +293,30 @@ class AdminBodyHomeView extends ConsumerWidget {
                       onPressed: () => context.push('/admin-config-categories'),
                     ),
                   ),
-                  // const SizedBox(height: 12),
-                  // SizedBox(
-                  //   width: double.infinity,
-                  //   child: ModernButton(
-                  //     text: 'Gestión de Productos',
-                  //     icon: Icons.store_mall_directory,
-                  //     style: ModernButtonStyle.success,
-                  //     onPressed: () => context.push('/admin-config-products'),
-                  //   ),
-                  // ),
+
+                  const SizedBox(height: 12),
+
+                  SizedBox(
+                    width: double.infinity,
+                    child: ModernButton(
+                      text: 'Gestión de Vehículos',
+                      icon: Icons.directions_car,
+                      style: ModernButtonStyle.secondary,
+                      onPressed: () => context.push('/admin-config-vehicles'),
+                    ),
+                  ),
+
+                  const SizedBox(height: 12),
+
+                  SizedBox(
+                    width: double.infinity,
+                    child: ModernButton(
+                      text: 'Gestión de Espacios',
+                      icon: Icons.schedule,
+                      style: ModernButtonStyle.secondary,
+                      onPressed: () => context.push('/admin-config-slots'),
+                    ),
+                  ),
                 ],
               ),
             ),

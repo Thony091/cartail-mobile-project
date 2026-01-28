@@ -232,6 +232,59 @@ class ServiceAdminCard extends StatelessWidget {
     required this.onShowOptions,
   });
 
+  Widget _buildServiceImage(Services service) {
+    // Check if service has images
+    if (service.images.isEmpty) {
+      return const Icon(
+        Icons.car_repair,
+        color: Color(0xFF3498db),
+        size: 40,
+      );
+    }
+
+    final imageUrl = service.images.first.trim();
+    if (imageUrl.isEmpty) {
+      return const Icon(
+        Icons.car_repair,
+        color: Color(0xFF3498db),
+        size: 40,
+      );
+    }
+
+    return ClipRRect(
+      borderRadius: BorderRadius.circular(12),
+      child: Image.network(
+        imageUrl,
+        fit: BoxFit.cover,
+        loadingBuilder: (context, child, loadingProgress) {
+          if (loadingProgress == null) return child;
+          return Center(
+            child: SizedBox(
+              width: 24,
+              height: 24,
+              child: CircularProgressIndicator(
+                strokeWidth: 2,
+                valueColor: AlwaysStoppedAnimation<Color>(
+                  Colors.grey[400]!,
+                ),
+              ),
+            ),
+          );
+        },
+        errorBuilder: (context, error, stackTrace) {
+          return Container(
+            color: const Color(0xFF3498db).withValues(alpha: 0.1),
+            child: const Icon(
+              Icons.car_repair,
+              color: Color(0xFF3498db),
+              size: 40,
+            ),
+          );
+        },
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Dismissible(
@@ -272,13 +325,9 @@ class ServiceAdminCard extends StatelessWidget {
                     height: 80,
                     decoration: BoxDecoration(
                       borderRadius: BorderRadius.circular(12),
-                      color: const Color(0xFF3498db).withOpacity(0.1),
+                      color: const Color(0xFF3498db).withValues(alpha: 0.1),
                     ),
-                    child: const Icon(
-                      Icons.car_repair,
-                      color: Color(0xFF3498db),
-                      size: 40,
-                    ),
+                    child: _buildServiceImage(service),
                   ),
 
                   const SizedBox(width: 16),

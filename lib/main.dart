@@ -10,10 +10,16 @@ import 'config/config.dart';
 import 'config/services/storage/encryption_service.dart';
 import 'config/services/storage/isar_service.dart';
 import 'config/theme/theme_provider.dart';
+import 'core/logging/logger_service.dart';
+import 'presentation/widgets/connectivity_banner.dart';
+import 'presentation/widgets/debug_fab_button.dart';
 
 void main() async {
 
   WidgetsFlutterBinding.ensureInitialized();
+
+  // Inicializa el logger global
+  initializeLogger();
 
   await Enviroment.initEnvironment();
 
@@ -77,15 +83,25 @@ class MainApp extends ConsumerWidget {
       title: 'DriveTail - Detailing Center',
       // Builder para configuraciones adicionales
       builder: (context, child) {
-        return MediaQuery(
-          // Asegurar que el texto no se escale más allá de ciertos límites
-          data: MediaQuery.of(context).copyWith(
-            textScaler: MediaQuery.of(context).textScaler.clamp(
-              minScaleFactor: 0.8,
-              maxScaleFactor: 1.2,
+        return ConnectivityBannerLayer(
+          child: MediaQuery(
+            // Asegurar que el texto no se escale más allá de ciertos límites
+            data: MediaQuery.of(context).copyWith(
+              textScaler: MediaQuery.of(context).textScaler.clamp(
+                minScaleFactor: 0.8,
+                maxScaleFactor: 1.2,
+              ),
+            ),
+            child: Stack(
+              children: [
+                child!,
+                // Debug FAB button (solo en debug mode)
+                DebugFabButton(
+                  onTap: () => appRouter.push('/debug/connectivity'),
+                ),
+              ],
             ),
           ),
-          child: child!,
         );
       },
     );

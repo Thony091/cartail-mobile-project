@@ -40,22 +40,28 @@ class WorkFormNotifier extends StateNotifier<WorkFormState>{
   );
 
   onTitleChange( String value ) {
+    final newTitle = Name.dirty(value);
     state = state.copyWith(
-      title: Name.dirty(value),
+      title: newTitle,
+      titleError: newTitle.errorMessage,
       isFormValid: _validate()
     );
   }
 
   onDescriptionChange( String value ) {
+    final newDescription = Description.dirty(value);
     state = state.copyWith(
-      description: Description.dirty(value),
+      description: newDescription,
+      descriptionError: newDescription.errorMessage,
       isFormValid: _validate()
     );
   }
 
   onTestimonialChange( String value ) {
+    final newTestimonial = Description.dirty(value);
     state = state.copyWith(
-      testimonial: Description.dirty(value),
+      testimonial: newTestimonial,
+      testimonialError: newTestimonial.errorMessage,
       isFormValid: _validate()
     );
   }
@@ -108,12 +114,19 @@ class WorkFormNotifier extends StateNotifier<WorkFormState>{
   }
   
   _tochedEverything(){
+    final newTitle = Name.dirty(state.title.value);
+    final newDescription = Description.dirty(state.description.value);
+    final newTestimonial = Description.dirty(state.testimonial.value);
+
     state = state.copyWith(
-      title: Name.dirty(state.title.value),
-      description: Description.dirty(state.description.value),
-      testimonial: Description.dirty(state.testimonial.value),
+      title: newTitle,
+      description: newDescription,
+      testimonial: newTestimonial,
       beforeImage: WorkImagen.dirty(state.beforeImage.value),
       afterImage: WorkImagen.dirty(state.afterImage.value),
+      titleError: newTitle.errorMessage,
+      descriptionError: newDescription.errorMessage,
+      testimonialError: newTestimonial.errorMessage,
       isFormValid: _validate()
     );
   }
@@ -181,6 +194,9 @@ class WorkFormState{
   final int vehicleModelId;
   final WorkImagen beforeImage;
   final WorkImagen afterImage;
+  final String? titleError;
+  final String? descriptionError;
+  final String? testimonialError;
 
   WorkFormState({
     required this.id,
@@ -196,6 +212,9 @@ class WorkFormState{
     this.vehicleModelId = 1,
     required this.beforeImage,
     required this.afterImage,
+    this.titleError,
+    this.descriptionError,
+    this.testimonialError,
   });
 
   WorkFormState copyWith({
@@ -212,6 +231,9 @@ class WorkFormState{
     int? vehicleModelId,
     WorkImagen? beforeImage,
     WorkImagen? afterImage,
+    String? titleError,
+    String? descriptionError,
+    String? testimonialError,
   }) => WorkFormState(
     id: id ?? this.id,
     isFormValid: isFormValid ?? this.isFormValid,
@@ -226,6 +248,9 @@ class WorkFormState{
     vehicleModelId: vehicleModelId ?? this.vehicleModelId,
     beforeImage: beforeImage ?? this.beforeImage,
     afterImage: afterImage ?? this.afterImage,
+    titleError: titleError ?? this.titleError,
+    descriptionError: descriptionError ?? this.descriptionError,
+    testimonialError: testimonialError ?? this.testimonialError,
   );
 
   @override

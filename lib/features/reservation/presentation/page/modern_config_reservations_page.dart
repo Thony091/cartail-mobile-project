@@ -57,7 +57,7 @@ class ModernConfigReservationsPageState
             begin: Alignment.topCenter,
             end: Alignment.bottomCenter,
             colors: [
-              const Color(0xFF667eea).withOpacity(0.1),
+              const Color(0xFF667eea).withValues(alpha: .1),
               const Color(0xFFf8fafc),
             ],
           ),
@@ -101,7 +101,7 @@ class ModernConfigReservationsPageState
                   borderRadius: BorderRadius.circular(12),
                   boxShadow: [
                     BoxShadow(
-                      color: Colors.black.withOpacity(0.05),
+                      color: Colors.black.withValues(alpha: .05),
                       blurRadius: 10,
                       offset: const Offset(0, 2),
                     ),

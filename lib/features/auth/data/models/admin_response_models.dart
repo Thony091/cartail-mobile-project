@@ -31,22 +31,31 @@ class AdminUserModel {
   });
 
   factory AdminUserModel.fromJson(Map<String, dynamic> json) {
+    final id = json['id'];
+    if (id == null || id is! String) {
+      throw const FormatException('Invalid user data: missing or invalid "id" field');
+    }
+    final email = json['email'];
+    if (email == null || email is! String) {
+      throw const FormatException('Invalid user data: missing or invalid "email" field');
+    }
+
     return AdminUserModel(
-      id: json['id'] as String,
-      name: json['name'] as String?,
-      email: json['email'] as String,
+      id: id,
+      name: json['name'] is String? ? json['name'] as String? : null,
+      email: email,
       emailVerified: json['emailVerified'] as bool? ?? false,
-      image: json['image'] as String?,
-      createdAt: json['createdAt'] != null
+      image: json['image'] is String? ? json['image'] as String? : null,
+      createdAt: json['createdAt'] != null && json['createdAt'] is String
           ? DateTime.tryParse(json['createdAt'] as String)
           : null,
-      updatedAt: json['updatedAt'] != null
+      updatedAt: json['updatedAt'] != null && json['updatedAt'] is String
           ? DateTime.tryParse(json['updatedAt'] as String)
           : null,
-      role: json['role'] as String?,
+      role: json['role'] is String? ? json['role'] as String? : null,
       banned: json['banned'] as bool? ?? false,
-      banReason: json['banReason'] as String?,
-      banExpires: json['banExpires'] != null
+      banReason: json['banReason'] is String? ? json['banReason'] as String? : null,
+      banExpires: json['banExpires'] != null && json['banExpires'] is String
           ? DateTime.tryParse(json['banExpires'] as String)
           : null,
     );
@@ -98,8 +107,12 @@ class AdminUserResponse {
   AdminUserResponse({required this.user});
 
   factory AdminUserResponse.fromJson(Map<String, dynamic> json) {
+    final userJson = json['user'];
+    if (userJson == null || userJson is! Map<String, dynamic>) {
+      throw const FormatException('Invalid response structure: missing or invalid "user" field');
+    }
     return AdminUserResponse(
-      user: AdminUserModel.fromJson(json['user'] as Map<String, dynamic>),
+      user: AdminUserModel.fromJson(userJson),
     );
   }
 }
@@ -119,9 +132,18 @@ class AdminListUsersResponse {
   });
 
   factory AdminListUsersResponse.fromJson(Map<String, dynamic> json) {
+    final usersList = json['users'];
+    if (usersList == null || usersList is! List<dynamic>) {
+      throw const FormatException('Invalid response structure: missing or invalid "users" field');
+    }
     return AdminListUsersResponse(
-      users: (json['users'] as List<dynamic>)
-          .map((e) => AdminUserModel.fromJson(e as Map<String, dynamic>))
+      users: usersList
+          .map((e) {
+            if (e is! Map<String, dynamic>) {
+              throw const FormatException('Invalid user object in users list');
+            }
+            return AdminUserModel.fromJson(e);
+          })
           .toList(),
       total: json['total'] as int? ?? 0,
       limit: json['limit'] as int? ?? 10,
@@ -146,9 +168,18 @@ class AdminListUserSessionsResponse {
   AdminListUserSessionsResponse({required this.sessions});
 
   factory AdminListUserSessionsResponse.fromJson(Map<String, dynamic> json) {
+    final sessionsList = json['sessions'];
+    if (sessionsList == null || sessionsList is! List<dynamic>) {
+      throw const FormatException('Invalid response structure: missing or invalid "sessions" field');
+    }
     return AdminListUserSessionsResponse(
-      sessions: (json['sessions'] as List<dynamic>)
-          .map((e) => SessionModel.fromJson(e as Map<String, dynamic>))
+      sessions: sessionsList
+          .map((e) {
+            if (e is! Map<String, dynamic>) {
+              throw const FormatException('Invalid session object in sessions list');
+            }
+            return SessionModel.fromJson(e);
+          })
           .toList(),
     );
   }
@@ -165,9 +196,17 @@ class AdminImpersonateResponse {
   });
 
   factory AdminImpersonateResponse.fromJson(Map<String, dynamic> json) {
+    final sessionJson = json['session'];
+    if (sessionJson == null || sessionJson is! Map<String, dynamic>) {
+      throw const FormatException('Invalid response structure: missing or invalid "session" field');
+    }
+    final userJson = json['user'];
+    if (userJson == null || userJson is! Map<String, dynamic>) {
+      throw const FormatException('Invalid response structure: missing or invalid "user" field');
+    }
     return AdminImpersonateResponse(
-      session: SessionModel.fromJson(json['session'] as Map<String, dynamic>),
-      user: AdminUserModel.fromJson(json['user'] as Map<String, dynamic>),
+      session: SessionModel.fromJson(sessionJson),
+      user: AdminUserModel.fromJson(userJson),
     );
   }
 }

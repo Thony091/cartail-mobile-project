@@ -84,7 +84,7 @@ class _ModernButtonState extends State<ModernButton>
                   borderRadius: BorderRadius.circular(12),
                   onTap: widget.isLoading ? null : widget.onPressed,
                   child: Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 24),
+                    padding: const EdgeInsets.symmetric(horizontal: 15),
                     child: Row(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
@@ -101,7 +101,11 @@ class _ModernButtonState extends State<ModernButton>
                           )
                         else ...[
                           if (widget.icon != null) ...[
-                            Icon(widget.icon, color: Colors.white, size: 20),
+                            Icon(
+                              widget.icon, 
+                              color: Colors.white, 
+                              size: 20
+                            ),
                             const SizedBox(width: 8),
                           ],
                           Text(
@@ -130,27 +134,27 @@ class _ModernButtonState extends State<ModernButton>
       case ModernButtonStyle.primary:
         return ButtonColors(
           gradientColors: [const Color(0xFF3498db), const Color(0xFF2980b9)],
-          shadowColor: const Color(0xFF3498db).withOpacity(0.3),
+          shadowColor: const Color(0xFF3498db).withValues(alpha: .3),
         );
       case ModernButtonStyle.secondary:
         return ButtonColors(
           gradientColors: [const Color(0xFF95a5a6), const Color(0xFF7f8c8d)],
-          shadowColor: const Color(0xFF95a5a6).withOpacity(0.3),
+          shadowColor: const Color(0xFF95a5a6).withValues(alpha: .3),
         );
       case ModernButtonStyle.danger:
         return ButtonColors(
           gradientColors: [const Color(0xFFe74c3c), const Color(0xFFc0392b)],
-          shadowColor: const Color(0xFFe74c3c).withOpacity(0.3),
+          shadowColor: const Color(0xFFe74c3c).withValues(alpha: .3),
         );
       case ModernButtonStyle.success:
         return ButtonColors(
           gradientColors: [const Color(0xFF27ae60), const Color(0xFF2ecc71)],
-          shadowColor: const Color(0xFF27ae60).withOpacity(0.3),
+          shadowColor: const Color(0xFF27ae60).withValues(alpha: .3),
         );
       case ModernButtonStyle.warning:
         return ButtonColors(
           gradientColors: [const Color(0xFFf39c12), const Color(0xFFe67e22)],
-          shadowColor: const Color(0xFFf39c12).withOpacity(0.3),
+          shadowColor: const Color(0xFFf39c12).withValues(alpha: .3),
         );
     }
   }

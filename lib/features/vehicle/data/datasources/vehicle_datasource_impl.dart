@@ -16,7 +16,7 @@ class VehicleDatasourceImpl extends VehicleDatasource {
     BaseOptions(
       baseUrl: Enviroment.baseUrl,
       headers: {
-        'x-api-key': 'ZvHNth6qgZ6LNnwtXwJX75Jk8YlXEZxX2AZvOFSW',
+        // 'x-api-key': 'ZvHNth6qgZ6LNnwtXwJX75Jk8YlXEZxX2AZvOFSW',
         'Authorization': 'Bearer $accessToken',
         'Content-Type': 'application/json',
       }

@@ -310,8 +310,7 @@ class WorkBasicInfo extends ConsumerWidget {
                     hint: 'Ej: Renault Duster Detailing',
                     initialValue: workForm.title.value,
                     onChanged: workFormNotifier.onTitleChange,
-                    validator: (value) =>
-                        value?.isEmpty ?? true ? 'Ingresa un título' : null,
+                    errorMessage: workForm.titleError,
                   ),
                   const SizedBox(height: 16),
                   ModernInputField(
@@ -493,8 +492,7 @@ class WorkDescription extends ConsumerWidget {
                 initialValue: workForm.description.value,
                 onChanged: workFormNotifier.onDescriptionChange,
                 maxLines: 6,
-                validator: (value) =>
-                    value?.isEmpty ?? true ? 'Ingresa una descripción' : null,
+                errorMessage: workForm.descriptionError,
               )
             else
               Text(
@@ -560,8 +558,7 @@ class WorkTestimonialAndRating extends ConsumerWidget {
                 hint: 'Comentario del cliente',
                 maxLines: 4,
                 initialValue: workForm.testimonial.value,
-                validator: (value) =>
-                    value?.isEmpty ?? true ? 'Ingresa un testimonio' : null,
+                errorMessage: workForm.testimonialError,
                 onChanged: workFormNotifier.onTestimonialChange,
               )
             else
@@ -772,12 +769,7 @@ class WorkActionButtons extends ConsumerWidget {
                   if (!context.mounted) return;
 
                   if (!success) {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(
-                        content: Text('No se pudo guardar el trabajo'),
-                        backgroundColor: Color(0xFFe74c3c),
-                      ),
-                    );
+                    // Los errores de validación ya se muestran en los campos
                     return;
                   }
 

@@ -722,102 +722,110 @@ class _AdminUsersPageState extends ConsumerState<AdminUsersPage> {
   }
 
   Future<void> _showUserDetails(String userId) async {
-    final notifier = ref.read(adminUserProvider.notifier);
-    await notifier.getUser(userId);
-    final userState = ref.read(adminUserProvider);
+    // final notifier = ref.read(adminUserProvider.notifier);
+    // final newUSer = await notifier.getUser(userId);
+    final usersState = ref.watch(adminUsersListProvider);
+    final user = usersState.users.firstWhere(
+      (u) => u.id == userId,
+      // orElse: () => newUSer,
+    );
+    // final userState = ref.read(adminUserProvider);
 
-    final user = userState.user;
-    if (!mounted || user == null) return;
+    // final user = userState.user;
+    if (!mounted ) return;
 
     showDialog<void>(
       context: context,
-      builder: (context) => Dialog(
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-        child: Container(
-          padding: const EdgeInsets.all(24),
-          decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(20),
-            gradient: LinearGradient(
-              begin: Alignment.topLeft,
-              end: Alignment.bottomRight,
-              colors: [
-                Colors.white,
-                const Color(0xFF667eea).withValues(alpha: 0.05),
-              ],
-            ),
-          ),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Row(
-                children: [
-                  Container(
-                    padding: const EdgeInsets.all(12),
-                    decoration: BoxDecoration(
-                      color: const Color(0xFF667eea).withValues(alpha: 0.1),
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                    child: const Icon(
-                      Icons.person_outline,
-                      color: Color(0xFF667eea),
-                      size: 28,
-                    ),
-                  ),
-                  const SizedBox(width: 16),
-                  const Expanded(
-                    child: Text(
-                      'Detalles de Usuario',
-                      style: TextStyle(
-                        fontSize: 20,
-                        fontWeight: FontWeight.bold,
-                        color: Color(0xFF2c3e50),
-                      ),
-                    ),
-                  ),
-                  IconButton(
-                    icon: const Icon(Icons.close),
-                    onPressed: () => Navigator.of(context).pop(),
-                  ),
+      builder: (context) => FadeInUp(
+        delay: const Duration(milliseconds: 300),
+        child: Dialog(
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+          child: Container(
+            padding: const EdgeInsets.all(24),
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(20),
+              gradient: LinearGradient(
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+                colors: [
+                  Colors.white,
+                  const Color(0xFF667eea).withValues(alpha: 0.05),
                 ],
               ),
-              const SizedBox(height: 24),
-              _DetailRow(icon: Icons.badge_outlined, label: 'ID', value: user.id),
-              _DetailRow(
-                icon: Icons.person_outline,
-                label: 'Nombre',
-                value: user.name ?? '-',
-              ),
-              _DetailRow(
-                icon: Icons.email_outlined,
-                label: 'Email',
-                value: user.email,
-              ),
-              _DetailRow(
-                icon: Icons.shield_outlined,
-                label: 'Rol',
-                value: (user.role ?? 'user').toUpperCase(),
-              ),
-              _DetailRow(
-                icon: user.isCurrentlyBanned
-                    ? Icons.block_outlined
-                    : Icons.check_circle_outline,
-                label: 'Estado',
-                value: user.isCurrentlyBanned ? 'BANEADO' : 'ACTIVO',
-                valueColor: user.isCurrentlyBanned
-                    ? const Color(0xFFe74c3c)
-                    : const Color(0xFF27ae60),
-              ),
-              const SizedBox(height: 24),
-              SizedBox(
-                width: double.infinity,
-                child: ModernButton(
-                  text: 'Cerrar',
-                  icon: Icons.check,
-                  onPressed: () => Navigator.of(context).pop(),
+            ),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.all(12),
+                      decoration: BoxDecoration(
+                        color: const Color(0xFF667eea).withValues(alpha: 0.1),
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      child: const Icon(
+                        Icons.person_outline,
+                        color: Color(0xFF667eea),
+                        size: 28,
+                      ),
+                    ),
+                    const SizedBox(width: 16),
+                    const Expanded(
+                      child: Text(
+                        'Detalles de Usuario',
+                        style: TextStyle(
+                          fontSize: 20,
+                          fontWeight: FontWeight.bold,
+                          color: Color(0xFF2c3e50),
+                        ),
+                      ),
+                    ),
+                    IconButton(
+                      icon: const Icon(Icons.close),
+                      onPressed: () => Navigator.of(context).pop(),
+                    ),
+                  ],
                 ),
-              ),
-            ],
+                const SizedBox(height: 24),
+                _DetailRow(icon: Icons.badge_outlined, label: 'ID', value: user.id),
+                _DetailRow(
+                  icon: Icons.person_outline,
+                  label: 'Nombre',
+                  value: user.name ?? '-',
+                ),
+                _DetailRow(
+                  icon: Icons.email_outlined,
+                  label: 'Email',
+                  value: user.email,
+                ),
+                _DetailRow(
+                  icon: Icons.shield_outlined,
+                  label: 'Rol',
+                  value: (user.role ?? 'user').toUpperCase(),
+                ),
+                _DetailRow(
+                  icon: user.isCurrentlyBanned
+                      ? Icons.block_outlined
+                      : Icons.check_circle_outline,
+                  label: 'Estado',
+                  value: user.isCurrentlyBanned ? 'BANEADO' : 'ACTIVO',
+                  valueColor: user.isCurrentlyBanned
+                      ? const Color(0xFFe74c3c)
+                      : const Color(0xFF27ae60),
+                ),
+                const SizedBox(height: 24),
+                SizedBox(
+                  width: double.infinity,
+                  child: ModernButton(
+                    text: 'Cerrar',
+                    icon: Icons.check,
+                    onPressed: () => Navigator.of(context).pop(),
+                  ),
+                ),
+              ],
+            ),
           ),
         ),
       ),

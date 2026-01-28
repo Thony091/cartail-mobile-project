@@ -5,7 +5,7 @@ import '../../../../shared/presentation/shared/widgets/modern_button.dart';
 import '../../../../shared/presentation/shared/widgets/modern_input_field.dart';
 import '../providers/admin_user_form_provider.dart';
 
-class AdminUserForm extends ConsumerWidget {
+class AdminUserForm extends ConsumerStatefulWidget {
   final AdminUserFormArgs args;
   final ValueChanged<bool>? onSaved;
   final bool showTitle;
@@ -17,31 +17,54 @@ class AdminUserForm extends ConsumerWidget {
     this.showTitle = true,
   });
 
+  @override
+  ConsumerState<AdminUserForm> createState() => _AdminUserFormState();
+}
+
+class _AdminUserFormState extends ConsumerState<AdminUserForm> {
+  late TextEditingController _nameController;
+  late TextEditingController _emailController;
+  late TextEditingController _passwordController;
+
+  @override
+  void initState() {
+    super.initState();
+    // Inicializar con los valores del args, no del provider
+    _nameController = TextEditingController(text: widget.args.name);
+    _emailController = TextEditingController(text: widget.args.email);
+    _passwordController = TextEditingController();
+  }
+
+  @override
+  void dispose() {
+    _nameController.dispose();
+    _emailController.dispose();
+    _passwordController.dispose();
+    super.dispose();
+  }
+
   static const List<String> _roles = [
     'admin',
     'operator',
     'user',
-    'guest',
   ];
 
   static const Map<String, IconData> _roleIcons = {
     'admin': Icons.admin_panel_settings_outlined,
     'operator': Icons.engineering_outlined,
     'user': Icons.person_outline,
-    'guest': Icons.visibility_outlined,
   };
 
   static const Map<String, Color> _roleColors = {
     'admin': Color(0xFFe74c3c),
     'operator': Color(0xFF9b59b6),
     'user': Color(0xFF3498db),
-    'guest': Color(0xFF95a5a6),
   };
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final formState = ref.watch(adminUserFormProvider(args));
-    final formNotifier = ref.read(adminUserFormProvider(args).notifier);
+  Widget build(BuildContext context) {
+    final formState = ref.watch(adminUserFormProvider(widget.args));
+    final formNotifier = ref.read(adminUserFormProvider(widget.args).notifier);
     final roles = [..._roles];
     if (formState.role.isNotEmpty && !roles.contains(formState.role)) {
       roles.add(formState.role);
@@ -53,7 +76,7 @@ class AdminUserForm extends ConsumerWidget {
         mainAxisSize: MainAxisSize.min,
         children: [
           // Header decorativo
-          if (showTitle)
+          if (widget.showTitle)
             Container(
               padding: const EdgeInsets.all(20),
               decoration: BoxDecoration(
@@ -97,12 +120,13 @@ class AdminUserForm extends ConsumerWidget {
               ),
             ),
 
-          if (showTitle) const SizedBox(height: 24),
+          if (widget.showTitle) const SizedBox(height: 24),
 
           // Campo de nombre
           ModernInputField(
             label: 'Nombre completo',
             hint: 'Ej: Juan Pérez',
+            controller: _nameController,
             prefixIcon: Container(
               margin: const EdgeInsets.all(12),
               padding: const EdgeInsets.all(8),
@@ -116,7 +140,6 @@ class AdminUserForm extends ConsumerWidget {
                 color: Color(0xFF3498db),
               ),
             ),
-            initialValue: (formState.name.value.isNotEmpty) ? formState.name.value : null,
             onChanged: formNotifier.onNameChange,
             errorMessage:
                 formState.isFormPosted ? formState.name.errorMessage : null,
@@ -128,6 +151,7 @@ class AdminUserForm extends ConsumerWidget {
           ModernInputField(
             label: 'Correo Electrónico',
             hint: 'usuario@correo.com',
+            controller: _emailController,
             keyboardType: TextInputType.emailAddress,
             prefixIcon: Container(
               margin: const EdgeInsets.all(12),
@@ -142,7 +166,6 @@ class AdminUserForm extends ConsumerWidget {
                 color: Color(0xFF27ae60),
               ),
             ),
-            initialValue: formState.email.value,
             onChanged: formNotifier.onEmailChange,
             errorMessage:
                 formState.isFormPosted ? formState.email.errorMessage : null,
@@ -154,6 +177,7 @@ class AdminUserForm extends ConsumerWidget {
             ModernInputField(
               label: 'Contraseña',
               hint: 'Mínimo 6 caracteres',
+              controller: _passwordController,
               obscureText: formState.isObscurePassword,
               prefixIcon: Container(
                 margin: const EdgeInsets.all(12),
@@ -221,8 +245,8 @@ class AdminUserForm extends ConsumerWidget {
               ),
               const SizedBox(height: 16),
               Wrap(
-                spacing: 12,
-                runSpacing: 12,
+                spacing: 11,
+                runSpacing: 11,
                 children: roles.map((role) {
                   final isSelected = formState.role == role;
                   final color = _roleColors[role] ?? const Color(0xFF95a5a6);
@@ -298,7 +322,20 @@ class AdminUserForm extends ConsumerWidget {
 
                       // Solo llamar onSaved si fue exitoso
                       if (ok) {
-                        onSaved?.call(ok);
+                        widget.onSaved?.call(ok);
+                        //Snackbar de éxito
+                        final snackBar = SnackBar(
+                          content: Text(formState.isNewUser
+                              ? 'Usuario creado exitosamente'
+                              : 'Cambios guardados exitosamente'),
+                          backgroundColor: const Color(0xFF27ae60),
+                          behavior: SnackBarBehavior.floating,
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                        );
+                        ScaffoldMessenger.of(context).showSnackBar(snackBar);
+                        Navigator.of(context).pop();
                       }
                       // Si hay error, no cerrar el modal, el error ya se muestra arriba
                     },

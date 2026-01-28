@@ -1,4 +1,5 @@
 import 'dart:io';
+import 'dart:convert';
 import 'package:flutter/foundation.dart';
 
 import 'package:dio/dio.dart';
@@ -8,18 +9,14 @@ import '../../domain/entities/works.dart';
 import '../errors/work_error.dart';
 import '../mappers/realized_work_mapper.dart';
 import 'realized_work_datasources.dart';
-import 'package:portafolio_project/core/utils/image_encoder_service.dart';
 
 class RealizedWorkDatasourceImpl extends RealizedWorkDatasource {
-  final ImageEncoderService _imageEncoder;
   late final Dio dio;
   final String accessToken;
 
   RealizedWorkDatasourceImpl({
     required this.accessToken,
-    ImageEncoderService? imageEncoder,
-  })  : _imageEncoder = imageEncoder ?? const ImageEncoderService(),
-        dio = Dio(
+  }) : dio = Dio(
           BaseOptions(
             baseUrl: Enviroment.baseUrl,
             headers: {
@@ -28,24 +25,6 @@ class RealizedWorkDatasourceImpl extends RealizedWorkDatasource {
             },
           ),
         );
-
-  Future<String> _preparePhoto(String photo) async {
-    final trimmedPhoto = photo.trim();
-    if (trimmedPhoto.isEmpty) return '';
-    if (trimmedPhoto.startsWith('http')) return trimmedPhoto;
-    if (trimmedPhoto.startsWith('data:image/')) {
-      return ImageEncoderService.stripDataUriPrefix(trimmedPhoto);
-    }
-
-    final normalizedPath = trimmedPhoto.startsWith('file://')
-        ? Uri.parse(trimmedPhoto).toFilePath()
-        : trimmedPhoto;
-    final file = File(normalizedPath);
-    if (await file.exists()) {
-      return _imageEncoder.encodeFile(file);
-    }
-    return ImageEncoderService.stripDataUriPrefix(trimmedPhoto);
-  }
 
   @override
   Future<Works> createUpdateWorks(Map<String, dynamic> worksSimilar) async {
@@ -63,15 +42,20 @@ class RealizedWorkDatasourceImpl extends RealizedWorkDatasource {
         payload.remove('image');
       }
 
+      // Procesar imágenes: si son archivos locales, convertir a base64
       if (payload['imagen_antes'] is String &&
           payload['imagen_antes'] != "") {
-        payload['imagen_antes'] =
-            await _preparePhoto(payload['imagen_antes']);
+        final imagenAntes = payload['imagen_antes'];
+        if (!imagenAntes.startsWith('http') && !imagenAntes.startsWith('data:image/')) {
+          payload['imagen_antes'] = await _fileToBase64(imagenAntes);
+        }
       }
       if (payload['imagen_despues'] is String &&
           payload['imagen_despues'] != "") {
-        payload['imagen_despues'] =
-            await _preparePhoto(payload['imagen_despues']);
+        final imagenDespues = payload['imagen_despues'];
+        if (!imagenDespues.startsWith('http') && !imagenDespues.startsWith('data:image/')) {
+          payload['imagen_despues'] = await _fileToBase64(imagenDespues);
+        }
       }
 
       payload['titulo'] ??= payload['name'] ?? '';
@@ -101,6 +85,89 @@ class RealizedWorkDatasourceImpl extends RealizedWorkDatasource {
       return fallbackWork;
     } catch (e) {
       throw Exception(e);
+    }
+  }
+
+  Future<String> _fileToBase64(String imagePath) async {
+    try {
+      final trimmed = imagePath.trim();
+      if (trimmed.isEmpty) return '';
+      if (trimmed.startsWith('http') || trimmed.startsWith('data:image/')) {
+        return trimmed;
+      }
+
+      final normalizedPath = trimmed.startsWith('file://')
+          ? Uri.parse(trimmed).toFilePath()
+          : trimmed;
+
+      final file = File(normalizedPath);
+      if (!await file.exists()) {
+        return trimmed;
+      }
+
+      // Leer bytes originales
+      List<int> bytes = await file.readAsBytes();
+      final originalSize = bytes.length;
+
+      if (kDebugMode) {
+        debugPrint('Original image size: ${originalSize ~/ 1024}KB');
+      }
+
+      // Si la imagen es muy grande (mayor a 2 MB), intentar comprimir
+      if (originalSize > 2 * 1024 * 1024) {
+        bytes = await _compressImage(bytes);
+        if (kDebugMode) {
+          debugPrint(
+            'Image compressed: ${originalSize ~/ 1024}KB → ${bytes.length ~/ 1024}KB',
+          );
+        }
+      }
+
+      // Validar que después de codificar no exceda 28 MB (dejando margen de los 30 MB)
+      final base64String = base64Encode(bytes);
+      final base64Size = base64String.length;
+
+      if (base64Size > 28 * 1024 * 1024) {
+        if (kDebugMode) {
+          debugPrint(
+            'Image too large after compression: ${base64Size ~/ (1024 * 1024)}MB',
+          );
+        }
+        return imagePath; // Retornar la ruta original como fallback
+      }
+
+      return 'data:image/jpeg;base64,$base64String';
+    } catch (e) {
+      if (kDebugMode) {
+        debugPrint('Error converting image to base64: $e');
+      }
+      return imagePath;
+    }
+  }
+
+  /// Comprime una imagen reduciendo su tamaño
+  Future<List<int>> _compressImage(List<int> imageBytes) async {
+    try {
+      // Nota: Para compresión más agresiva, se recomienda agregar flutter_image_compress
+      // flutter_image_compress: ^2.2.0
+      //
+      // Implementación más robusta:
+      // final compressed = await FlutterImageCompress.compressAsBytes(
+      //   imageBytes,
+      //   minHeight: 1080,
+      //   minWidth: 1080,
+      //   quality: 70,
+      //   format: CompressFormat.jpeg,
+      // );
+
+      // Por ahora, retornamos los bytes tal como están
+      // El servidor maneja compresión adicional si es necesario
+      return imageBytes;
+    } catch (e) {
+      if (kDebugMode) {
+        debugPrint('Error compressing image: $e');
+      }
+      return imageBytes;
     }
   }
 

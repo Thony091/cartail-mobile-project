@@ -182,7 +182,11 @@ class AdminAuthDatasourceImpl implements AdminAuthDatasource {
         userId: userId,
         role: role,
       );
-      return AdminUserResponse.fromJson(response.data as Map<String, dynamic>);
+      final data = response.data;
+      if (data == null || data is! Map<String, dynamic>) {
+        throw ServerException('La respuesta del servidor tiene formato inválido');
+      }
+      return AdminUserResponse.fromJson(data);
     } on DioException catch (e) {
       throw _handleDioError(e, endpoint: _epSetRole);
     }
@@ -197,9 +201,11 @@ class AdminAuthDatasourceImpl implements AdminAuthDatasource {
       final response = await _authService.adminHasPermission(
         permissions: permissions,
       );
-      return AdminHasPermissionResponse.fromJson(
-        response.data as Map<String, dynamic>,
-      );
+      final data = response.data;
+      if (data == null || data is! Map<String, dynamic>) {
+        throw ServerException('La respuesta del servidor tiene formato inválido');
+      }
+      return AdminHasPermissionResponse.fromJson(data);
     } on DioException catch (e) {
       throw _handleDioError(e, endpoint: _epHasPermission);
     }
@@ -214,7 +220,14 @@ class AdminAuthDatasourceImpl implements AdminAuthDatasource {
   Future<AdminUserResponse> getUser({required String userId}) async {
     try {
       final response = await _authService.adminGetUser(id: userId);
-      return AdminUserResponse.fromJson(response.data as Map<String, dynamic>);
+      final data = response.data;
+      if (data == null) {
+        throw ServerException('La respuesta del servidor no contiene datos');
+      }
+      if (data is! Map<String, dynamic>) {
+        throw ServerException('La respuesta del servidor tiene formato inválido');
+      }
+      return AdminUserResponse.fromJson(data);
     } on DioException catch (e) {
       throw _handleDioError(e, endpoint: _epGetUser);
     }
@@ -240,7 +253,11 @@ class AdminAuthDatasourceImpl implements AdminAuthDatasource {
           if (data != null) ...data,
         },
       );
-      return AdminUserResponse.fromJson(response.data as Map<String, dynamic>);
+      final responseData = response.data;
+      if (responseData == null || responseData is! Map<String, dynamic>) {
+        throw ServerException('La respuesta del servidor tiene formato inválido');
+      }
+      return AdminUserResponse.fromJson(responseData);
     } on DioException catch (e) {
       throw _handleDioError(e, endpoint: _epCreateUser);
     }
@@ -257,7 +274,11 @@ class AdminAuthDatasourceImpl implements AdminAuthDatasource {
         userId: userId,
         data: data,
       );
-      return AdminUserResponse.fromJson(response.data as Map<String, dynamic>);
+      final responseData = response.data;
+      if (responseData == null || responseData is! Map<String, dynamic>) {
+        throw ServerException('La respuesta del servidor tiene formato inválido');
+      }
+      return AdminUserResponse.fromJson(responseData);
     } on DioException catch (e) {
       throw _handleDioError(e, endpoint: _epUpdateUser);
     }
@@ -286,9 +307,11 @@ class AdminAuthDatasourceImpl implements AdminAuthDatasource {
         filterOperator: filterOperator,
         filterValue: filterValue,
       );
-      return AdminListUsersResponse.fromJson(
-        response.data as Map<String, dynamic>,
-      );
+      final data = response.data;
+      if (data == null || data is! Map<String, dynamic>) {
+        throw ServerException('La respuesta del servidor tiene formato inválido');
+      }
+      return AdminListUsersResponse.fromJson(data);
     } on DioException catch (e) {
       throw _handleDioError(e, endpoint: _epListUsers);
     }
@@ -305,9 +328,11 @@ class AdminAuthDatasourceImpl implements AdminAuthDatasource {
         userId: userId,
         newPassword: newPassword,
       );
-      return AdminSuccessResponse.fromJson(
-        response.data as Map<String, dynamic>,
-      );
+      final data = response.data;
+      if (data == null || data is! Map<String, dynamic>) {
+        throw ServerException('La respuesta del servidor tiene formato inválido');
+      }
+      return AdminSuccessResponse.fromJson(data);
     } on DioException catch (e) {
       throw _handleDioError(e, endpoint: _epSetUserPassword);
     }
@@ -324,9 +349,11 @@ class AdminAuthDatasourceImpl implements AdminAuthDatasource {
   }) async {
     try {
       final response = await _authService.adminListUserSessions(userId: userId);
-      return AdminListUserSessionsResponse.fromJson(
-        response.data as Map<String, dynamic>,
-      );
+      final data = response.data;
+      if (data == null || data is! Map<String, dynamic>) {
+        throw ServerException('La respuesta del servidor tiene formato inválido');
+      }
+      return AdminListUserSessionsResponse.fromJson(data);
     } on DioException catch (e) {
       throw _handleDioError(e, endpoint: _epListUserSessions);
     }
@@ -341,9 +368,11 @@ class AdminAuthDatasourceImpl implements AdminAuthDatasource {
       final response = await _authService.adminRevokeUserSession(
         sessionToken: sessionToken,
       );
-      return AdminSuccessResponse.fromJson(
-        response.data as Map<String, dynamic>,
-      );
+      final data = response.data;
+      if (data == null || data is! Map<String, dynamic>) {
+        throw ServerException('La respuesta del servidor tiene formato inválido');
+      }
+      return AdminSuccessResponse.fromJson(data);
     } on DioException catch (e) {
       throw _handleDioError(e, endpoint: _epRevokeUserSession);
     }
@@ -358,9 +387,11 @@ class AdminAuthDatasourceImpl implements AdminAuthDatasource {
       final response = await _authService.adminRevokeUserSessions(
         userId: userId,
       );
-      return AdminSuccessResponse.fromJson(
-        response.data as Map<String, dynamic>,
-      );
+      final data = response.data;
+      if (data == null || data is! Map<String, dynamic>) {
+        throw ServerException('La respuesta del servidor tiene formato inválido');
+      }
+      return AdminSuccessResponse.fromJson(data);
     } on DioException catch (e) {
       throw _handleDioError(e, endpoint: _epRevokeUserSessions);
     }
@@ -411,9 +442,11 @@ class AdminAuthDatasourceImpl implements AdminAuthDatasource {
   }) async {
     try {
       final response = await _authService.adminImpersonateUser(userId: userId);
-      return AdminImpersonateResponse.fromJson(
-        response.data as Map<String, dynamic>,
-      );
+      final data = response.data;
+      if (data == null || data is! Map<String, dynamic>) {
+        throw ServerException('La respuesta del servidor tiene formato inválido');
+      }
+      return AdminImpersonateResponse.fromJson(data);
     } on DioException catch (e) {
       throw _handleDioError(e, endpoint: _epImpersonateUser);
     }
@@ -424,9 +457,11 @@ class AdminAuthDatasourceImpl implements AdminAuthDatasource {
   Future<AdminStopImpersonatingResponse> stopImpersonating() async {
     try {
       final response = await _authService.adminStopImpersonating();
-      return AdminStopImpersonatingResponse.fromJson(
-        response.data as Map<String, dynamic>,
-      );
+      final data = response.data;
+      if (data == null || data is! Map<String, dynamic>) {
+        throw ServerException('La respuesta del servidor tiene formato inválido');
+      }
+      return AdminStopImpersonatingResponse.fromJson(data);
     } on DioException catch (e) {
       throw _handleDioError(e, endpoint: _epStopImpersonating);
     }

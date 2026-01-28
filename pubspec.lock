@@ -913,7 +913,7 @@ packages:
     source: hosted
     version: "1.0.5"
   isar_community:
-    dependency: "direct main"
+    dependency: transitive
     description:
       name: isar_community
       sha256: d92315e1862448f236489c2b2b1f9a7ad5ba2405f42d87216234be4fb2e1dd2d

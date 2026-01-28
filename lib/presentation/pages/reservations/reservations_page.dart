@@ -7,6 +7,7 @@ import 'package:portafolio_project/features/shared/presentation/shared/widgets/c
 
 import '../../../config/config.dart';
 import '../../presentation_container.dart';
+import '../../../features/reservation/presentation/page/reservation_payment_webview_page.dart';
 
 
 //*TODO Revisar la implementación de la página de reservas*****
@@ -137,21 +138,33 @@ class _ReservationFormBody extends ConsumerWidget {
     final notifier = ref.read(reservationFormProvider.notifier);
 
     try {
-      final success = await notifier.onFormSubmit();
+      final paymentSession = await notifier.onFormSubmit();
 
       if (!context.mounted) return;
 
-      if (success) {
-        _showSuccessSnackBar(context, 'Reserva realizada con éxito');
-        await Future.delayed(const Duration(milliseconds: 800));
-        if (context.mounted) {
-          context.push('/');
+      if (paymentSession != null) {
+        final result = await context.push<ReservationPaymentResult>(
+          '/reservation-payment',
+          extra: paymentSession,
+        );
+        if (!context.mounted) return;
+        if (result?.success == true) {
+          _showSuccessSnackBar(
+            context,
+            result?.message ?? 'Reserva pagada con éxito',
+          );
+          await Future.delayed(const Duration(milliseconds: 800));
+          if (context.mounted) {
+            context.push('/reservations');
+          }
+        } else if (result?.message != null) {
+          _showErrorSnackBar(context, result!.message!);
         }
       } else {
         // Leer el estado actualizado después del submit
         final currentState = ref.read(reservationFormProvider);
         final errorMessage = _getFirstValidationError(currentState, needsClientInfo);
-        _showErrorSnackBar(context, errorMessage ?? 'Error al realizar la reserva');
+        _showErrorSnackBar(context, errorMessage ?? currentState.errorMessage ?? 'Error al iniciar el pago');
       }
     } catch (e) {
       // Manejo de errores de red o servidor

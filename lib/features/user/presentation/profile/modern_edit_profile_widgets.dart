@@ -9,8 +9,13 @@ import '../providers/change_password_form_provider.dart';
 
 class EditProfileAvatarSection extends StatelessWidget {
   final VoidCallback onChangeAvatar;
+  final String? currentImageUrl;
 
-  const EditProfileAvatarSection({super.key, required this.onChangeAvatar});
+  const EditProfileAvatarSection({
+    super.key,
+    required this.onChangeAvatar,
+    this.currentImageUrl,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -36,11 +41,26 @@ class EditProfileAvatarSection extends StatelessWidget {
                       ),
                     ],
                   ),
-                  child: const Icon(
-                    Icons.person,
-                    color: Colors.white,
-                    size: 40,
-                  ),
+                  child: currentImageUrl != null && currentImageUrl!.isNotEmpty
+                      ? ClipRRect(
+                          borderRadius: BorderRadius.circular(50),
+                          child: Image.network(
+                            currentImageUrl!,
+                            fit: BoxFit.cover,
+                            errorBuilder: (context, error, stackTrace) {
+                              return const Icon(
+                                Icons.person,
+                                color: Colors.white,
+                                size: 40,
+                              );
+                            },
+                          ),
+                        )
+                      : const Icon(
+                          Icons.person,
+                          color: Colors.white,
+                          size: 40,
+                        ),
                 ),
                 Positioned(
                   bottom: 0,
@@ -77,7 +97,7 @@ class EditProfileAvatarSection extends StatelessWidget {
   }
 }
 
-class EditProfileInfoSection extends StatelessWidget {
+class EditProfileInfoSection extends StatefulWidget {
   // Controllers
   final TextEditingController nameController;
   final TextEditingController rutController;
@@ -99,24 +119,93 @@ class EditProfileInfoSection extends StatelessWidget {
   });
 
   @override
+  State<EditProfileInfoSection> createState() => _EditProfileInfoSectionState();
+}
+
+class _EditProfileInfoSectionState extends State<EditProfileInfoSection> {
+  late bool _hasChanges;
+
+  @override
+  void initState() {
+    super.initState();
+    _hasChanges = false;
+    widget.nameController.addListener(_updateChangeStatus);
+    widget.rutController.addListener(_updateChangeStatus);
+    widget.birthdayController.addListener(_updateChangeStatus);
+    widget.phoneController.addListener(_updateChangeStatus);
+    widget.bioController.addListener(_updateChangeStatus);
+  }
+
+  @override
+  void dispose() {
+    widget.nameController.removeListener(_updateChangeStatus);
+    widget.rutController.removeListener(_updateChangeStatus);
+    widget.birthdayController.removeListener(_updateChangeStatus);
+    widget.phoneController.removeListener(_updateChangeStatus);
+    widget.bioController.removeListener(_updateChangeStatus);
+    super.dispose();
+  }
+
+  void _updateChangeStatus() {
+    setState(() {
+      _hasChanges = widget.nameController.text.isNotEmpty ||
+          widget.rutController.text.isNotEmpty ||
+          widget.birthdayController.text.isNotEmpty ||
+          widget.phoneController.text.isNotEmpty ||
+          widget.bioController.text.isNotEmpty;
+    });
+  }
+
+  @override
   Widget build(BuildContext context) {
     return FadeInLeft(
       child: ModernCard(
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const Text(
-              'Información Personal',
-              style: TextStyle(
-                fontSize: 18,
-                fontWeight: FontWeight.w700,
-                color: Color(0xFF2c3e50),
-              ),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                const Text(
+                  'Información Personal',
+                  style: TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.w700,
+                    color: Color(0xFF2c3e50),
+                  ),
+                ),
+                if (_hasChanges)
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                    decoration: BoxDecoration(
+                      color: const Color(0xFFF39c12).withValues(alpha: 0.2),
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: const Row(
+                      children: [
+                        Icon(
+                          Icons.info,
+                          size: 14,
+                          color: Color(0xFFF39c12),
+                        ),
+                        SizedBox(width: 4),
+                        Text(
+                          'Con cambios',
+                          style: TextStyle(
+                            fontSize: 12,
+                            fontWeight: FontWeight.w600,
+                            color: Color(0xFFF39c12),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+              ],
             ),
             const SizedBox(height: 20),
 
             ModernInputField(
-              controller: nameController,
+              controller: widget.nameController,
               label: 'Nombre Completo',
               prefixIcon: const Icon(Icons.person),
               validator: (value) {
@@ -130,12 +219,18 @@ class EditProfileInfoSection extends StatelessWidget {
             const SizedBox(height: 20),
 
             ModernInputField(
-              controller: rutController,
+              controller: widget.rutController,
               label: 'RUT',
               prefixIcon: const Icon(Icons.badge),
+              hint: 'XX.XXX.XXX-X',
               validator: (value) {
                 if (value?.isEmpty ?? true) {
                   return 'El RUT es requerido';
+                }
+                // Validación básica de RUT chileno
+                final rutRegex = RegExp(r'^\d{1,2}\.\d{3}\.\d{3}-[0-9Kk]$');
+                if (!rutRegex.hasMatch(value ?? '')) {
+                  return 'Formato de RUT inválido (XX.XXX.XXX-X)';
                 }
                 return null;
               },
@@ -144,17 +239,22 @@ class EditProfileInfoSection extends StatelessWidget {
             const SizedBox(height: 20),
 
             ModernInputField(
-              controller: birthdayController,
+              controller: widget.birthdayController,
               label: 'Fecha de Nacimiento',
               prefixIcon: const Icon(Icons.calendar_today),
+              hint: 'DD/MM/YYYY',
               readOnly: true,
-              onTap: onSelectBirthday,
+              onTap: widget.onSelectBirthday,
+              suffixIcon: const Icon(
+                Icons.date_range,
+                color: Color(0xFF3498db),
+              ),
             ),
 
             const SizedBox(height: 20),
 
             ModernInputField(
-              controller: phoneController,
+              controller: widget.phoneController,
               label: 'Número de Teléfono',
               keyboardType: TextInputType.phone,
               prefixIcon: const Icon(Icons.phone),
@@ -169,7 +269,7 @@ class EditProfileInfoSection extends StatelessWidget {
             const SizedBox(height: 20),
 
             ModernInputField(
-              controller: bioController,
+              controller: widget.bioController,
               label: 'Biografía',
               hint: 'Cuéntanos algo sobre ti...',
               maxLines: 4,
@@ -182,8 +282,57 @@ class EditProfileInfoSection extends StatelessWidget {
   }
 }
 
-class AvatarSelectionSheet extends StatelessWidget {
+class AvatarSelectionSheet extends StatefulWidget {
   const AvatarSelectionSheet({super.key});
+
+  @override
+  State<AvatarSelectionSheet> createState() => _AvatarSelectionSheetState();
+}
+
+class _AvatarSelectionSheetState extends State<AvatarSelectionSheet> {
+  bool _isLoading = false;
+
+  void _handleCameraCapture() async {
+    setState(() => _isLoading = true);
+    // TODO: Implementar captura de cámara usando image_picker
+    // Ejemplo:
+    // final picker = ImagePicker();
+    // final pickedFile = await picker.pickImage(source: ImageSource.camera);
+    // if (pickedFile != null) {
+    //   // Procesar imagen
+    // }
+    await Future.delayed(const Duration(milliseconds: 500));
+    if (mounted) {
+      Navigator.of(context).pop();
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Funcionalidad de cámara no implementada'),
+          backgroundColor: Color(0xFFF39c12),
+        ),
+      );
+    }
+  }
+
+  void _handleGallerySelection() async {
+    setState(() => _isLoading = true);
+    // TODO: Implementar selección de galería usando image_picker
+    // Ejemplo:
+    // final picker = ImagePicker();
+    // final pickedFile = await picker.pickImage(source: ImageSource.gallery);
+    // if (pickedFile != null) {
+    //   // Procesar imagen
+    // }
+    await Future.delayed(const Duration(milliseconds: 500));
+    if (mounted) {
+      Navigator.of(context).pop();
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Funcionalidad de galería no implementada'),
+          backgroundColor: Color(0xFFF39c12),
+        ),
+      );
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -204,20 +353,16 @@ class AvatarSelectionSheet extends StatelessWidget {
           ModernButton(
             text: 'Tomar Foto',
             icon: Icons.camera_alt,
-            onPressed: () {
-              Navigator.of(context).pop();
-              // Implementar cámara
-            },
+            isLoading: _isLoading,
+            onPressed: _isLoading ? null : _handleCameraCapture,
           ),
           const SizedBox(height: 12),
           ModernButton(
             text: 'Seleccionar de Galería',
             style: ModernButtonStyle.secondary,
             icon: Icons.photo_library,
-            onPressed: () {
-              Navigator.of(context).pop();
-              // Implementar galería
-            },
+            isLoading: _isLoading,
+            onPressed: _isLoading ? null : _handleGallerySelection,
           ),
         ],
       ),
@@ -244,6 +389,12 @@ class _ChangePasswordDialogState extends ConsumerState<ChangePasswordDialog> {
     _currentPasswordController = TextEditingController();
     _newPasswordController = TextEditingController();
     _confirmPasswordController = TextEditingController();
+
+    // Limpiar campos cuando se abre el dialog
+    Future.microtask(() {
+      final notifier = ref.read(changePasswordFormProvider.notifier);
+      notifier.reset();
+    });
   }
 
   @override

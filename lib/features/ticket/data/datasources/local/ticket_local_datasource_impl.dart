@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:isar_community/isar.dart';
 
 import '../../../../../config/services/storage/isar_service.dart';
@@ -9,8 +11,22 @@ class TicketLocalDatasourceImpl implements TicketLocalDatasource {
       : _isarService = isarService;
 
   final IsarService _isarService;
+  Future<void> _writeChain = Future.value();
 
   Isar get _isar => _isarService.isar;
+
+  Future<T> _enqueueWrite<T>(Future<T> Function() action) {
+    final completer = Completer<T>();
+    _writeChain = _writeChain.catchError((_) {}).then((_) async {
+      try {
+        final result = await _isar.writeTxn(action);
+        completer.complete(result);
+      } catch (e, st) {
+        completer.completeError(e, st);
+      }
+    });
+    return completer.future;
+  }
 
   @override
   Future<TicketModel?> getByBackendId(String backendId) {
@@ -38,8 +54,8 @@ class TicketLocalDatasourceImpl implements TicketLocalDatasource {
 
   @override
   Future<void> upsert(TicketModel model) async {
-    await _isar.writeTxn(() async {
-      await _isar.ticketModels.put(model);
+    await _enqueueWrite(() async {
+      await _isar.ticketModels.putByIndex('backendId', model);
       if (model.reservation.value != null) {
         await model.reservation.save();
       }
@@ -53,8 +69,45 @@ class TicketLocalDatasourceImpl implements TicketLocalDatasource {
   }
 
   @override
+  Future<void> upsertBatch(List<TicketModel> models) async {
+    await _enqueueWrite(() async {
+      await _isar.ticketModels.putAllByIndex('backendId', models);
+      for (final model in models) {
+        if (model.reservation.value != null) {
+          await model.reservation.save();
+        }
+        if (model.service.value != null) {
+          await model.service.save();
+        }
+        if (model.user.value != null) {
+          await model.user.save();
+        }
+      }
+    });
+  }
+
+  @override
+  Future<void> clearAndUpsertBatch(List<TicketModel> models) async {
+    await _enqueueWrite(() async {
+      await _isar.ticketModels.clear();
+      await _isar.ticketModels.putAllByIndex('backendId', models);
+      for (final model in models) {
+        if (model.reservation.value != null) {
+          await model.reservation.save();
+        }
+        if (model.service.value != null) {
+          await model.service.save();
+        }
+        if (model.user.value != null) {
+          await model.user.save();
+        }
+      }
+    });
+  }
+
+  @override
   Future<void> deleteByBackendId(String backendId) async {
-    await _isar.writeTxn(() async {
+    await _enqueueWrite(() async {
       final existing = await _isar.ticketModels
           .filter()
           .backendIdEqualTo(backendId)
@@ -66,7 +119,7 @@ class TicketLocalDatasourceImpl implements TicketLocalDatasource {
 
   @override
   Future<void> clear() async {
-    await _isar.writeTxn(() async {
+    await _enqueueWrite(() async {
       await _isar.ticketModels.clear();
     });
   }

@@ -45,11 +45,10 @@ class ServicesDatasourceImpl extends ServicesDatasource {
           // if (token == null || token.isEmpty) {
           String? token = accessToken.isNotEmpty ? accessToken : '';
           // }
-          // if (token != null &&
-          //     token.isNotEmpty &&
-          //     !options.headers.containsKey('Authorization')) {
+          if (token.isNotEmpty &&
+              !options.headers.containsKey('Authorization')) {
             options.headers['Authorization'] = 'Bearer $token';
-          // }
+          }
           return handler.next(options);
         },
       ),
@@ -131,30 +130,24 @@ class ServicesDatasourceImpl extends ServicesDatasource {
           method: method,
         ),
       );
-      Services service = Services(
-        id: '',
-        name: '',
-        description: '',
-        minPrice: 0,
-        maxPrice: 0,
-        requiresReservation: false,
-        isActive: false,
-        images: [],
-        durationMinutes: 0,
-        categoryId: null,
-      );
-      if (response.statusCode == 200 || response.statusCode == 201) {
-        final data = _extractData(response.data);
-        if (data is Map<String, dynamic>) {
-          service = ServiceMapper.jsonToEntity(data);
-        } else if (data is List && data.isNotEmpty) {
-          final first = data.first;
-          if (first is Map<String, dynamic>) {
-            service = ServiceMapper.jsonToEntity(first);
-          }
+      if (response.statusCode != 200 && response.statusCode != 201) {
+        throw Exception(
+          'createUpdateService failed with status ${response.statusCode}',
+        );
+      }
+
+      final data = _extractData(response.data);
+      if (data is Map<String, dynamic>) {
+        return ServiceMapper.jsonToEntity(data);
+      }
+      if (data is List && data.isNotEmpty) {
+        final first = data.first;
+        if (first is Map<String, dynamic>) {
+          return ServiceMapper.jsonToEntity(first);
         }
       }
-      return service;
+
+      throw Exception('createUpdateService returned empty payload');
     } catch (e) {
       debugPrint('Error en createUpdateService: $e');
       throw Exception(e);

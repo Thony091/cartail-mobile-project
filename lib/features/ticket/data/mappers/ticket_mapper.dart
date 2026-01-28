@@ -5,9 +5,14 @@ import '../../domain/entities/urgencia_ticket.dart';
 
 class TicketMapper {
   static Ticket jsonToEntity(Map<String, dynamic> json) {
+    print('🔍 TicketMapper.jsonToEntity() parsing: ${json['id']} - ${json['nombre']}');
+    print('   Keys: ${json.keys.toList()}');
+
     final estado = _parseEstado(json);
     final importancia = _parseImportancia(json);
     final urgencia = _parseUrgencia(json);
+
+    print('   ✅ Parsed - Estado: id=${estado.id}, Importancia: id=${importancia.id}, Urgencia: id=${urgencia.id}');
 
     return Ticket(
       id: _parseInt(json['id']) ?? 0,
@@ -18,8 +23,8 @@ class TicketMapper {
       description: json['description'] as String? ?? json['descripcion'] as String? ?? '',
       desde: _parseDate(json['desde'] ?? json['startDate']),
       hasta: _parseDate(json['hasta'] ?? json['endDate']),
-      createdAt: _parseDate(json['createdAt']) ?? DateTime.now(),
-      updatedAt: _parseDate(json['updatedAt']) ?? DateTime.now(),
+      createdAt: _parseDate(json['createdAt'] ?? json['created_at']) ?? DateTime.now(),
+      updatedAt: _parseDate(json['updatedAt'] ?? json['updated_at']) ?? DateTime.now(),
       idServicio: _parseInt(json['idServicio'] ?? json['id_servicio']) ?? 0,
       idUser: json['idUser']?.toString() ??
           json['id_user']?.toString() ??
@@ -90,7 +95,8 @@ class TicketMapper {
         ? (data['nombre'] as String? ?? data['name'] as String?)
         : (json['importanciaNombre'] as String? ??
             json['importancia_nombre'] as String?);
-    return ImportanciaTicket(id: id ?? 1, nombre: nombre ?? '');
+    print('   📌 Importancia: id=$id, nombre=$nombre, data=$data');
+    return ImportanciaTicket(id: id ?? 1, nombre: nombre ?? 'Normal');
   }
 
   static UrgenciaTicket _parseUrgencia(Map<String, dynamic> json) {
@@ -101,6 +107,7 @@ class TicketMapper {
     final nombre = data is Map
         ? (data['nombre'] as String? ?? data['name'] as String?)
         : (json['urgenciaNombre'] as String? ?? json['urgencia_nombre'] as String?);
-    return UrgenciaTicket(id: id ?? 1, nombre: nombre ?? '');
+    print('   🚨 Urgencia: id=$id, nombre=$nombre, data=$data');
+    return UrgenciaTicket(id: id ?? 1, nombre: nombre ?? 'Normal');
   }
 }

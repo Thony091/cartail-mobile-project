@@ -25,6 +25,7 @@ class ModernVehicleDetailPageState extends ConsumerState<ModernVehicleDetailPage
   final _formKey = GlobalKey<FormState>();
   bool _isSaving = false;
   bool _isEditMode = false;
+  String? _errorMessage;
 
   @override
   void initState() {
@@ -114,15 +115,57 @@ class ModernVehicleDetailPageState extends ConsumerState<ModernVehicleDetailPage
         ),
         child: SingleChildScrollView(
           padding: const EdgeInsets.all(20),
-          child: Form(
-            key: _formKey,
-            child: _VehicleForm(
-              vehicle: vehicle,
-              isEditMode: _isEditMode,
-              isSaving: _isSaving,
-              onSave: _saveVehicle,
-              onCancel: () => context.pop(),
-            ),
+          child: Column(
+            children: [
+              if (_errorMessage != null)
+                Container(
+                  width: double.infinity,
+                  margin: const EdgeInsets.only(bottom: 16),
+                  padding: const EdgeInsets.all(16),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFFe74c3c).withValues(alpha: 0.1),
+                    border: Border.all(color: const Color(0xFFe74c3c), width: 1),
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const Row(
+                        children: [
+                          Icon(Icons.error_outline, color: Color(0xFFe74c3c), size: 20),
+                          SizedBox(width: 8),
+                          Text(
+                            'Error al guardar',
+                            style: TextStyle(
+                              fontSize: 14,
+                              fontWeight: FontWeight.w600,
+                              color: Color(0xFFe74c3c),
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 8),
+                      Text(
+                        _errorMessage!,
+                        style: const TextStyle(
+                          fontSize: 13,
+                          color: Color(0xFF2c3e50),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              Form(
+                key: _formKey,
+                child: _VehicleForm(
+                  vehicle: vehicle,
+                  isEditMode: _isEditMode,
+                  isSaving: _isSaving,
+                  onSave: _saveVehicle,
+                  onCancel: () => context.pop(),
+                ),
+              ),
+            ],
           ),
         ),
       ),
@@ -153,15 +196,57 @@ class ModernVehicleDetailPageState extends ConsumerState<ModernVehicleDetailPage
         ),
         child: SingleChildScrollView(
           padding: const EdgeInsets.all(20),
-          child: Form(
-            key: _formKey,
-            child: _VehicleForm(
-              vehicle: emptyVehicle,
-              isEditMode: true,
-              isSaving: _isSaving,
-              onSave: _saveVehicle,
-              onCancel: () => context.pop(),
-            ),
+          child: Column(
+            children: [
+              if (_errorMessage != null)
+                Container(
+                  width: double.infinity,
+                  margin: const EdgeInsets.only(bottom: 16),
+                  padding: const EdgeInsets.all(16),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFFe74c3c).withValues(alpha: 0.1),
+                    border: Border.all(color: const Color(0xFFe74c3c), width: 1),
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const Row(
+                        children: [
+                          Icon(Icons.error_outline, color: Color(0xFFe74c3c), size: 20),
+                          SizedBox(width: 8),
+                          Text(
+                            'Error al guardar',
+                            style: TextStyle(
+                              fontSize: 14,
+                              fontWeight: FontWeight.w600,
+                              color: Color(0xFFe74c3c),
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 8),
+                      Text(
+                        _errorMessage!,
+                        style: const TextStyle(
+                          fontSize: 13,
+                          color: Color(0xFF2c3e50),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              Form(
+                key: _formKey,
+                child: _VehicleForm(
+                  vehicle: emptyVehicle,
+                  isEditMode: true,
+                  isSaving: _isSaving,
+                  onSave: _saveVehicle,
+                  onCancel: () => context.pop(),
+                ),
+              ),
+            ],
           ),
         ),
       ),
@@ -171,15 +256,18 @@ class ModernVehicleDetailPageState extends ConsumerState<ModernVehicleDetailPage
   Future<void> _saveVehicle(VehicleFormNotifier notifier) async {
     if (_isSaving) return;
 
-    setState(() => _isSaving = true);
+    setState(() {
+      _isSaving = true;
+      _errorMessage = null;
+    });
 
     final isSaved = await notifier.onFormSubmit();
 
     if (!mounted) return;
 
-    setState(() => _isSaving = false);
-
     if (isSaved) {
+      // Éxito: mostrar snackbar y retroceder
+      setState(() => _isSaving = false);
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
           content: Text('Modelo guardado exitosamente'),
@@ -188,6 +276,12 @@ class ModernVehicleDetailPageState extends ConsumerState<ModernVehicleDetailPage
         ),
       );
       context.pop();
+    } else {
+      // Error: mostrar el error en la UI y quedarse en la vista
+      setState(() {
+        _isSaving = false;
+        _errorMessage = 'Error al guardar el modelo. Verifica los datos e intenta de nuevo.';
+      });
     }
   }
 }

@@ -3,6 +3,7 @@ import 'package:dio/dio.dart';
 import '../../../../config/config.dart';
 import '../../../services/data/errors/service_errors.dart';
 import '../../domain/entities/reservation.dart';
+import '../../domain/entities/reservation_payment_init.dart';
 import '../mappers/reservation_mapper.dart';
 import 'reservation_datasources.dart';
 
@@ -18,6 +19,10 @@ class ReservationDatasourceImpl extends ReservationDatasource {
         // 'x-api-key': 'ZvHNth6qgZ6LNnwtXwJX75Jk8YlXEZxX2AZvOFSW',
         // 'Authorization': 'Bearer $accessToken',
         'Content-Type': 'application/json',
+      },
+      // Acepta códigos 2xx, 307 (redirección temporal para pago) y no lanza excepción
+      validateStatus: (status) {
+        return status != null && status < 400;
       },
       )
     ) {
@@ -46,13 +51,73 @@ class ReservationDatasourceImpl extends ReservationDatasource {
       );
       final response = await dio.post('/reserva', data: data);
 
-      final reserva = ReservationMapper.jsonToEntity(
-        _extractData(response.data),
-      );
+      if (response.statusCode != 200 && response.statusCode != 201) {
+        throw Exception(
+          'createUpdateReservation failed with status ${response.statusCode}',
+        );
+      }
 
-      return reserva;
+      final payload = _extractData(response.data);
+      if (payload is Map<String, dynamic>) {
+        return ReservationMapper.jsonToEntity(payload);
+      }
+      throw Exception('createUpdateReservation returned empty payload');
     } catch (e) {
       throw Exception('Error al crear la reserva');
+    }
+  }
+
+  @override
+  Future<ReservationPaymentInit> pagarReserva(
+    Map<String, dynamic> reservationSimilar,
+  ) async {
+    try {
+      final data = _normalizeReservationPayload(
+        Map<String, dynamic>.from(reservationSimilar),
+      );
+      final response = await dio.post(
+        '/reserva.pagar',
+        data: data,
+        options: Options(
+          followRedirects: false,
+          validateStatus: (status) => status != null && status < 400,
+        ),
+      );
+
+      final redirectUrl = _extractRedirectUrlFromResponse(response);
+      if (redirectUrl.isNotEmpty) {
+        return ReservationPaymentInit(paymentUrl: redirectUrl);
+      }
+
+      final payload = _extractData(response.data);
+
+      if (payload is Map<String, dynamic>) {
+        final paymentUrl = _extractPaymentUrl(payload);
+        if (paymentUrl.isEmpty) {
+          throw Exception('Respuesta de pago inválida: falta paymentUrl');
+        }
+        return ReservationPaymentInit(
+          paymentUrl: paymentUrl,
+          reservationBackendId: _stringOrNull(
+            payload['reservationBackendId'] ??
+                payload['reservationId'] ??
+                payload['idReserva'] ??
+                payload['id_reserva'],
+          ),
+          paymentId: _stringOrNull(
+            payload['paymentId'] ??
+                payload['payment_id'] ??
+                payload['idPago'] ??
+                payload['id_pago'],
+          ),
+        );
+      }
+
+      throw Exception('Respuesta de pago inválida: formato de respuesta incorrecto');
+    } on DioException catch (e) {
+      throw Exception('Error de conexión al iniciar pago: ${e.message}');
+    } catch (e) {
+      throw Exception('Error al iniciar el pago de la reserva: $e');
     }
   }
 
@@ -120,6 +185,41 @@ class ReservationDatasourceImpl extends ReservationDatasource {
       return responseData['data'];
     }
     return responseData;
+  }
+
+  String _extractPaymentUrl(Map<String, dynamic> payload) {
+    return (payload['paymentUrl'] ??
+            payload['payment_url'] ??
+            payload['urlPago'] ??
+            payload['url_pago'] ??
+            payload['url'] ??
+            '')
+        .toString()
+        .trim();
+  }
+
+  String _extractRedirectUrlFromResponse(Response response) {
+    if (response.statusCode == 307 || response.statusCode == 302) {
+      final location = response.headers.value('location');
+      if (location != null && location.trim().isNotEmpty) {
+        return location.trim();
+      }
+    }
+
+    final raw = response.data;
+    if (raw is String) {
+      final match = RegExp(r'https?://\S+').firstMatch(raw);
+      if (match != null) {
+        return match.group(0)?.trim() ?? '';
+      }
+    }
+    return '';
+  }
+
+  String? _stringOrNull(dynamic value) {
+    if (value == null) return null;
+    final parsed = value.toString().trim();
+    return parsed.isEmpty ? null : parsed;
   }
 
   Map<String, dynamic> _normalizeReservationPayload(Map<String, dynamic> data) {

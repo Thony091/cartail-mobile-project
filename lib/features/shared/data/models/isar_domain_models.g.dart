@@ -15391,3 +15391,4258 @@ extension TicketModelQueryProperty
     });
   }
 }
+
+// coverage:ignore-file
+// ignore_for_file: duplicate_ignore, non_constant_identifier_names, constant_identifier_names, invalid_use_of_protected_member, unnecessary_cast, prefer_const_constructors, lines_longer_than_80_chars, require_trailing_commas, inference_failure_on_function_invocation, unnecessary_parenthesis, unnecessary_raw_strings, unnecessary_null_checks, join_return_with_assignment, prefer_final_locals, avoid_js_rounded_ints, avoid_positional_boolean_parameters, always_specify_types
+
+extension GetTicketLookupModelCollection on Isar {
+  IsarCollection<TicketLookupModel> get ticketLookupModels => this.collection();
+}
+
+const TicketLookupModelSchema = CollectionSchema(
+  name: r'TicketLookupModel',
+  id: -2915773053909979970,
+  properties: {
+    r'backendId': PropertySchema(
+      id: 0,
+      name: r'backendId',
+      type: IsarType.long,
+    ),
+    r'key': PropertySchema(id: 1, name: r'key', type: IsarType.string),
+    r'name': PropertySchema(id: 2, name: r'name', type: IsarType.string),
+    r'type': PropertySchema(id: 3, name: r'type', type: IsarType.string),
+    r'updatedAt': PropertySchema(
+      id: 4,
+      name: r'updatedAt',
+      type: IsarType.dateTime,
+    ),
+  },
+
+  estimateSize: _ticketLookupModelEstimateSize,
+  serialize: _ticketLookupModelSerialize,
+  deserialize: _ticketLookupModelDeserialize,
+  deserializeProp: _ticketLookupModelDeserializeProp,
+  idName: r'id',
+  indexes: {
+    r'key': IndexSchema(
+      id: -4906094122524121629,
+      name: r'key',
+      unique: true,
+      replace: false,
+      properties: [
+        IndexPropertySchema(
+          name: r'key',
+          type: IndexType.hash,
+          caseSensitive: true,
+        ),
+      ],
+    ),
+    r'type': IndexSchema(
+      id: 5117122708147080838,
+      name: r'type',
+      unique: false,
+      replace: false,
+      properties: [
+        IndexPropertySchema(
+          name: r'type',
+          type: IndexType.hash,
+          caseSensitive: true,
+        ),
+      ],
+    ),
+    r'backendId': IndexSchema(
+      id: 8781752057772026410,
+      name: r'backendId',
+      unique: false,
+      replace: false,
+      properties: [
+        IndexPropertySchema(
+          name: r'backendId',
+          type: IndexType.value,
+          caseSensitive: false,
+        ),
+      ],
+    ),
+  },
+  links: {},
+  embeddedSchemas: {},
+
+  getId: _ticketLookupModelGetId,
+  getLinks: _ticketLookupModelGetLinks,
+  attach: _ticketLookupModelAttach,
+  version: '3.3.0',
+);
+
+int _ticketLookupModelEstimateSize(
+  TicketLookupModel object,
+  List<int> offsets,
+  Map<Type, List<int>> allOffsets,
+) {
+  var bytesCount = offsets.last;
+  bytesCount += 3 + object.key.length * 3;
+  bytesCount += 3 + object.name.length * 3;
+  bytesCount += 3 + object.type.length * 3;
+  return bytesCount;
+}
+
+void _ticketLookupModelSerialize(
+  TicketLookupModel object,
+  IsarWriter writer,
+  List<int> offsets,
+  Map<Type, List<int>> allOffsets,
+) {
+  writer.writeLong(offsets[0], object.backendId);
+  writer.writeString(offsets[1], object.key);
+  writer.writeString(offsets[2], object.name);
+  writer.writeString(offsets[3], object.type);
+  writer.writeDateTime(offsets[4], object.updatedAt);
+}
+
+TicketLookupModel _ticketLookupModelDeserialize(
+  Id id,
+  IsarReader reader,
+  List<int> offsets,
+  Map<Type, List<int>> allOffsets,
+) {
+  final object = TicketLookupModel();
+  object.backendId = reader.readLong(offsets[0]);
+  object.id = id;
+  object.key = reader.readString(offsets[1]);
+  object.name = reader.readString(offsets[2]);
+  object.type = reader.readString(offsets[3]);
+  object.updatedAt = reader.readDateTime(offsets[4]);
+  return object;
+}
+
+P _ticketLookupModelDeserializeProp<P>(
+  IsarReader reader,
+  int propertyId,
+  int offset,
+  Map<Type, List<int>> allOffsets,
+) {
+  switch (propertyId) {
+    case 0:
+      return (reader.readLong(offset)) as P;
+    case 1:
+      return (reader.readString(offset)) as P;
+    case 2:
+      return (reader.readString(offset)) as P;
+    case 3:
+      return (reader.readString(offset)) as P;
+    case 4:
+      return (reader.readDateTime(offset)) as P;
+    default:
+      throw IsarError('Unknown property with id $propertyId');
+  }
+}
+
+Id _ticketLookupModelGetId(TicketLookupModel object) {
+  return object.id;
+}
+
+List<IsarLinkBase<dynamic>> _ticketLookupModelGetLinks(
+  TicketLookupModel object,
+) {
+  return [];
+}
+
+void _ticketLookupModelAttach(
+  IsarCollection<dynamic> col,
+  Id id,
+  TicketLookupModel object,
+) {
+  object.id = id;
+}
+
+extension TicketLookupModelByIndex on IsarCollection<TicketLookupModel> {
+  Future<TicketLookupModel?> getByKey(String key) {
+    return getByIndex(r'key', [key]);
+  }
+
+  TicketLookupModel? getByKeySync(String key) {
+    return getByIndexSync(r'key', [key]);
+  }
+
+  Future<bool> deleteByKey(String key) {
+    return deleteByIndex(r'key', [key]);
+  }
+
+  bool deleteByKeySync(String key) {
+    return deleteByIndexSync(r'key', [key]);
+  }
+
+  Future<List<TicketLookupModel?>> getAllByKey(List<String> keyValues) {
+    final values = keyValues.map((e) => [e]).toList();
+    return getAllByIndex(r'key', values);
+  }
+
+  List<TicketLookupModel?> getAllByKeySync(List<String> keyValues) {
+    final values = keyValues.map((e) => [e]).toList();
+    return getAllByIndexSync(r'key', values);
+  }
+
+  Future<int> deleteAllByKey(List<String> keyValues) {
+    final values = keyValues.map((e) => [e]).toList();
+    return deleteAllByIndex(r'key', values);
+  }
+
+  int deleteAllByKeySync(List<String> keyValues) {
+    final values = keyValues.map((e) => [e]).toList();
+    return deleteAllByIndexSync(r'key', values);
+  }
+
+  Future<Id> putByKey(TicketLookupModel object) {
+    return putByIndex(r'key', object);
+  }
+
+  Id putByKeySync(TicketLookupModel object, {bool saveLinks = true}) {
+    return putByIndexSync(r'key', object, saveLinks: saveLinks);
+  }
+
+  Future<List<Id>> putAllByKey(List<TicketLookupModel> objects) {
+    return putAllByIndex(r'key', objects);
+  }
+
+  List<Id> putAllByKeySync(
+    List<TicketLookupModel> objects, {
+    bool saveLinks = true,
+  }) {
+    return putAllByIndexSync(r'key', objects, saveLinks: saveLinks);
+  }
+}
+
+extension TicketLookupModelQueryWhereSort
+    on QueryBuilder<TicketLookupModel, TicketLookupModel, QWhere> {
+  QueryBuilder<TicketLookupModel, TicketLookupModel, QAfterWhere> anyId() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addWhereClause(const IdWhereClause.any());
+    });
+  }
+
+  QueryBuilder<TicketLookupModel, TicketLookupModel, QAfterWhere>
+  anyBackendId() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addWhereClause(
+        const IndexWhereClause.any(indexName: r'backendId'),
+      );
+    });
+  }
+}
+
+extension TicketLookupModelQueryWhere
+    on QueryBuilder<TicketLookupModel, TicketLookupModel, QWhereClause> {
+  QueryBuilder<TicketLookupModel, TicketLookupModel, QAfterWhereClause>
+  idEqualTo(Id id) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addWhereClause(IdWhereClause.between(lower: id, upper: id));
+    });
+  }
+
+  QueryBuilder<TicketLookupModel, TicketLookupModel, QAfterWhereClause>
+  idNotEqualTo(Id id) {
+    return QueryBuilder.apply(this, (query) {
+      if (query.whereSort == Sort.asc) {
+        return query
+            .addWhereClause(
+              IdWhereClause.lessThan(upper: id, includeUpper: false),
+            )
+            .addWhereClause(
+              IdWhereClause.greaterThan(lower: id, includeLower: false),
+            );
+      } else {
+        return query
+            .addWhereClause(
+              IdWhereClause.greaterThan(lower: id, includeLower: false),
+            )
+            .addWhereClause(
+              IdWhereClause.lessThan(upper: id, includeUpper: false),
+            );
+      }
+    });
+  }
+
+  QueryBuilder<TicketLookupModel, TicketLookupModel, QAfterWhereClause>
+  idGreaterThan(Id id, {bool include = false}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addWhereClause(
+        IdWhereClause.greaterThan(lower: id, includeLower: include),
+      );
+    });
+  }
+
+  QueryBuilder<TicketLookupModel, TicketLookupModel, QAfterWhereClause>
+  idLessThan(Id id, {bool include = false}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addWhereClause(
+        IdWhereClause.lessThan(upper: id, includeUpper: include),
+      );
+    });
+  }
+
+  QueryBuilder<TicketLookupModel, TicketLookupModel, QAfterWhereClause>
+  idBetween(
+    Id lowerId,
+    Id upperId, {
+    bool includeLower = true,
+    bool includeUpper = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addWhereClause(
+        IdWhereClause.between(
+          lower: lowerId,
+          includeLower: includeLower,
+          upper: upperId,
+          includeUpper: includeUpper,
+        ),
+      );
+    });
+  }
+
+  QueryBuilder<TicketLookupModel, TicketLookupModel, QAfterWhereClause>
+  keyEqualTo(String key) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addWhereClause(
+        IndexWhereClause.equalTo(indexName: r'key', value: [key]),
+      );
+    });
+  }
+
+  QueryBuilder<TicketLookupModel, TicketLookupModel, QAfterWhereClause>
+  keyNotEqualTo(String key) {
+    return QueryBuilder.apply(this, (query) {
+      if (query.whereSort == Sort.asc) {
+        return query
+            .addWhereClause(
+              IndexWhereClause.between(
+                indexName: r'key',
+                lower: [],
+                upper: [key],
+                includeUpper: false,
+              ),
+            )
+            .addWhereClause(
+              IndexWhereClause.between(
+                indexName: r'key',
+                lower: [key],
+                includeLower: false,
+                upper: [],
+              ),
+            );
+      } else {
+        return query
+            .addWhereClause(
+              IndexWhereClause.between(
+                indexName: r'key',
+                lower: [key],
+                includeLower: false,
+                upper: [],
+              ),
+            )
+            .addWhereClause(
+              IndexWhereClause.between(
+                indexName: r'key',
+                lower: [],
+                upper: [key],
+                includeUpper: false,
+              ),
+            );
+      }
+    });
+  }
+
+  QueryBuilder<TicketLookupModel, TicketLookupModel, QAfterWhereClause>
+  typeEqualTo(String type) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addWhereClause(
+        IndexWhereClause.equalTo(indexName: r'type', value: [type]),
+      );
+    });
+  }
+
+  QueryBuilder<TicketLookupModel, TicketLookupModel, QAfterWhereClause>
+  typeNotEqualTo(String type) {
+    return QueryBuilder.apply(this, (query) {
+      if (query.whereSort == Sort.asc) {
+        return query
+            .addWhereClause(
+              IndexWhereClause.between(
+                indexName: r'type',
+                lower: [],
+                upper: [type],
+                includeUpper: false,
+              ),
+            )
+            .addWhereClause(
+              IndexWhereClause.between(
+                indexName: r'type',
+                lower: [type],
+                includeLower: false,
+                upper: [],
+              ),
+            );
+      } else {
+        return query
+            .addWhereClause(
+              IndexWhereClause.between(
+                indexName: r'type',
+                lower: [type],
+                includeLower: false,
+                upper: [],
+              ),
+            )
+            .addWhereClause(
+              IndexWhereClause.between(
+                indexName: r'type',
+                lower: [],
+                upper: [type],
+                includeUpper: false,
+              ),
+            );
+      }
+    });
+  }
+
+  QueryBuilder<TicketLookupModel, TicketLookupModel, QAfterWhereClause>
+  backendIdEqualTo(int backendId) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addWhereClause(
+        IndexWhereClause.equalTo(indexName: r'backendId', value: [backendId]),
+      );
+    });
+  }
+
+  QueryBuilder<TicketLookupModel, TicketLookupModel, QAfterWhereClause>
+  backendIdNotEqualTo(int backendId) {
+    return QueryBuilder.apply(this, (query) {
+      if (query.whereSort == Sort.asc) {
+        return query
+            .addWhereClause(
+              IndexWhereClause.between(
+                indexName: r'backendId',
+                lower: [],
+                upper: [backendId],
+                includeUpper: false,
+              ),
+            )
+            .addWhereClause(
+              IndexWhereClause.between(
+                indexName: r'backendId',
+                lower: [backendId],
+                includeLower: false,
+                upper: [],
+              ),
+            );
+      } else {
+        return query
+            .addWhereClause(
+              IndexWhereClause.between(
+                indexName: r'backendId',
+                lower: [backendId],
+                includeLower: false,
+                upper: [],
+              ),
+            )
+            .addWhereClause(
+              IndexWhereClause.between(
+                indexName: r'backendId',
+                lower: [],
+                upper: [backendId],
+                includeUpper: false,
+              ),
+            );
+      }
+    });
+  }
+
+  QueryBuilder<TicketLookupModel, TicketLookupModel, QAfterWhereClause>
+  backendIdGreaterThan(int backendId, {bool include = false}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addWhereClause(
+        IndexWhereClause.between(
+          indexName: r'backendId',
+          lower: [backendId],
+          includeLower: include,
+          upper: [],
+        ),
+      );
+    });
+  }
+
+  QueryBuilder<TicketLookupModel, TicketLookupModel, QAfterWhereClause>
+  backendIdLessThan(int backendId, {bool include = false}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addWhereClause(
+        IndexWhereClause.between(
+          indexName: r'backendId',
+          lower: [],
+          upper: [backendId],
+          includeUpper: include,
+        ),
+      );
+    });
+  }
+
+  QueryBuilder<TicketLookupModel, TicketLookupModel, QAfterWhereClause>
+  backendIdBetween(
+    int lowerBackendId,
+    int upperBackendId, {
+    bool includeLower = true,
+    bool includeUpper = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addWhereClause(
+        IndexWhereClause.between(
+          indexName: r'backendId',
+          lower: [lowerBackendId],
+          includeLower: includeLower,
+          upper: [upperBackendId],
+          includeUpper: includeUpper,
+        ),
+      );
+    });
+  }
+}
+
+extension TicketLookupModelQueryFilter
+    on QueryBuilder<TicketLookupModel, TicketLookupModel, QFilterCondition> {
+  QueryBuilder<TicketLookupModel, TicketLookupModel, QAfterFilterCondition>
+  backendIdEqualTo(int value) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.equalTo(property: r'backendId', value: value),
+      );
+    });
+  }
+
+  QueryBuilder<TicketLookupModel, TicketLookupModel, QAfterFilterCondition>
+  backendIdGreaterThan(int value, {bool include = false}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.greaterThan(
+          include: include,
+          property: r'backendId',
+          value: value,
+        ),
+      );
+    });
+  }
+
+  QueryBuilder<TicketLookupModel, TicketLookupModel, QAfterFilterCondition>
+  backendIdLessThan(int value, {bool include = false}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.lessThan(
+          include: include,
+          property: r'backendId',
+          value: value,
+        ),
+      );
+    });
+  }
+
+  QueryBuilder<TicketLookupModel, TicketLookupModel, QAfterFilterCondition>
+  backendIdBetween(
+    int lower,
+    int upper, {
+    bool includeLower = true,
+    bool includeUpper = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.between(
+          property: r'backendId',
+          lower: lower,
+          includeLower: includeLower,
+          upper: upper,
+          includeUpper: includeUpper,
+        ),
+      );
+    });
+  }
+
+  QueryBuilder<TicketLookupModel, TicketLookupModel, QAfterFilterCondition>
+  idEqualTo(Id value) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.equalTo(property: r'id', value: value),
+      );
+    });
+  }
+
+  QueryBuilder<TicketLookupModel, TicketLookupModel, QAfterFilterCondition>
+  idGreaterThan(Id value, {bool include = false}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.greaterThan(
+          include: include,
+          property: r'id',
+          value: value,
+        ),
+      );
+    });
+  }
+
+  QueryBuilder<TicketLookupModel, TicketLookupModel, QAfterFilterCondition>
+  idLessThan(Id value, {bool include = false}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.lessThan(
+          include: include,
+          property: r'id',
+          value: value,
+        ),
+      );
+    });
+  }
+
+  QueryBuilder<TicketLookupModel, TicketLookupModel, QAfterFilterCondition>
+  idBetween(
+    Id lower,
+    Id upper, {
+    bool includeLower = true,
+    bool includeUpper = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.between(
+          property: r'id',
+          lower: lower,
+          includeLower: includeLower,
+          upper: upper,
+          includeUpper: includeUpper,
+        ),
+      );
+    });
+  }
+
+  QueryBuilder<TicketLookupModel, TicketLookupModel, QAfterFilterCondition>
+  keyEqualTo(String value, {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.equalTo(
+          property: r'key',
+          value: value,
+          caseSensitive: caseSensitive,
+        ),
+      );
+    });
+  }
+
+  QueryBuilder<TicketLookupModel, TicketLookupModel, QAfterFilterCondition>
+  keyGreaterThan(
+    String value, {
+    bool include = false,
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.greaterThan(
+          include: include,
+          property: r'key',
+          value: value,
+          caseSensitive: caseSensitive,
+        ),
+      );
+    });
+  }
+
+  QueryBuilder<TicketLookupModel, TicketLookupModel, QAfterFilterCondition>
+  keyLessThan(String value, {bool include = false, bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.lessThan(
+          include: include,
+          property: r'key',
+          value: value,
+          caseSensitive: caseSensitive,
+        ),
+      );
+    });
+  }
+
+  QueryBuilder<TicketLookupModel, TicketLookupModel, QAfterFilterCondition>
+  keyBetween(
+    String lower,
+    String upper, {
+    bool includeLower = true,
+    bool includeUpper = true,
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.between(
+          property: r'key',
+          lower: lower,
+          includeLower: includeLower,
+          upper: upper,
+          includeUpper: includeUpper,
+          caseSensitive: caseSensitive,
+        ),
+      );
+    });
+  }
+
+  QueryBuilder<TicketLookupModel, TicketLookupModel, QAfterFilterCondition>
+  keyStartsWith(String value, {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.startsWith(
+          property: r'key',
+          value: value,
+          caseSensitive: caseSensitive,
+        ),
+      );
+    });
+  }
+
+  QueryBuilder<TicketLookupModel, TicketLookupModel, QAfterFilterCondition>
+  keyEndsWith(String value, {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.endsWith(
+          property: r'key',
+          value: value,
+          caseSensitive: caseSensitive,
+        ),
+      );
+    });
+  }
+
+  QueryBuilder<TicketLookupModel, TicketLookupModel, QAfterFilterCondition>
+  keyContains(String value, {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.contains(
+          property: r'key',
+          value: value,
+          caseSensitive: caseSensitive,
+        ),
+      );
+    });
+  }
+
+  QueryBuilder<TicketLookupModel, TicketLookupModel, QAfterFilterCondition>
+  keyMatches(String pattern, {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.matches(
+          property: r'key',
+          wildcard: pattern,
+          caseSensitive: caseSensitive,
+        ),
+      );
+    });
+  }
+
+  QueryBuilder<TicketLookupModel, TicketLookupModel, QAfterFilterCondition>
+  keyIsEmpty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.equalTo(property: r'key', value: ''),
+      );
+    });
+  }
+
+  QueryBuilder<TicketLookupModel, TicketLookupModel, QAfterFilterCondition>
+  keyIsNotEmpty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.greaterThan(property: r'key', value: ''),
+      );
+    });
+  }
+
+  QueryBuilder<TicketLookupModel, TicketLookupModel, QAfterFilterCondition>
+  nameEqualTo(String value, {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.equalTo(
+          property: r'name',
+          value: value,
+          caseSensitive: caseSensitive,
+        ),
+      );
+    });
+  }
+
+  QueryBuilder<TicketLookupModel, TicketLookupModel, QAfterFilterCondition>
+  nameGreaterThan(
+    String value, {
+    bool include = false,
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.greaterThan(
+          include: include,
+          property: r'name',
+          value: value,
+          caseSensitive: caseSensitive,
+        ),
+      );
+    });
+  }
+
+  QueryBuilder<TicketLookupModel, TicketLookupModel, QAfterFilterCondition>
+  nameLessThan(
+    String value, {
+    bool include = false,
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.lessThan(
+          include: include,
+          property: r'name',
+          value: value,
+          caseSensitive: caseSensitive,
+        ),
+      );
+    });
+  }
+
+  QueryBuilder<TicketLookupModel, TicketLookupModel, QAfterFilterCondition>
+  nameBetween(
+    String lower,
+    String upper, {
+    bool includeLower = true,
+    bool includeUpper = true,
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.between(
+          property: r'name',
+          lower: lower,
+          includeLower: includeLower,
+          upper: upper,
+          includeUpper: includeUpper,
+          caseSensitive: caseSensitive,
+        ),
+      );
+    });
+  }
+
+  QueryBuilder<TicketLookupModel, TicketLookupModel, QAfterFilterCondition>
+  nameStartsWith(String value, {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.startsWith(
+          property: r'name',
+          value: value,
+          caseSensitive: caseSensitive,
+        ),
+      );
+    });
+  }
+
+  QueryBuilder<TicketLookupModel, TicketLookupModel, QAfterFilterCondition>
+  nameEndsWith(String value, {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.endsWith(
+          property: r'name',
+          value: value,
+          caseSensitive: caseSensitive,
+        ),
+      );
+    });
+  }
+
+  QueryBuilder<TicketLookupModel, TicketLookupModel, QAfterFilterCondition>
+  nameContains(String value, {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.contains(
+          property: r'name',
+          value: value,
+          caseSensitive: caseSensitive,
+        ),
+      );
+    });
+  }
+
+  QueryBuilder<TicketLookupModel, TicketLookupModel, QAfterFilterCondition>
+  nameMatches(String pattern, {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.matches(
+          property: r'name',
+          wildcard: pattern,
+          caseSensitive: caseSensitive,
+        ),
+      );
+    });
+  }
+
+  QueryBuilder<TicketLookupModel, TicketLookupModel, QAfterFilterCondition>
+  nameIsEmpty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.equalTo(property: r'name', value: ''),
+      );
+    });
+  }
+
+  QueryBuilder<TicketLookupModel, TicketLookupModel, QAfterFilterCondition>
+  nameIsNotEmpty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.greaterThan(property: r'name', value: ''),
+      );
+    });
+  }
+
+  QueryBuilder<TicketLookupModel, TicketLookupModel, QAfterFilterCondition>
+  typeEqualTo(String value, {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.equalTo(
+          property: r'type',
+          value: value,
+          caseSensitive: caseSensitive,
+        ),
+      );
+    });
+  }
+
+  QueryBuilder<TicketLookupModel, TicketLookupModel, QAfterFilterCondition>
+  typeGreaterThan(
+    String value, {
+    bool include = false,
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.greaterThan(
+          include: include,
+          property: r'type',
+          value: value,
+          caseSensitive: caseSensitive,
+        ),
+      );
+    });
+  }
+
+  QueryBuilder<TicketLookupModel, TicketLookupModel, QAfterFilterCondition>
+  typeLessThan(
+    String value, {
+    bool include = false,
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.lessThan(
+          include: include,
+          property: r'type',
+          value: value,
+          caseSensitive: caseSensitive,
+        ),
+      );
+    });
+  }
+
+  QueryBuilder<TicketLookupModel, TicketLookupModel, QAfterFilterCondition>
+  typeBetween(
+    String lower,
+    String upper, {
+    bool includeLower = true,
+    bool includeUpper = true,
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.between(
+          property: r'type',
+          lower: lower,
+          includeLower: includeLower,
+          upper: upper,
+          includeUpper: includeUpper,
+          caseSensitive: caseSensitive,
+        ),
+      );
+    });
+  }
+
+  QueryBuilder<TicketLookupModel, TicketLookupModel, QAfterFilterCondition>
+  typeStartsWith(String value, {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.startsWith(
+          property: r'type',
+          value: value,
+          caseSensitive: caseSensitive,
+        ),
+      );
+    });
+  }
+
+  QueryBuilder<TicketLookupModel, TicketLookupModel, QAfterFilterCondition>
+  typeEndsWith(String value, {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.endsWith(
+          property: r'type',
+          value: value,
+          caseSensitive: caseSensitive,
+        ),
+      );
+    });
+  }
+
+  QueryBuilder<TicketLookupModel, TicketLookupModel, QAfterFilterCondition>
+  typeContains(String value, {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.contains(
+          property: r'type',
+          value: value,
+          caseSensitive: caseSensitive,
+        ),
+      );
+    });
+  }
+
+  QueryBuilder<TicketLookupModel, TicketLookupModel, QAfterFilterCondition>
+  typeMatches(String pattern, {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.matches(
+          property: r'type',
+          wildcard: pattern,
+          caseSensitive: caseSensitive,
+        ),
+      );
+    });
+  }
+
+  QueryBuilder<TicketLookupModel, TicketLookupModel, QAfterFilterCondition>
+  typeIsEmpty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.equalTo(property: r'type', value: ''),
+      );
+    });
+  }
+
+  QueryBuilder<TicketLookupModel, TicketLookupModel, QAfterFilterCondition>
+  typeIsNotEmpty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.greaterThan(property: r'type', value: ''),
+      );
+    });
+  }
+
+  QueryBuilder<TicketLookupModel, TicketLookupModel, QAfterFilterCondition>
+  updatedAtEqualTo(DateTime value) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.equalTo(property: r'updatedAt', value: value),
+      );
+    });
+  }
+
+  QueryBuilder<TicketLookupModel, TicketLookupModel, QAfterFilterCondition>
+  updatedAtGreaterThan(DateTime value, {bool include = false}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.greaterThan(
+          include: include,
+          property: r'updatedAt',
+          value: value,
+        ),
+      );
+    });
+  }
+
+  QueryBuilder<TicketLookupModel, TicketLookupModel, QAfterFilterCondition>
+  updatedAtLessThan(DateTime value, {bool include = false}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.lessThan(
+          include: include,
+          property: r'updatedAt',
+          value: value,
+        ),
+      );
+    });
+  }
+
+  QueryBuilder<TicketLookupModel, TicketLookupModel, QAfterFilterCondition>
+  updatedAtBetween(
+    DateTime lower,
+    DateTime upper, {
+    bool includeLower = true,
+    bool includeUpper = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.between(
+          property: r'updatedAt',
+          lower: lower,
+          includeLower: includeLower,
+          upper: upper,
+          includeUpper: includeUpper,
+        ),
+      );
+    });
+  }
+}
+
+extension TicketLookupModelQueryObject
+    on QueryBuilder<TicketLookupModel, TicketLookupModel, QFilterCondition> {}
+
+extension TicketLookupModelQueryLinks
+    on QueryBuilder<TicketLookupModel, TicketLookupModel, QFilterCondition> {}
+
+extension TicketLookupModelQuerySortBy
+    on QueryBuilder<TicketLookupModel, TicketLookupModel, QSortBy> {
+  QueryBuilder<TicketLookupModel, TicketLookupModel, QAfterSortBy>
+  sortByBackendId() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'backendId', Sort.asc);
+    });
+  }
+
+  QueryBuilder<TicketLookupModel, TicketLookupModel, QAfterSortBy>
+  sortByBackendIdDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'backendId', Sort.desc);
+    });
+  }
+
+  QueryBuilder<TicketLookupModel, TicketLookupModel, QAfterSortBy> sortByKey() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'key', Sort.asc);
+    });
+  }
+
+  QueryBuilder<TicketLookupModel, TicketLookupModel, QAfterSortBy>
+  sortByKeyDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'key', Sort.desc);
+    });
+  }
+
+  QueryBuilder<TicketLookupModel, TicketLookupModel, QAfterSortBy>
+  sortByName() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'name', Sort.asc);
+    });
+  }
+
+  QueryBuilder<TicketLookupModel, TicketLookupModel, QAfterSortBy>
+  sortByNameDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'name', Sort.desc);
+    });
+  }
+
+  QueryBuilder<TicketLookupModel, TicketLookupModel, QAfterSortBy>
+  sortByType() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'type', Sort.asc);
+    });
+  }
+
+  QueryBuilder<TicketLookupModel, TicketLookupModel, QAfterSortBy>
+  sortByTypeDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'type', Sort.desc);
+    });
+  }
+
+  QueryBuilder<TicketLookupModel, TicketLookupModel, QAfterSortBy>
+  sortByUpdatedAt() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'updatedAt', Sort.asc);
+    });
+  }
+
+  QueryBuilder<TicketLookupModel, TicketLookupModel, QAfterSortBy>
+  sortByUpdatedAtDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'updatedAt', Sort.desc);
+    });
+  }
+}
+
+extension TicketLookupModelQuerySortThenBy
+    on QueryBuilder<TicketLookupModel, TicketLookupModel, QSortThenBy> {
+  QueryBuilder<TicketLookupModel, TicketLookupModel, QAfterSortBy>
+  thenByBackendId() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'backendId', Sort.asc);
+    });
+  }
+
+  QueryBuilder<TicketLookupModel, TicketLookupModel, QAfterSortBy>
+  thenByBackendIdDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'backendId', Sort.desc);
+    });
+  }
+
+  QueryBuilder<TicketLookupModel, TicketLookupModel, QAfterSortBy> thenById() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'id', Sort.asc);
+    });
+  }
+
+  QueryBuilder<TicketLookupModel, TicketLookupModel, QAfterSortBy>
+  thenByIdDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'id', Sort.desc);
+    });
+  }
+
+  QueryBuilder<TicketLookupModel, TicketLookupModel, QAfterSortBy> thenByKey() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'key', Sort.asc);
+    });
+  }
+
+  QueryBuilder<TicketLookupModel, TicketLookupModel, QAfterSortBy>
+  thenByKeyDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'key', Sort.desc);
+    });
+  }
+
+  QueryBuilder<TicketLookupModel, TicketLookupModel, QAfterSortBy>
+  thenByName() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'name', Sort.asc);
+    });
+  }
+
+  QueryBuilder<TicketLookupModel, TicketLookupModel, QAfterSortBy>
+  thenByNameDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'name', Sort.desc);
+    });
+  }
+
+  QueryBuilder<TicketLookupModel, TicketLookupModel, QAfterSortBy>
+  thenByType() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'type', Sort.asc);
+    });
+  }
+
+  QueryBuilder<TicketLookupModel, TicketLookupModel, QAfterSortBy>
+  thenByTypeDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'type', Sort.desc);
+    });
+  }
+
+  QueryBuilder<TicketLookupModel, TicketLookupModel, QAfterSortBy>
+  thenByUpdatedAt() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'updatedAt', Sort.asc);
+    });
+  }
+
+  QueryBuilder<TicketLookupModel, TicketLookupModel, QAfterSortBy>
+  thenByUpdatedAtDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'updatedAt', Sort.desc);
+    });
+  }
+}
+
+extension TicketLookupModelQueryWhereDistinct
+    on QueryBuilder<TicketLookupModel, TicketLookupModel, QDistinct> {
+  QueryBuilder<TicketLookupModel, TicketLookupModel, QDistinct>
+  distinctByBackendId() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addDistinctBy(r'backendId');
+    });
+  }
+
+  QueryBuilder<TicketLookupModel, TicketLookupModel, QDistinct> distinctByKey({
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addDistinctBy(r'key', caseSensitive: caseSensitive);
+    });
+  }
+
+  QueryBuilder<TicketLookupModel, TicketLookupModel, QDistinct> distinctByName({
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addDistinctBy(r'name', caseSensitive: caseSensitive);
+    });
+  }
+
+  QueryBuilder<TicketLookupModel, TicketLookupModel, QDistinct> distinctByType({
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addDistinctBy(r'type', caseSensitive: caseSensitive);
+    });
+  }
+
+  QueryBuilder<TicketLookupModel, TicketLookupModel, QDistinct>
+  distinctByUpdatedAt() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addDistinctBy(r'updatedAt');
+    });
+  }
+}
+
+extension TicketLookupModelQueryProperty
+    on QueryBuilder<TicketLookupModel, TicketLookupModel, QQueryProperty> {
+  QueryBuilder<TicketLookupModel, int, QQueryOperations> idProperty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addPropertyName(r'id');
+    });
+  }
+
+  QueryBuilder<TicketLookupModel, int, QQueryOperations> backendIdProperty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addPropertyName(r'backendId');
+    });
+  }
+
+  QueryBuilder<TicketLookupModel, String, QQueryOperations> keyProperty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addPropertyName(r'key');
+    });
+  }
+
+  QueryBuilder<TicketLookupModel, String, QQueryOperations> nameProperty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addPropertyName(r'name');
+    });
+  }
+
+  QueryBuilder<TicketLookupModel, String, QQueryOperations> typeProperty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addPropertyName(r'type');
+    });
+  }
+
+  QueryBuilder<TicketLookupModel, DateTime, QQueryOperations>
+  updatedAtProperty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addPropertyName(r'updatedAt');
+    });
+  }
+}
+
+// coverage:ignore-file
+// ignore_for_file: duplicate_ignore, non_constant_identifier_names, constant_identifier_names, invalid_use_of_protected_member, unnecessary_cast, prefer_const_constructors, lines_longer_than_80_chars, require_trailing_commas, inference_failure_on_function_invocation, unnecessary_parenthesis, unnecessary_raw_strings, unnecessary_null_checks, join_return_with_assignment, prefer_final_locals, avoid_js_rounded_ints, avoid_positional_boolean_parameters, always_specify_types
+
+extension GetTicketEstadoModelCollection on Isar {
+  IsarCollection<TicketEstadoModel> get ticketEstadoModels => this.collection();
+}
+
+const TicketEstadoModelSchema = CollectionSchema(
+  name: r'TicketEstadoModel',
+  id: -5177548595280775310,
+  properties: {
+    r'backendId': PropertySchema(
+      id: 0,
+      name: r'backendId',
+      type: IsarType.long,
+    ),
+    r'name': PropertySchema(id: 1, name: r'name', type: IsarType.string),
+    r'updatedAt': PropertySchema(
+      id: 2,
+      name: r'updatedAt',
+      type: IsarType.dateTime,
+    ),
+  },
+
+  estimateSize: _ticketEstadoModelEstimateSize,
+  serialize: _ticketEstadoModelSerialize,
+  deserialize: _ticketEstadoModelDeserialize,
+  deserializeProp: _ticketEstadoModelDeserializeProp,
+  idName: r'id',
+  indexes: {
+    r'backendId': IndexSchema(
+      id: 8781752057772026410,
+      name: r'backendId',
+      unique: true,
+      replace: false,
+      properties: [
+        IndexPropertySchema(
+          name: r'backendId',
+          type: IndexType.value,
+          caseSensitive: false,
+        ),
+      ],
+    ),
+    r'name': IndexSchema(
+      id: 879695947855722453,
+      name: r'name',
+      unique: false,
+      replace: false,
+      properties: [
+        IndexPropertySchema(
+          name: r'name',
+          type: IndexType.hash,
+          caseSensitive: true,
+        ),
+      ],
+    ),
+  },
+  links: {},
+  embeddedSchemas: {},
+
+  getId: _ticketEstadoModelGetId,
+  getLinks: _ticketEstadoModelGetLinks,
+  attach: _ticketEstadoModelAttach,
+  version: '3.3.0',
+);
+
+int _ticketEstadoModelEstimateSize(
+  TicketEstadoModel object,
+  List<int> offsets,
+  Map<Type, List<int>> allOffsets,
+) {
+  var bytesCount = offsets.last;
+  bytesCount += 3 + object.name.length * 3;
+  return bytesCount;
+}
+
+void _ticketEstadoModelSerialize(
+  TicketEstadoModel object,
+  IsarWriter writer,
+  List<int> offsets,
+  Map<Type, List<int>> allOffsets,
+) {
+  writer.writeLong(offsets[0], object.backendId);
+  writer.writeString(offsets[1], object.name);
+  writer.writeDateTime(offsets[2], object.updatedAt);
+}
+
+TicketEstadoModel _ticketEstadoModelDeserialize(
+  Id id,
+  IsarReader reader,
+  List<int> offsets,
+  Map<Type, List<int>> allOffsets,
+) {
+  final object = TicketEstadoModel();
+  object.backendId = reader.readLong(offsets[0]);
+  object.id = id;
+  object.name = reader.readString(offsets[1]);
+  object.updatedAt = reader.readDateTime(offsets[2]);
+  return object;
+}
+
+P _ticketEstadoModelDeserializeProp<P>(
+  IsarReader reader,
+  int propertyId,
+  int offset,
+  Map<Type, List<int>> allOffsets,
+) {
+  switch (propertyId) {
+    case 0:
+      return (reader.readLong(offset)) as P;
+    case 1:
+      return (reader.readString(offset)) as P;
+    case 2:
+      return (reader.readDateTime(offset)) as P;
+    default:
+      throw IsarError('Unknown property with id $propertyId');
+  }
+}
+
+Id _ticketEstadoModelGetId(TicketEstadoModel object) {
+  return object.id;
+}
+
+List<IsarLinkBase<dynamic>> _ticketEstadoModelGetLinks(
+  TicketEstadoModel object,
+) {
+  return [];
+}
+
+void _ticketEstadoModelAttach(
+  IsarCollection<dynamic> col,
+  Id id,
+  TicketEstadoModel object,
+) {
+  object.id = id;
+}
+
+extension TicketEstadoModelByIndex on IsarCollection<TicketEstadoModel> {
+  Future<TicketEstadoModel?> getByBackendId(int backendId) {
+    return getByIndex(r'backendId', [backendId]);
+  }
+
+  TicketEstadoModel? getByBackendIdSync(int backendId) {
+    return getByIndexSync(r'backendId', [backendId]);
+  }
+
+  Future<bool> deleteByBackendId(int backendId) {
+    return deleteByIndex(r'backendId', [backendId]);
+  }
+
+  bool deleteByBackendIdSync(int backendId) {
+    return deleteByIndexSync(r'backendId', [backendId]);
+  }
+
+  Future<List<TicketEstadoModel?>> getAllByBackendId(
+    List<int> backendIdValues,
+  ) {
+    final values = backendIdValues.map((e) => [e]).toList();
+    return getAllByIndex(r'backendId', values);
+  }
+
+  List<TicketEstadoModel?> getAllByBackendIdSync(List<int> backendIdValues) {
+    final values = backendIdValues.map((e) => [e]).toList();
+    return getAllByIndexSync(r'backendId', values);
+  }
+
+  Future<int> deleteAllByBackendId(List<int> backendIdValues) {
+    final values = backendIdValues.map((e) => [e]).toList();
+    return deleteAllByIndex(r'backendId', values);
+  }
+
+  int deleteAllByBackendIdSync(List<int> backendIdValues) {
+    final values = backendIdValues.map((e) => [e]).toList();
+    return deleteAllByIndexSync(r'backendId', values);
+  }
+
+  Future<Id> putByBackendId(TicketEstadoModel object) {
+    return putByIndex(r'backendId', object);
+  }
+
+  Id putByBackendIdSync(TicketEstadoModel object, {bool saveLinks = true}) {
+    return putByIndexSync(r'backendId', object, saveLinks: saveLinks);
+  }
+
+  Future<List<Id>> putAllByBackendId(List<TicketEstadoModel> objects) {
+    return putAllByIndex(r'backendId', objects);
+  }
+
+  List<Id> putAllByBackendIdSync(
+    List<TicketEstadoModel> objects, {
+    bool saveLinks = true,
+  }) {
+    return putAllByIndexSync(r'backendId', objects, saveLinks: saveLinks);
+  }
+}
+
+extension TicketEstadoModelQueryWhereSort
+    on QueryBuilder<TicketEstadoModel, TicketEstadoModel, QWhere> {
+  QueryBuilder<TicketEstadoModel, TicketEstadoModel, QAfterWhere> anyId() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addWhereClause(const IdWhereClause.any());
+    });
+  }
+
+  QueryBuilder<TicketEstadoModel, TicketEstadoModel, QAfterWhere>
+  anyBackendId() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addWhereClause(
+        const IndexWhereClause.any(indexName: r'backendId'),
+      );
+    });
+  }
+}
+
+extension TicketEstadoModelQueryWhere
+    on QueryBuilder<TicketEstadoModel, TicketEstadoModel, QWhereClause> {
+  QueryBuilder<TicketEstadoModel, TicketEstadoModel, QAfterWhereClause>
+  idEqualTo(Id id) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addWhereClause(IdWhereClause.between(lower: id, upper: id));
+    });
+  }
+
+  QueryBuilder<TicketEstadoModel, TicketEstadoModel, QAfterWhereClause>
+  idNotEqualTo(Id id) {
+    return QueryBuilder.apply(this, (query) {
+      if (query.whereSort == Sort.asc) {
+        return query
+            .addWhereClause(
+              IdWhereClause.lessThan(upper: id, includeUpper: false),
+            )
+            .addWhereClause(
+              IdWhereClause.greaterThan(lower: id, includeLower: false),
+            );
+      } else {
+        return query
+            .addWhereClause(
+              IdWhereClause.greaterThan(lower: id, includeLower: false),
+            )
+            .addWhereClause(
+              IdWhereClause.lessThan(upper: id, includeUpper: false),
+            );
+      }
+    });
+  }
+
+  QueryBuilder<TicketEstadoModel, TicketEstadoModel, QAfterWhereClause>
+  idGreaterThan(Id id, {bool include = false}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addWhereClause(
+        IdWhereClause.greaterThan(lower: id, includeLower: include),
+      );
+    });
+  }
+
+  QueryBuilder<TicketEstadoModel, TicketEstadoModel, QAfterWhereClause>
+  idLessThan(Id id, {bool include = false}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addWhereClause(
+        IdWhereClause.lessThan(upper: id, includeUpper: include),
+      );
+    });
+  }
+
+  QueryBuilder<TicketEstadoModel, TicketEstadoModel, QAfterWhereClause>
+  idBetween(
+    Id lowerId,
+    Id upperId, {
+    bool includeLower = true,
+    bool includeUpper = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addWhereClause(
+        IdWhereClause.between(
+          lower: lowerId,
+          includeLower: includeLower,
+          upper: upperId,
+          includeUpper: includeUpper,
+        ),
+      );
+    });
+  }
+
+  QueryBuilder<TicketEstadoModel, TicketEstadoModel, QAfterWhereClause>
+  backendIdEqualTo(int backendId) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addWhereClause(
+        IndexWhereClause.equalTo(indexName: r'backendId', value: [backendId]),
+      );
+    });
+  }
+
+  QueryBuilder<TicketEstadoModel, TicketEstadoModel, QAfterWhereClause>
+  backendIdNotEqualTo(int backendId) {
+    return QueryBuilder.apply(this, (query) {
+      if (query.whereSort == Sort.asc) {
+        return query
+            .addWhereClause(
+              IndexWhereClause.between(
+                indexName: r'backendId',
+                lower: [],
+                upper: [backendId],
+                includeUpper: false,
+              ),
+            )
+            .addWhereClause(
+              IndexWhereClause.between(
+                indexName: r'backendId',
+                lower: [backendId],
+                includeLower: false,
+                upper: [],
+              ),
+            );
+      } else {
+        return query
+            .addWhereClause(
+              IndexWhereClause.between(
+                indexName: r'backendId',
+                lower: [backendId],
+                includeLower: false,
+                upper: [],
+              ),
+            )
+            .addWhereClause(
+              IndexWhereClause.between(
+                indexName: r'backendId',
+                lower: [],
+                upper: [backendId],
+                includeUpper: false,
+              ),
+            );
+      }
+    });
+  }
+
+  QueryBuilder<TicketEstadoModel, TicketEstadoModel, QAfterWhereClause>
+  backendIdGreaterThan(int backendId, {bool include = false}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addWhereClause(
+        IndexWhereClause.between(
+          indexName: r'backendId',
+          lower: [backendId],
+          includeLower: include,
+          upper: [],
+        ),
+      );
+    });
+  }
+
+  QueryBuilder<TicketEstadoModel, TicketEstadoModel, QAfterWhereClause>
+  backendIdLessThan(int backendId, {bool include = false}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addWhereClause(
+        IndexWhereClause.between(
+          indexName: r'backendId',
+          lower: [],
+          upper: [backendId],
+          includeUpper: include,
+        ),
+      );
+    });
+  }
+
+  QueryBuilder<TicketEstadoModel, TicketEstadoModel, QAfterWhereClause>
+  backendIdBetween(
+    int lowerBackendId,
+    int upperBackendId, {
+    bool includeLower = true,
+    bool includeUpper = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addWhereClause(
+        IndexWhereClause.between(
+          indexName: r'backendId',
+          lower: [lowerBackendId],
+          includeLower: includeLower,
+          upper: [upperBackendId],
+          includeUpper: includeUpper,
+        ),
+      );
+    });
+  }
+
+  QueryBuilder<TicketEstadoModel, TicketEstadoModel, QAfterWhereClause>
+  nameEqualTo(String name) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addWhereClause(
+        IndexWhereClause.equalTo(indexName: r'name', value: [name]),
+      );
+    });
+  }
+
+  QueryBuilder<TicketEstadoModel, TicketEstadoModel, QAfterWhereClause>
+  nameNotEqualTo(String name) {
+    return QueryBuilder.apply(this, (query) {
+      if (query.whereSort == Sort.asc) {
+        return query
+            .addWhereClause(
+              IndexWhereClause.between(
+                indexName: r'name',
+                lower: [],
+                upper: [name],
+                includeUpper: false,
+              ),
+            )
+            .addWhereClause(
+              IndexWhereClause.between(
+                indexName: r'name',
+                lower: [name],
+                includeLower: false,
+                upper: [],
+              ),
+            );
+      } else {
+        return query
+            .addWhereClause(
+              IndexWhereClause.between(
+                indexName: r'name',
+                lower: [name],
+                includeLower: false,
+                upper: [],
+              ),
+            )
+            .addWhereClause(
+              IndexWhereClause.between(
+                indexName: r'name',
+                lower: [],
+                upper: [name],
+                includeUpper: false,
+              ),
+            );
+      }
+    });
+  }
+}
+
+extension TicketEstadoModelQueryFilter
+    on QueryBuilder<TicketEstadoModel, TicketEstadoModel, QFilterCondition> {
+  QueryBuilder<TicketEstadoModel, TicketEstadoModel, QAfterFilterCondition>
+  backendIdEqualTo(int value) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.equalTo(property: r'backendId', value: value),
+      );
+    });
+  }
+
+  QueryBuilder<TicketEstadoModel, TicketEstadoModel, QAfterFilterCondition>
+  backendIdGreaterThan(int value, {bool include = false}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.greaterThan(
+          include: include,
+          property: r'backendId',
+          value: value,
+        ),
+      );
+    });
+  }
+
+  QueryBuilder<TicketEstadoModel, TicketEstadoModel, QAfterFilterCondition>
+  backendIdLessThan(int value, {bool include = false}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.lessThan(
+          include: include,
+          property: r'backendId',
+          value: value,
+        ),
+      );
+    });
+  }
+
+  QueryBuilder<TicketEstadoModel, TicketEstadoModel, QAfterFilterCondition>
+  backendIdBetween(
+    int lower,
+    int upper, {
+    bool includeLower = true,
+    bool includeUpper = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.between(
+          property: r'backendId',
+          lower: lower,
+          includeLower: includeLower,
+          upper: upper,
+          includeUpper: includeUpper,
+        ),
+      );
+    });
+  }
+
+  QueryBuilder<TicketEstadoModel, TicketEstadoModel, QAfterFilterCondition>
+  idEqualTo(Id value) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.equalTo(property: r'id', value: value),
+      );
+    });
+  }
+
+  QueryBuilder<TicketEstadoModel, TicketEstadoModel, QAfterFilterCondition>
+  idGreaterThan(Id value, {bool include = false}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.greaterThan(
+          include: include,
+          property: r'id',
+          value: value,
+        ),
+      );
+    });
+  }
+
+  QueryBuilder<TicketEstadoModel, TicketEstadoModel, QAfterFilterCondition>
+  idLessThan(Id value, {bool include = false}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.lessThan(
+          include: include,
+          property: r'id',
+          value: value,
+        ),
+      );
+    });
+  }
+
+  QueryBuilder<TicketEstadoModel, TicketEstadoModel, QAfterFilterCondition>
+  idBetween(
+    Id lower,
+    Id upper, {
+    bool includeLower = true,
+    bool includeUpper = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.between(
+          property: r'id',
+          lower: lower,
+          includeLower: includeLower,
+          upper: upper,
+          includeUpper: includeUpper,
+        ),
+      );
+    });
+  }
+
+  QueryBuilder<TicketEstadoModel, TicketEstadoModel, QAfterFilterCondition>
+  nameEqualTo(String value, {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.equalTo(
+          property: r'name',
+          value: value,
+          caseSensitive: caseSensitive,
+        ),
+      );
+    });
+  }
+
+  QueryBuilder<TicketEstadoModel, TicketEstadoModel, QAfterFilterCondition>
+  nameGreaterThan(
+    String value, {
+    bool include = false,
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.greaterThan(
+          include: include,
+          property: r'name',
+          value: value,
+          caseSensitive: caseSensitive,
+        ),
+      );
+    });
+  }
+
+  QueryBuilder<TicketEstadoModel, TicketEstadoModel, QAfterFilterCondition>
+  nameLessThan(
+    String value, {
+    bool include = false,
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.lessThan(
+          include: include,
+          property: r'name',
+          value: value,
+          caseSensitive: caseSensitive,
+        ),
+      );
+    });
+  }
+
+  QueryBuilder<TicketEstadoModel, TicketEstadoModel, QAfterFilterCondition>
+  nameBetween(
+    String lower,
+    String upper, {
+    bool includeLower = true,
+    bool includeUpper = true,
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.between(
+          property: r'name',
+          lower: lower,
+          includeLower: includeLower,
+          upper: upper,
+          includeUpper: includeUpper,
+          caseSensitive: caseSensitive,
+        ),
+      );
+    });
+  }
+
+  QueryBuilder<TicketEstadoModel, TicketEstadoModel, QAfterFilterCondition>
+  nameStartsWith(String value, {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.startsWith(
+          property: r'name',
+          value: value,
+          caseSensitive: caseSensitive,
+        ),
+      );
+    });
+  }
+
+  QueryBuilder<TicketEstadoModel, TicketEstadoModel, QAfterFilterCondition>
+  nameEndsWith(String value, {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.endsWith(
+          property: r'name',
+          value: value,
+          caseSensitive: caseSensitive,
+        ),
+      );
+    });
+  }
+
+  QueryBuilder<TicketEstadoModel, TicketEstadoModel, QAfterFilterCondition>
+  nameContains(String value, {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.contains(
+          property: r'name',
+          value: value,
+          caseSensitive: caseSensitive,
+        ),
+      );
+    });
+  }
+
+  QueryBuilder<TicketEstadoModel, TicketEstadoModel, QAfterFilterCondition>
+  nameMatches(String pattern, {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.matches(
+          property: r'name',
+          wildcard: pattern,
+          caseSensitive: caseSensitive,
+        ),
+      );
+    });
+  }
+
+  QueryBuilder<TicketEstadoModel, TicketEstadoModel, QAfterFilterCondition>
+  nameIsEmpty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.equalTo(property: r'name', value: ''),
+      );
+    });
+  }
+
+  QueryBuilder<TicketEstadoModel, TicketEstadoModel, QAfterFilterCondition>
+  nameIsNotEmpty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.greaterThan(property: r'name', value: ''),
+      );
+    });
+  }
+
+  QueryBuilder<TicketEstadoModel, TicketEstadoModel, QAfterFilterCondition>
+  updatedAtEqualTo(DateTime value) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.equalTo(property: r'updatedAt', value: value),
+      );
+    });
+  }
+
+  QueryBuilder<TicketEstadoModel, TicketEstadoModel, QAfterFilterCondition>
+  updatedAtGreaterThan(DateTime value, {bool include = false}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.greaterThan(
+          include: include,
+          property: r'updatedAt',
+          value: value,
+        ),
+      );
+    });
+  }
+
+  QueryBuilder<TicketEstadoModel, TicketEstadoModel, QAfterFilterCondition>
+  updatedAtLessThan(DateTime value, {bool include = false}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.lessThan(
+          include: include,
+          property: r'updatedAt',
+          value: value,
+        ),
+      );
+    });
+  }
+
+  QueryBuilder<TicketEstadoModel, TicketEstadoModel, QAfterFilterCondition>
+  updatedAtBetween(
+    DateTime lower,
+    DateTime upper, {
+    bool includeLower = true,
+    bool includeUpper = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.between(
+          property: r'updatedAt',
+          lower: lower,
+          includeLower: includeLower,
+          upper: upper,
+          includeUpper: includeUpper,
+        ),
+      );
+    });
+  }
+}
+
+extension TicketEstadoModelQueryObject
+    on QueryBuilder<TicketEstadoModel, TicketEstadoModel, QFilterCondition> {}
+
+extension TicketEstadoModelQueryLinks
+    on QueryBuilder<TicketEstadoModel, TicketEstadoModel, QFilterCondition> {}
+
+extension TicketEstadoModelQuerySortBy
+    on QueryBuilder<TicketEstadoModel, TicketEstadoModel, QSortBy> {
+  QueryBuilder<TicketEstadoModel, TicketEstadoModel, QAfterSortBy>
+  sortByBackendId() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'backendId', Sort.asc);
+    });
+  }
+
+  QueryBuilder<TicketEstadoModel, TicketEstadoModel, QAfterSortBy>
+  sortByBackendIdDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'backendId', Sort.desc);
+    });
+  }
+
+  QueryBuilder<TicketEstadoModel, TicketEstadoModel, QAfterSortBy>
+  sortByName() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'name', Sort.asc);
+    });
+  }
+
+  QueryBuilder<TicketEstadoModel, TicketEstadoModel, QAfterSortBy>
+  sortByNameDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'name', Sort.desc);
+    });
+  }
+
+  QueryBuilder<TicketEstadoModel, TicketEstadoModel, QAfterSortBy>
+  sortByUpdatedAt() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'updatedAt', Sort.asc);
+    });
+  }
+
+  QueryBuilder<TicketEstadoModel, TicketEstadoModel, QAfterSortBy>
+  sortByUpdatedAtDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'updatedAt', Sort.desc);
+    });
+  }
+}
+
+extension TicketEstadoModelQuerySortThenBy
+    on QueryBuilder<TicketEstadoModel, TicketEstadoModel, QSortThenBy> {
+  QueryBuilder<TicketEstadoModel, TicketEstadoModel, QAfterSortBy>
+  thenByBackendId() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'backendId', Sort.asc);
+    });
+  }
+
+  QueryBuilder<TicketEstadoModel, TicketEstadoModel, QAfterSortBy>
+  thenByBackendIdDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'backendId', Sort.desc);
+    });
+  }
+
+  QueryBuilder<TicketEstadoModel, TicketEstadoModel, QAfterSortBy> thenById() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'id', Sort.asc);
+    });
+  }
+
+  QueryBuilder<TicketEstadoModel, TicketEstadoModel, QAfterSortBy>
+  thenByIdDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'id', Sort.desc);
+    });
+  }
+
+  QueryBuilder<TicketEstadoModel, TicketEstadoModel, QAfterSortBy>
+  thenByName() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'name', Sort.asc);
+    });
+  }
+
+  QueryBuilder<TicketEstadoModel, TicketEstadoModel, QAfterSortBy>
+  thenByNameDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'name', Sort.desc);
+    });
+  }
+
+  QueryBuilder<TicketEstadoModel, TicketEstadoModel, QAfterSortBy>
+  thenByUpdatedAt() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'updatedAt', Sort.asc);
+    });
+  }
+
+  QueryBuilder<TicketEstadoModel, TicketEstadoModel, QAfterSortBy>
+  thenByUpdatedAtDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'updatedAt', Sort.desc);
+    });
+  }
+}
+
+extension TicketEstadoModelQueryWhereDistinct
+    on QueryBuilder<TicketEstadoModel, TicketEstadoModel, QDistinct> {
+  QueryBuilder<TicketEstadoModel, TicketEstadoModel, QDistinct>
+  distinctByBackendId() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addDistinctBy(r'backendId');
+    });
+  }
+
+  QueryBuilder<TicketEstadoModel, TicketEstadoModel, QDistinct> distinctByName({
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addDistinctBy(r'name', caseSensitive: caseSensitive);
+    });
+  }
+
+  QueryBuilder<TicketEstadoModel, TicketEstadoModel, QDistinct>
+  distinctByUpdatedAt() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addDistinctBy(r'updatedAt');
+    });
+  }
+}
+
+extension TicketEstadoModelQueryProperty
+    on QueryBuilder<TicketEstadoModel, TicketEstadoModel, QQueryProperty> {
+  QueryBuilder<TicketEstadoModel, int, QQueryOperations> idProperty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addPropertyName(r'id');
+    });
+  }
+
+  QueryBuilder<TicketEstadoModel, int, QQueryOperations> backendIdProperty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addPropertyName(r'backendId');
+    });
+  }
+
+  QueryBuilder<TicketEstadoModel, String, QQueryOperations> nameProperty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addPropertyName(r'name');
+    });
+  }
+
+  QueryBuilder<TicketEstadoModel, DateTime, QQueryOperations>
+  updatedAtProperty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addPropertyName(r'updatedAt');
+    });
+  }
+}
+
+// coverage:ignore-file
+// ignore_for_file: duplicate_ignore, non_constant_identifier_names, constant_identifier_names, invalid_use_of_protected_member, unnecessary_cast, prefer_const_constructors, lines_longer_than_80_chars, require_trailing_commas, inference_failure_on_function_invocation, unnecessary_parenthesis, unnecessary_raw_strings, unnecessary_null_checks, join_return_with_assignment, prefer_final_locals, avoid_js_rounded_ints, avoid_positional_boolean_parameters, always_specify_types
+
+extension GetTicketImportanciaModelCollection on Isar {
+  IsarCollection<TicketImportanciaModel> get ticketImportanciaModels =>
+      this.collection();
+}
+
+const TicketImportanciaModelSchema = CollectionSchema(
+  name: r'TicketImportanciaModel',
+  id: -4580341687382326998,
+  properties: {
+    r'backendId': PropertySchema(
+      id: 0,
+      name: r'backendId',
+      type: IsarType.long,
+    ),
+    r'name': PropertySchema(id: 1, name: r'name', type: IsarType.string),
+    r'updatedAt': PropertySchema(
+      id: 2,
+      name: r'updatedAt',
+      type: IsarType.dateTime,
+    ),
+  },
+
+  estimateSize: _ticketImportanciaModelEstimateSize,
+  serialize: _ticketImportanciaModelSerialize,
+  deserialize: _ticketImportanciaModelDeserialize,
+  deserializeProp: _ticketImportanciaModelDeserializeProp,
+  idName: r'id',
+  indexes: {
+    r'backendId': IndexSchema(
+      id: 8781752057772026410,
+      name: r'backendId',
+      unique: true,
+      replace: false,
+      properties: [
+        IndexPropertySchema(
+          name: r'backendId',
+          type: IndexType.value,
+          caseSensitive: false,
+        ),
+      ],
+    ),
+    r'name': IndexSchema(
+      id: 879695947855722453,
+      name: r'name',
+      unique: false,
+      replace: false,
+      properties: [
+        IndexPropertySchema(
+          name: r'name',
+          type: IndexType.hash,
+          caseSensitive: true,
+        ),
+      ],
+    ),
+  },
+  links: {},
+  embeddedSchemas: {},
+
+  getId: _ticketImportanciaModelGetId,
+  getLinks: _ticketImportanciaModelGetLinks,
+  attach: _ticketImportanciaModelAttach,
+  version: '3.3.0',
+);
+
+int _ticketImportanciaModelEstimateSize(
+  TicketImportanciaModel object,
+  List<int> offsets,
+  Map<Type, List<int>> allOffsets,
+) {
+  var bytesCount = offsets.last;
+  bytesCount += 3 + object.name.length * 3;
+  return bytesCount;
+}
+
+void _ticketImportanciaModelSerialize(
+  TicketImportanciaModel object,
+  IsarWriter writer,
+  List<int> offsets,
+  Map<Type, List<int>> allOffsets,
+) {
+  writer.writeLong(offsets[0], object.backendId);
+  writer.writeString(offsets[1], object.name);
+  writer.writeDateTime(offsets[2], object.updatedAt);
+}
+
+TicketImportanciaModel _ticketImportanciaModelDeserialize(
+  Id id,
+  IsarReader reader,
+  List<int> offsets,
+  Map<Type, List<int>> allOffsets,
+) {
+  final object = TicketImportanciaModel();
+  object.backendId = reader.readLong(offsets[0]);
+  object.id = id;
+  object.name = reader.readString(offsets[1]);
+  object.updatedAt = reader.readDateTime(offsets[2]);
+  return object;
+}
+
+P _ticketImportanciaModelDeserializeProp<P>(
+  IsarReader reader,
+  int propertyId,
+  int offset,
+  Map<Type, List<int>> allOffsets,
+) {
+  switch (propertyId) {
+    case 0:
+      return (reader.readLong(offset)) as P;
+    case 1:
+      return (reader.readString(offset)) as P;
+    case 2:
+      return (reader.readDateTime(offset)) as P;
+    default:
+      throw IsarError('Unknown property with id $propertyId');
+  }
+}
+
+Id _ticketImportanciaModelGetId(TicketImportanciaModel object) {
+  return object.id;
+}
+
+List<IsarLinkBase<dynamic>> _ticketImportanciaModelGetLinks(
+  TicketImportanciaModel object,
+) {
+  return [];
+}
+
+void _ticketImportanciaModelAttach(
+  IsarCollection<dynamic> col,
+  Id id,
+  TicketImportanciaModel object,
+) {
+  object.id = id;
+}
+
+extension TicketImportanciaModelByIndex
+    on IsarCollection<TicketImportanciaModel> {
+  Future<TicketImportanciaModel?> getByBackendId(int backendId) {
+    return getByIndex(r'backendId', [backendId]);
+  }
+
+  TicketImportanciaModel? getByBackendIdSync(int backendId) {
+    return getByIndexSync(r'backendId', [backendId]);
+  }
+
+  Future<bool> deleteByBackendId(int backendId) {
+    return deleteByIndex(r'backendId', [backendId]);
+  }
+
+  bool deleteByBackendIdSync(int backendId) {
+    return deleteByIndexSync(r'backendId', [backendId]);
+  }
+
+  Future<List<TicketImportanciaModel?>> getAllByBackendId(
+    List<int> backendIdValues,
+  ) {
+    final values = backendIdValues.map((e) => [e]).toList();
+    return getAllByIndex(r'backendId', values);
+  }
+
+  List<TicketImportanciaModel?> getAllByBackendIdSync(
+    List<int> backendIdValues,
+  ) {
+    final values = backendIdValues.map((e) => [e]).toList();
+    return getAllByIndexSync(r'backendId', values);
+  }
+
+  Future<int> deleteAllByBackendId(List<int> backendIdValues) {
+    final values = backendIdValues.map((e) => [e]).toList();
+    return deleteAllByIndex(r'backendId', values);
+  }
+
+  int deleteAllByBackendIdSync(List<int> backendIdValues) {
+    final values = backendIdValues.map((e) => [e]).toList();
+    return deleteAllByIndexSync(r'backendId', values);
+  }
+
+  Future<Id> putByBackendId(TicketImportanciaModel object) {
+    return putByIndex(r'backendId', object);
+  }
+
+  Id putByBackendIdSync(
+    TicketImportanciaModel object, {
+    bool saveLinks = true,
+  }) {
+    return putByIndexSync(r'backendId', object, saveLinks: saveLinks);
+  }
+
+  Future<List<Id>> putAllByBackendId(List<TicketImportanciaModel> objects) {
+    return putAllByIndex(r'backendId', objects);
+  }
+
+  List<Id> putAllByBackendIdSync(
+    List<TicketImportanciaModel> objects, {
+    bool saveLinks = true,
+  }) {
+    return putAllByIndexSync(r'backendId', objects, saveLinks: saveLinks);
+  }
+}
+
+extension TicketImportanciaModelQueryWhereSort
+    on QueryBuilder<TicketImportanciaModel, TicketImportanciaModel, QWhere> {
+  QueryBuilder<TicketImportanciaModel, TicketImportanciaModel, QAfterWhere>
+  anyId() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addWhereClause(const IdWhereClause.any());
+    });
+  }
+
+  QueryBuilder<TicketImportanciaModel, TicketImportanciaModel, QAfterWhere>
+  anyBackendId() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addWhereClause(
+        const IndexWhereClause.any(indexName: r'backendId'),
+      );
+    });
+  }
+}
+
+extension TicketImportanciaModelQueryWhere
+    on
+        QueryBuilder<
+          TicketImportanciaModel,
+          TicketImportanciaModel,
+          QWhereClause
+        > {
+  QueryBuilder<
+    TicketImportanciaModel,
+    TicketImportanciaModel,
+    QAfterWhereClause
+  >
+  idEqualTo(Id id) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addWhereClause(IdWhereClause.between(lower: id, upper: id));
+    });
+  }
+
+  QueryBuilder<
+    TicketImportanciaModel,
+    TicketImportanciaModel,
+    QAfterWhereClause
+  >
+  idNotEqualTo(Id id) {
+    return QueryBuilder.apply(this, (query) {
+      if (query.whereSort == Sort.asc) {
+        return query
+            .addWhereClause(
+              IdWhereClause.lessThan(upper: id, includeUpper: false),
+            )
+            .addWhereClause(
+              IdWhereClause.greaterThan(lower: id, includeLower: false),
+            );
+      } else {
+        return query
+            .addWhereClause(
+              IdWhereClause.greaterThan(lower: id, includeLower: false),
+            )
+            .addWhereClause(
+              IdWhereClause.lessThan(upper: id, includeUpper: false),
+            );
+      }
+    });
+  }
+
+  QueryBuilder<
+    TicketImportanciaModel,
+    TicketImportanciaModel,
+    QAfterWhereClause
+  >
+  idGreaterThan(Id id, {bool include = false}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addWhereClause(
+        IdWhereClause.greaterThan(lower: id, includeLower: include),
+      );
+    });
+  }
+
+  QueryBuilder<
+    TicketImportanciaModel,
+    TicketImportanciaModel,
+    QAfterWhereClause
+  >
+  idLessThan(Id id, {bool include = false}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addWhereClause(
+        IdWhereClause.lessThan(upper: id, includeUpper: include),
+      );
+    });
+  }
+
+  QueryBuilder<
+    TicketImportanciaModel,
+    TicketImportanciaModel,
+    QAfterWhereClause
+  >
+  idBetween(
+    Id lowerId,
+    Id upperId, {
+    bool includeLower = true,
+    bool includeUpper = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addWhereClause(
+        IdWhereClause.between(
+          lower: lowerId,
+          includeLower: includeLower,
+          upper: upperId,
+          includeUpper: includeUpper,
+        ),
+      );
+    });
+  }
+
+  QueryBuilder<
+    TicketImportanciaModel,
+    TicketImportanciaModel,
+    QAfterWhereClause
+  >
+  backendIdEqualTo(int backendId) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addWhereClause(
+        IndexWhereClause.equalTo(indexName: r'backendId', value: [backendId]),
+      );
+    });
+  }
+
+  QueryBuilder<
+    TicketImportanciaModel,
+    TicketImportanciaModel,
+    QAfterWhereClause
+  >
+  backendIdNotEqualTo(int backendId) {
+    return QueryBuilder.apply(this, (query) {
+      if (query.whereSort == Sort.asc) {
+        return query
+            .addWhereClause(
+              IndexWhereClause.between(
+                indexName: r'backendId',
+                lower: [],
+                upper: [backendId],
+                includeUpper: false,
+              ),
+            )
+            .addWhereClause(
+              IndexWhereClause.between(
+                indexName: r'backendId',
+                lower: [backendId],
+                includeLower: false,
+                upper: [],
+              ),
+            );
+      } else {
+        return query
+            .addWhereClause(
+              IndexWhereClause.between(
+                indexName: r'backendId',
+                lower: [backendId],
+                includeLower: false,
+                upper: [],
+              ),
+            )
+            .addWhereClause(
+              IndexWhereClause.between(
+                indexName: r'backendId',
+                lower: [],
+                upper: [backendId],
+                includeUpper: false,
+              ),
+            );
+      }
+    });
+  }
+
+  QueryBuilder<
+    TicketImportanciaModel,
+    TicketImportanciaModel,
+    QAfterWhereClause
+  >
+  backendIdGreaterThan(int backendId, {bool include = false}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addWhereClause(
+        IndexWhereClause.between(
+          indexName: r'backendId',
+          lower: [backendId],
+          includeLower: include,
+          upper: [],
+        ),
+      );
+    });
+  }
+
+  QueryBuilder<
+    TicketImportanciaModel,
+    TicketImportanciaModel,
+    QAfterWhereClause
+  >
+  backendIdLessThan(int backendId, {bool include = false}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addWhereClause(
+        IndexWhereClause.between(
+          indexName: r'backendId',
+          lower: [],
+          upper: [backendId],
+          includeUpper: include,
+        ),
+      );
+    });
+  }
+
+  QueryBuilder<
+    TicketImportanciaModel,
+    TicketImportanciaModel,
+    QAfterWhereClause
+  >
+  backendIdBetween(
+    int lowerBackendId,
+    int upperBackendId, {
+    bool includeLower = true,
+    bool includeUpper = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addWhereClause(
+        IndexWhereClause.between(
+          indexName: r'backendId',
+          lower: [lowerBackendId],
+          includeLower: includeLower,
+          upper: [upperBackendId],
+          includeUpper: includeUpper,
+        ),
+      );
+    });
+  }
+
+  QueryBuilder<
+    TicketImportanciaModel,
+    TicketImportanciaModel,
+    QAfterWhereClause
+  >
+  nameEqualTo(String name) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addWhereClause(
+        IndexWhereClause.equalTo(indexName: r'name', value: [name]),
+      );
+    });
+  }
+
+  QueryBuilder<
+    TicketImportanciaModel,
+    TicketImportanciaModel,
+    QAfterWhereClause
+  >
+  nameNotEqualTo(String name) {
+    return QueryBuilder.apply(this, (query) {
+      if (query.whereSort == Sort.asc) {
+        return query
+            .addWhereClause(
+              IndexWhereClause.between(
+                indexName: r'name',
+                lower: [],
+                upper: [name],
+                includeUpper: false,
+              ),
+            )
+            .addWhereClause(
+              IndexWhereClause.between(
+                indexName: r'name',
+                lower: [name],
+                includeLower: false,
+                upper: [],
+              ),
+            );
+      } else {
+        return query
+            .addWhereClause(
+              IndexWhereClause.between(
+                indexName: r'name',
+                lower: [name],
+                includeLower: false,
+                upper: [],
+              ),
+            )
+            .addWhereClause(
+              IndexWhereClause.between(
+                indexName: r'name',
+                lower: [],
+                upper: [name],
+                includeUpper: false,
+              ),
+            );
+      }
+    });
+  }
+}
+
+extension TicketImportanciaModelQueryFilter
+    on
+        QueryBuilder<
+          TicketImportanciaModel,
+          TicketImportanciaModel,
+          QFilterCondition
+        > {
+  QueryBuilder<
+    TicketImportanciaModel,
+    TicketImportanciaModel,
+    QAfterFilterCondition
+  >
+  backendIdEqualTo(int value) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.equalTo(property: r'backendId', value: value),
+      );
+    });
+  }
+
+  QueryBuilder<
+    TicketImportanciaModel,
+    TicketImportanciaModel,
+    QAfterFilterCondition
+  >
+  backendIdGreaterThan(int value, {bool include = false}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.greaterThan(
+          include: include,
+          property: r'backendId',
+          value: value,
+        ),
+      );
+    });
+  }
+
+  QueryBuilder<
+    TicketImportanciaModel,
+    TicketImportanciaModel,
+    QAfterFilterCondition
+  >
+  backendIdLessThan(int value, {bool include = false}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.lessThan(
+          include: include,
+          property: r'backendId',
+          value: value,
+        ),
+      );
+    });
+  }
+
+  QueryBuilder<
+    TicketImportanciaModel,
+    TicketImportanciaModel,
+    QAfterFilterCondition
+  >
+  backendIdBetween(
+    int lower,
+    int upper, {
+    bool includeLower = true,
+    bool includeUpper = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.between(
+          property: r'backendId',
+          lower: lower,
+          includeLower: includeLower,
+          upper: upper,
+          includeUpper: includeUpper,
+        ),
+      );
+    });
+  }
+
+  QueryBuilder<
+    TicketImportanciaModel,
+    TicketImportanciaModel,
+    QAfterFilterCondition
+  >
+  idEqualTo(Id value) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.equalTo(property: r'id', value: value),
+      );
+    });
+  }
+
+  QueryBuilder<
+    TicketImportanciaModel,
+    TicketImportanciaModel,
+    QAfterFilterCondition
+  >
+  idGreaterThan(Id value, {bool include = false}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.greaterThan(
+          include: include,
+          property: r'id',
+          value: value,
+        ),
+      );
+    });
+  }
+
+  QueryBuilder<
+    TicketImportanciaModel,
+    TicketImportanciaModel,
+    QAfterFilterCondition
+  >
+  idLessThan(Id value, {bool include = false}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.lessThan(
+          include: include,
+          property: r'id',
+          value: value,
+        ),
+      );
+    });
+  }
+
+  QueryBuilder<
+    TicketImportanciaModel,
+    TicketImportanciaModel,
+    QAfterFilterCondition
+  >
+  idBetween(
+    Id lower,
+    Id upper, {
+    bool includeLower = true,
+    bool includeUpper = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.between(
+          property: r'id',
+          lower: lower,
+          includeLower: includeLower,
+          upper: upper,
+          includeUpper: includeUpper,
+        ),
+      );
+    });
+  }
+
+  QueryBuilder<
+    TicketImportanciaModel,
+    TicketImportanciaModel,
+    QAfterFilterCondition
+  >
+  nameEqualTo(String value, {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.equalTo(
+          property: r'name',
+          value: value,
+          caseSensitive: caseSensitive,
+        ),
+      );
+    });
+  }
+
+  QueryBuilder<
+    TicketImportanciaModel,
+    TicketImportanciaModel,
+    QAfterFilterCondition
+  >
+  nameGreaterThan(
+    String value, {
+    bool include = false,
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.greaterThan(
+          include: include,
+          property: r'name',
+          value: value,
+          caseSensitive: caseSensitive,
+        ),
+      );
+    });
+  }
+
+  QueryBuilder<
+    TicketImportanciaModel,
+    TicketImportanciaModel,
+    QAfterFilterCondition
+  >
+  nameLessThan(
+    String value, {
+    bool include = false,
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.lessThan(
+          include: include,
+          property: r'name',
+          value: value,
+          caseSensitive: caseSensitive,
+        ),
+      );
+    });
+  }
+
+  QueryBuilder<
+    TicketImportanciaModel,
+    TicketImportanciaModel,
+    QAfterFilterCondition
+  >
+  nameBetween(
+    String lower,
+    String upper, {
+    bool includeLower = true,
+    bool includeUpper = true,
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.between(
+          property: r'name',
+          lower: lower,
+          includeLower: includeLower,
+          upper: upper,
+          includeUpper: includeUpper,
+          caseSensitive: caseSensitive,
+        ),
+      );
+    });
+  }
+
+  QueryBuilder<
+    TicketImportanciaModel,
+    TicketImportanciaModel,
+    QAfterFilterCondition
+  >
+  nameStartsWith(String value, {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.startsWith(
+          property: r'name',
+          value: value,
+          caseSensitive: caseSensitive,
+        ),
+      );
+    });
+  }
+
+  QueryBuilder<
+    TicketImportanciaModel,
+    TicketImportanciaModel,
+    QAfterFilterCondition
+  >
+  nameEndsWith(String value, {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.endsWith(
+          property: r'name',
+          value: value,
+          caseSensitive: caseSensitive,
+        ),
+      );
+    });
+  }
+
+  QueryBuilder<
+    TicketImportanciaModel,
+    TicketImportanciaModel,
+    QAfterFilterCondition
+  >
+  nameContains(String value, {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.contains(
+          property: r'name',
+          value: value,
+          caseSensitive: caseSensitive,
+        ),
+      );
+    });
+  }
+
+  QueryBuilder<
+    TicketImportanciaModel,
+    TicketImportanciaModel,
+    QAfterFilterCondition
+  >
+  nameMatches(String pattern, {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.matches(
+          property: r'name',
+          wildcard: pattern,
+          caseSensitive: caseSensitive,
+        ),
+      );
+    });
+  }
+
+  QueryBuilder<
+    TicketImportanciaModel,
+    TicketImportanciaModel,
+    QAfterFilterCondition
+  >
+  nameIsEmpty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.equalTo(property: r'name', value: ''),
+      );
+    });
+  }
+
+  QueryBuilder<
+    TicketImportanciaModel,
+    TicketImportanciaModel,
+    QAfterFilterCondition
+  >
+  nameIsNotEmpty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.greaterThan(property: r'name', value: ''),
+      );
+    });
+  }
+
+  QueryBuilder<
+    TicketImportanciaModel,
+    TicketImportanciaModel,
+    QAfterFilterCondition
+  >
+  updatedAtEqualTo(DateTime value) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.equalTo(property: r'updatedAt', value: value),
+      );
+    });
+  }
+
+  QueryBuilder<
+    TicketImportanciaModel,
+    TicketImportanciaModel,
+    QAfterFilterCondition
+  >
+  updatedAtGreaterThan(DateTime value, {bool include = false}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.greaterThan(
+          include: include,
+          property: r'updatedAt',
+          value: value,
+        ),
+      );
+    });
+  }
+
+  QueryBuilder<
+    TicketImportanciaModel,
+    TicketImportanciaModel,
+    QAfterFilterCondition
+  >
+  updatedAtLessThan(DateTime value, {bool include = false}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.lessThan(
+          include: include,
+          property: r'updatedAt',
+          value: value,
+        ),
+      );
+    });
+  }
+
+  QueryBuilder<
+    TicketImportanciaModel,
+    TicketImportanciaModel,
+    QAfterFilterCondition
+  >
+  updatedAtBetween(
+    DateTime lower,
+    DateTime upper, {
+    bool includeLower = true,
+    bool includeUpper = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.between(
+          property: r'updatedAt',
+          lower: lower,
+          includeLower: includeLower,
+          upper: upper,
+          includeUpper: includeUpper,
+        ),
+      );
+    });
+  }
+}
+
+extension TicketImportanciaModelQueryObject
+    on
+        QueryBuilder<
+          TicketImportanciaModel,
+          TicketImportanciaModel,
+          QFilterCondition
+        > {}
+
+extension TicketImportanciaModelQueryLinks
+    on
+        QueryBuilder<
+          TicketImportanciaModel,
+          TicketImportanciaModel,
+          QFilterCondition
+        > {}
+
+extension TicketImportanciaModelQuerySortBy
+    on QueryBuilder<TicketImportanciaModel, TicketImportanciaModel, QSortBy> {
+  QueryBuilder<TicketImportanciaModel, TicketImportanciaModel, QAfterSortBy>
+  sortByBackendId() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'backendId', Sort.asc);
+    });
+  }
+
+  QueryBuilder<TicketImportanciaModel, TicketImportanciaModel, QAfterSortBy>
+  sortByBackendIdDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'backendId', Sort.desc);
+    });
+  }
+
+  QueryBuilder<TicketImportanciaModel, TicketImportanciaModel, QAfterSortBy>
+  sortByName() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'name', Sort.asc);
+    });
+  }
+
+  QueryBuilder<TicketImportanciaModel, TicketImportanciaModel, QAfterSortBy>
+  sortByNameDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'name', Sort.desc);
+    });
+  }
+
+  QueryBuilder<TicketImportanciaModel, TicketImportanciaModel, QAfterSortBy>
+  sortByUpdatedAt() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'updatedAt', Sort.asc);
+    });
+  }
+
+  QueryBuilder<TicketImportanciaModel, TicketImportanciaModel, QAfterSortBy>
+  sortByUpdatedAtDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'updatedAt', Sort.desc);
+    });
+  }
+}
+
+extension TicketImportanciaModelQuerySortThenBy
+    on
+        QueryBuilder<
+          TicketImportanciaModel,
+          TicketImportanciaModel,
+          QSortThenBy
+        > {
+  QueryBuilder<TicketImportanciaModel, TicketImportanciaModel, QAfterSortBy>
+  thenByBackendId() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'backendId', Sort.asc);
+    });
+  }
+
+  QueryBuilder<TicketImportanciaModel, TicketImportanciaModel, QAfterSortBy>
+  thenByBackendIdDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'backendId', Sort.desc);
+    });
+  }
+
+  QueryBuilder<TicketImportanciaModel, TicketImportanciaModel, QAfterSortBy>
+  thenById() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'id', Sort.asc);
+    });
+  }
+
+  QueryBuilder<TicketImportanciaModel, TicketImportanciaModel, QAfterSortBy>
+  thenByIdDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'id', Sort.desc);
+    });
+  }
+
+  QueryBuilder<TicketImportanciaModel, TicketImportanciaModel, QAfterSortBy>
+  thenByName() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'name', Sort.asc);
+    });
+  }
+
+  QueryBuilder<TicketImportanciaModel, TicketImportanciaModel, QAfterSortBy>
+  thenByNameDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'name', Sort.desc);
+    });
+  }
+
+  QueryBuilder<TicketImportanciaModel, TicketImportanciaModel, QAfterSortBy>
+  thenByUpdatedAt() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'updatedAt', Sort.asc);
+    });
+  }
+
+  QueryBuilder<TicketImportanciaModel, TicketImportanciaModel, QAfterSortBy>
+  thenByUpdatedAtDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'updatedAt', Sort.desc);
+    });
+  }
+}
+
+extension TicketImportanciaModelQueryWhereDistinct
+    on QueryBuilder<TicketImportanciaModel, TicketImportanciaModel, QDistinct> {
+  QueryBuilder<TicketImportanciaModel, TicketImportanciaModel, QDistinct>
+  distinctByBackendId() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addDistinctBy(r'backendId');
+    });
+  }
+
+  QueryBuilder<TicketImportanciaModel, TicketImportanciaModel, QDistinct>
+  distinctByName({bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addDistinctBy(r'name', caseSensitive: caseSensitive);
+    });
+  }
+
+  QueryBuilder<TicketImportanciaModel, TicketImportanciaModel, QDistinct>
+  distinctByUpdatedAt() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addDistinctBy(r'updatedAt');
+    });
+  }
+}
+
+extension TicketImportanciaModelQueryProperty
+    on
+        QueryBuilder<
+          TicketImportanciaModel,
+          TicketImportanciaModel,
+          QQueryProperty
+        > {
+  QueryBuilder<TicketImportanciaModel, int, QQueryOperations> idProperty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addPropertyName(r'id');
+    });
+  }
+
+  QueryBuilder<TicketImportanciaModel, int, QQueryOperations>
+  backendIdProperty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addPropertyName(r'backendId');
+    });
+  }
+
+  QueryBuilder<TicketImportanciaModel, String, QQueryOperations>
+  nameProperty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addPropertyName(r'name');
+    });
+  }
+
+  QueryBuilder<TicketImportanciaModel, DateTime, QQueryOperations>
+  updatedAtProperty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addPropertyName(r'updatedAt');
+    });
+  }
+}
+
+// coverage:ignore-file
+// ignore_for_file: duplicate_ignore, non_constant_identifier_names, constant_identifier_names, invalid_use_of_protected_member, unnecessary_cast, prefer_const_constructors, lines_longer_than_80_chars, require_trailing_commas, inference_failure_on_function_invocation, unnecessary_parenthesis, unnecessary_raw_strings, unnecessary_null_checks, join_return_with_assignment, prefer_final_locals, avoid_js_rounded_ints, avoid_positional_boolean_parameters, always_specify_types
+
+extension GetTicketUrgenciaModelCollection on Isar {
+  IsarCollection<TicketUrgenciaModel> get ticketUrgenciaModels =>
+      this.collection();
+}
+
+const TicketUrgenciaModelSchema = CollectionSchema(
+  name: r'TicketUrgenciaModel',
+  id: 6117412044372669523,
+  properties: {
+    r'backendId': PropertySchema(
+      id: 0,
+      name: r'backendId',
+      type: IsarType.long,
+    ),
+    r'name': PropertySchema(id: 1, name: r'name', type: IsarType.string),
+    r'updatedAt': PropertySchema(
+      id: 2,
+      name: r'updatedAt',
+      type: IsarType.dateTime,
+    ),
+  },
+
+  estimateSize: _ticketUrgenciaModelEstimateSize,
+  serialize: _ticketUrgenciaModelSerialize,
+  deserialize: _ticketUrgenciaModelDeserialize,
+  deserializeProp: _ticketUrgenciaModelDeserializeProp,
+  idName: r'id',
+  indexes: {
+    r'backendId': IndexSchema(
+      id: 8781752057772026410,
+      name: r'backendId',
+      unique: true,
+      replace: false,
+      properties: [
+        IndexPropertySchema(
+          name: r'backendId',
+          type: IndexType.value,
+          caseSensitive: false,
+        ),
+      ],
+    ),
+    r'name': IndexSchema(
+      id: 879695947855722453,
+      name: r'name',
+      unique: false,
+      replace: false,
+      properties: [
+        IndexPropertySchema(
+          name: r'name',
+          type: IndexType.hash,
+          caseSensitive: true,
+        ),
+      ],
+    ),
+  },
+  links: {},
+  embeddedSchemas: {},
+
+  getId: _ticketUrgenciaModelGetId,
+  getLinks: _ticketUrgenciaModelGetLinks,
+  attach: _ticketUrgenciaModelAttach,
+  version: '3.3.0',
+);
+
+int _ticketUrgenciaModelEstimateSize(
+  TicketUrgenciaModel object,
+  List<int> offsets,
+  Map<Type, List<int>> allOffsets,
+) {
+  var bytesCount = offsets.last;
+  bytesCount += 3 + object.name.length * 3;
+  return bytesCount;
+}
+
+void _ticketUrgenciaModelSerialize(
+  TicketUrgenciaModel object,
+  IsarWriter writer,
+  List<int> offsets,
+  Map<Type, List<int>> allOffsets,
+) {
+  writer.writeLong(offsets[0], object.backendId);
+  writer.writeString(offsets[1], object.name);
+  writer.writeDateTime(offsets[2], object.updatedAt);
+}
+
+TicketUrgenciaModel _ticketUrgenciaModelDeserialize(
+  Id id,
+  IsarReader reader,
+  List<int> offsets,
+  Map<Type, List<int>> allOffsets,
+) {
+  final object = TicketUrgenciaModel();
+  object.backendId = reader.readLong(offsets[0]);
+  object.id = id;
+  object.name = reader.readString(offsets[1]);
+  object.updatedAt = reader.readDateTime(offsets[2]);
+  return object;
+}
+
+P _ticketUrgenciaModelDeserializeProp<P>(
+  IsarReader reader,
+  int propertyId,
+  int offset,
+  Map<Type, List<int>> allOffsets,
+) {
+  switch (propertyId) {
+    case 0:
+      return (reader.readLong(offset)) as P;
+    case 1:
+      return (reader.readString(offset)) as P;
+    case 2:
+      return (reader.readDateTime(offset)) as P;
+    default:
+      throw IsarError('Unknown property with id $propertyId');
+  }
+}
+
+Id _ticketUrgenciaModelGetId(TicketUrgenciaModel object) {
+  return object.id;
+}
+
+List<IsarLinkBase<dynamic>> _ticketUrgenciaModelGetLinks(
+  TicketUrgenciaModel object,
+) {
+  return [];
+}
+
+void _ticketUrgenciaModelAttach(
+  IsarCollection<dynamic> col,
+  Id id,
+  TicketUrgenciaModel object,
+) {
+  object.id = id;
+}
+
+extension TicketUrgenciaModelByIndex on IsarCollection<TicketUrgenciaModel> {
+  Future<TicketUrgenciaModel?> getByBackendId(int backendId) {
+    return getByIndex(r'backendId', [backendId]);
+  }
+
+  TicketUrgenciaModel? getByBackendIdSync(int backendId) {
+    return getByIndexSync(r'backendId', [backendId]);
+  }
+
+  Future<bool> deleteByBackendId(int backendId) {
+    return deleteByIndex(r'backendId', [backendId]);
+  }
+
+  bool deleteByBackendIdSync(int backendId) {
+    return deleteByIndexSync(r'backendId', [backendId]);
+  }
+
+  Future<List<TicketUrgenciaModel?>> getAllByBackendId(
+    List<int> backendIdValues,
+  ) {
+    final values = backendIdValues.map((e) => [e]).toList();
+    return getAllByIndex(r'backendId', values);
+  }
+
+  List<TicketUrgenciaModel?> getAllByBackendIdSync(List<int> backendIdValues) {
+    final values = backendIdValues.map((e) => [e]).toList();
+    return getAllByIndexSync(r'backendId', values);
+  }
+
+  Future<int> deleteAllByBackendId(List<int> backendIdValues) {
+    final values = backendIdValues.map((e) => [e]).toList();
+    return deleteAllByIndex(r'backendId', values);
+  }
+
+  int deleteAllByBackendIdSync(List<int> backendIdValues) {
+    final values = backendIdValues.map((e) => [e]).toList();
+    return deleteAllByIndexSync(r'backendId', values);
+  }
+
+  Future<Id> putByBackendId(TicketUrgenciaModel object) {
+    return putByIndex(r'backendId', object);
+  }
+
+  Id putByBackendIdSync(TicketUrgenciaModel object, {bool saveLinks = true}) {
+    return putByIndexSync(r'backendId', object, saveLinks: saveLinks);
+  }
+
+  Future<List<Id>> putAllByBackendId(List<TicketUrgenciaModel> objects) {
+    return putAllByIndex(r'backendId', objects);
+  }
+
+  List<Id> putAllByBackendIdSync(
+    List<TicketUrgenciaModel> objects, {
+    bool saveLinks = true,
+  }) {
+    return putAllByIndexSync(r'backendId', objects, saveLinks: saveLinks);
+  }
+}
+
+extension TicketUrgenciaModelQueryWhereSort
+    on QueryBuilder<TicketUrgenciaModel, TicketUrgenciaModel, QWhere> {
+  QueryBuilder<TicketUrgenciaModel, TicketUrgenciaModel, QAfterWhere> anyId() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addWhereClause(const IdWhereClause.any());
+    });
+  }
+
+  QueryBuilder<TicketUrgenciaModel, TicketUrgenciaModel, QAfterWhere>
+  anyBackendId() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addWhereClause(
+        const IndexWhereClause.any(indexName: r'backendId'),
+      );
+    });
+  }
+}
+
+extension TicketUrgenciaModelQueryWhere
+    on QueryBuilder<TicketUrgenciaModel, TicketUrgenciaModel, QWhereClause> {
+  QueryBuilder<TicketUrgenciaModel, TicketUrgenciaModel, QAfterWhereClause>
+  idEqualTo(Id id) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addWhereClause(IdWhereClause.between(lower: id, upper: id));
+    });
+  }
+
+  QueryBuilder<TicketUrgenciaModel, TicketUrgenciaModel, QAfterWhereClause>
+  idNotEqualTo(Id id) {
+    return QueryBuilder.apply(this, (query) {
+      if (query.whereSort == Sort.asc) {
+        return query
+            .addWhereClause(
+              IdWhereClause.lessThan(upper: id, includeUpper: false),
+            )
+            .addWhereClause(
+              IdWhereClause.greaterThan(lower: id, includeLower: false),
+            );
+      } else {
+        return query
+            .addWhereClause(
+              IdWhereClause.greaterThan(lower: id, includeLower: false),
+            )
+            .addWhereClause(
+              IdWhereClause.lessThan(upper: id, includeUpper: false),
+            );
+      }
+    });
+  }
+
+  QueryBuilder<TicketUrgenciaModel, TicketUrgenciaModel, QAfterWhereClause>
+  idGreaterThan(Id id, {bool include = false}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addWhereClause(
+        IdWhereClause.greaterThan(lower: id, includeLower: include),
+      );
+    });
+  }
+
+  QueryBuilder<TicketUrgenciaModel, TicketUrgenciaModel, QAfterWhereClause>
+  idLessThan(Id id, {bool include = false}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addWhereClause(
+        IdWhereClause.lessThan(upper: id, includeUpper: include),
+      );
+    });
+  }
+
+  QueryBuilder<TicketUrgenciaModel, TicketUrgenciaModel, QAfterWhereClause>
+  idBetween(
+    Id lowerId,
+    Id upperId, {
+    bool includeLower = true,
+    bool includeUpper = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addWhereClause(
+        IdWhereClause.between(
+          lower: lowerId,
+          includeLower: includeLower,
+          upper: upperId,
+          includeUpper: includeUpper,
+        ),
+      );
+    });
+  }
+
+  QueryBuilder<TicketUrgenciaModel, TicketUrgenciaModel, QAfterWhereClause>
+  backendIdEqualTo(int backendId) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addWhereClause(
+        IndexWhereClause.equalTo(indexName: r'backendId', value: [backendId]),
+      );
+    });
+  }
+
+  QueryBuilder<TicketUrgenciaModel, TicketUrgenciaModel, QAfterWhereClause>
+  backendIdNotEqualTo(int backendId) {
+    return QueryBuilder.apply(this, (query) {
+      if (query.whereSort == Sort.asc) {
+        return query
+            .addWhereClause(
+              IndexWhereClause.between(
+                indexName: r'backendId',
+                lower: [],
+                upper: [backendId],
+                includeUpper: false,
+              ),
+            )
+            .addWhereClause(
+              IndexWhereClause.between(
+                indexName: r'backendId',
+                lower: [backendId],
+                includeLower: false,
+                upper: [],
+              ),
+            );
+      } else {
+        return query
+            .addWhereClause(
+              IndexWhereClause.between(
+                indexName: r'backendId',
+                lower: [backendId],
+                includeLower: false,
+                upper: [],
+              ),
+            )
+            .addWhereClause(
+              IndexWhereClause.between(
+                indexName: r'backendId',
+                lower: [],
+                upper: [backendId],
+                includeUpper: false,
+              ),
+            );
+      }
+    });
+  }
+
+  QueryBuilder<TicketUrgenciaModel, TicketUrgenciaModel, QAfterWhereClause>
+  backendIdGreaterThan(int backendId, {bool include = false}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addWhereClause(
+        IndexWhereClause.between(
+          indexName: r'backendId',
+          lower: [backendId],
+          includeLower: include,
+          upper: [],
+        ),
+      );
+    });
+  }
+
+  QueryBuilder<TicketUrgenciaModel, TicketUrgenciaModel, QAfterWhereClause>
+  backendIdLessThan(int backendId, {bool include = false}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addWhereClause(
+        IndexWhereClause.between(
+          indexName: r'backendId',
+          lower: [],
+          upper: [backendId],
+          includeUpper: include,
+        ),
+      );
+    });
+  }
+
+  QueryBuilder<TicketUrgenciaModel, TicketUrgenciaModel, QAfterWhereClause>
+  backendIdBetween(
+    int lowerBackendId,
+    int upperBackendId, {
+    bool includeLower = true,
+    bool includeUpper = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addWhereClause(
+        IndexWhereClause.between(
+          indexName: r'backendId',
+          lower: [lowerBackendId],
+          includeLower: includeLower,
+          upper: [upperBackendId],
+          includeUpper: includeUpper,
+        ),
+      );
+    });
+  }
+
+  QueryBuilder<TicketUrgenciaModel, TicketUrgenciaModel, QAfterWhereClause>
+  nameEqualTo(String name) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addWhereClause(
+        IndexWhereClause.equalTo(indexName: r'name', value: [name]),
+      );
+    });
+  }
+
+  QueryBuilder<TicketUrgenciaModel, TicketUrgenciaModel, QAfterWhereClause>
+  nameNotEqualTo(String name) {
+    return QueryBuilder.apply(this, (query) {
+      if (query.whereSort == Sort.asc) {
+        return query
+            .addWhereClause(
+              IndexWhereClause.between(
+                indexName: r'name',
+                lower: [],
+                upper: [name],
+                includeUpper: false,
+              ),
+            )
+            .addWhereClause(
+              IndexWhereClause.between(
+                indexName: r'name',
+                lower: [name],
+                includeLower: false,
+                upper: [],
+              ),
+            );
+      } else {
+        return query
+            .addWhereClause(
+              IndexWhereClause.between(
+                indexName: r'name',
+                lower: [name],
+                includeLower: false,
+                upper: [],
+              ),
+            )
+            .addWhereClause(
+              IndexWhereClause.between(
+                indexName: r'name',
+                lower: [],
+                upper: [name],
+                includeUpper: false,
+              ),
+            );
+      }
+    });
+  }
+}
+
+extension TicketUrgenciaModelQueryFilter
+    on
+        QueryBuilder<
+          TicketUrgenciaModel,
+          TicketUrgenciaModel,
+          QFilterCondition
+        > {
+  QueryBuilder<TicketUrgenciaModel, TicketUrgenciaModel, QAfterFilterCondition>
+  backendIdEqualTo(int value) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.equalTo(property: r'backendId', value: value),
+      );
+    });
+  }
+
+  QueryBuilder<TicketUrgenciaModel, TicketUrgenciaModel, QAfterFilterCondition>
+  backendIdGreaterThan(int value, {bool include = false}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.greaterThan(
+          include: include,
+          property: r'backendId',
+          value: value,
+        ),
+      );
+    });
+  }
+
+  QueryBuilder<TicketUrgenciaModel, TicketUrgenciaModel, QAfterFilterCondition>
+  backendIdLessThan(int value, {bool include = false}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.lessThan(
+          include: include,
+          property: r'backendId',
+          value: value,
+        ),
+      );
+    });
+  }
+
+  QueryBuilder<TicketUrgenciaModel, TicketUrgenciaModel, QAfterFilterCondition>
+  backendIdBetween(
+    int lower,
+    int upper, {
+    bool includeLower = true,
+    bool includeUpper = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.between(
+          property: r'backendId',
+          lower: lower,
+          includeLower: includeLower,
+          upper: upper,
+          includeUpper: includeUpper,
+        ),
+      );
+    });
+  }
+
+  QueryBuilder<TicketUrgenciaModel, TicketUrgenciaModel, QAfterFilterCondition>
+  idEqualTo(Id value) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.equalTo(property: r'id', value: value),
+      );
+    });
+  }
+
+  QueryBuilder<TicketUrgenciaModel, TicketUrgenciaModel, QAfterFilterCondition>
+  idGreaterThan(Id value, {bool include = false}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.greaterThan(
+          include: include,
+          property: r'id',
+          value: value,
+        ),
+      );
+    });
+  }
+
+  QueryBuilder<TicketUrgenciaModel, TicketUrgenciaModel, QAfterFilterCondition>
+  idLessThan(Id value, {bool include = false}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.lessThan(
+          include: include,
+          property: r'id',
+          value: value,
+        ),
+      );
+    });
+  }
+
+  QueryBuilder<TicketUrgenciaModel, TicketUrgenciaModel, QAfterFilterCondition>
+  idBetween(
+    Id lower,
+    Id upper, {
+    bool includeLower = true,
+    bool includeUpper = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.between(
+          property: r'id',
+          lower: lower,
+          includeLower: includeLower,
+          upper: upper,
+          includeUpper: includeUpper,
+        ),
+      );
+    });
+  }
+
+  QueryBuilder<TicketUrgenciaModel, TicketUrgenciaModel, QAfterFilterCondition>
+  nameEqualTo(String value, {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.equalTo(
+          property: r'name',
+          value: value,
+          caseSensitive: caseSensitive,
+        ),
+      );
+    });
+  }
+
+  QueryBuilder<TicketUrgenciaModel, TicketUrgenciaModel, QAfterFilterCondition>
+  nameGreaterThan(
+    String value, {
+    bool include = false,
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.greaterThan(
+          include: include,
+          property: r'name',
+          value: value,
+          caseSensitive: caseSensitive,
+        ),
+      );
+    });
+  }
+
+  QueryBuilder<TicketUrgenciaModel, TicketUrgenciaModel, QAfterFilterCondition>
+  nameLessThan(
+    String value, {
+    bool include = false,
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.lessThan(
+          include: include,
+          property: r'name',
+          value: value,
+          caseSensitive: caseSensitive,
+        ),
+      );
+    });
+  }
+
+  QueryBuilder<TicketUrgenciaModel, TicketUrgenciaModel, QAfterFilterCondition>
+  nameBetween(
+    String lower,
+    String upper, {
+    bool includeLower = true,
+    bool includeUpper = true,
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.between(
+          property: r'name',
+          lower: lower,
+          includeLower: includeLower,
+          upper: upper,
+          includeUpper: includeUpper,
+          caseSensitive: caseSensitive,
+        ),
+      );
+    });
+  }
+
+  QueryBuilder<TicketUrgenciaModel, TicketUrgenciaModel, QAfterFilterCondition>
+  nameStartsWith(String value, {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.startsWith(
+          property: r'name',
+          value: value,
+          caseSensitive: caseSensitive,
+        ),
+      );
+    });
+  }
+
+  QueryBuilder<TicketUrgenciaModel, TicketUrgenciaModel, QAfterFilterCondition>
+  nameEndsWith(String value, {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.endsWith(
+          property: r'name',
+          value: value,
+          caseSensitive: caseSensitive,
+        ),
+      );
+    });
+  }
+
+  QueryBuilder<TicketUrgenciaModel, TicketUrgenciaModel, QAfterFilterCondition>
+  nameContains(String value, {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.contains(
+          property: r'name',
+          value: value,
+          caseSensitive: caseSensitive,
+        ),
+      );
+    });
+  }
+
+  QueryBuilder<TicketUrgenciaModel, TicketUrgenciaModel, QAfterFilterCondition>
+  nameMatches(String pattern, {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.matches(
+          property: r'name',
+          wildcard: pattern,
+          caseSensitive: caseSensitive,
+        ),
+      );
+    });
+  }
+
+  QueryBuilder<TicketUrgenciaModel, TicketUrgenciaModel, QAfterFilterCondition>
+  nameIsEmpty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.equalTo(property: r'name', value: ''),
+      );
+    });
+  }
+
+  QueryBuilder<TicketUrgenciaModel, TicketUrgenciaModel, QAfterFilterCondition>
+  nameIsNotEmpty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.greaterThan(property: r'name', value: ''),
+      );
+    });
+  }
+
+  QueryBuilder<TicketUrgenciaModel, TicketUrgenciaModel, QAfterFilterCondition>
+  updatedAtEqualTo(DateTime value) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.equalTo(property: r'updatedAt', value: value),
+      );
+    });
+  }
+
+  QueryBuilder<TicketUrgenciaModel, TicketUrgenciaModel, QAfterFilterCondition>
+  updatedAtGreaterThan(DateTime value, {bool include = false}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.greaterThan(
+          include: include,
+          property: r'updatedAt',
+          value: value,
+        ),
+      );
+    });
+  }
+
+  QueryBuilder<TicketUrgenciaModel, TicketUrgenciaModel, QAfterFilterCondition>
+  updatedAtLessThan(DateTime value, {bool include = false}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.lessThan(
+          include: include,
+          property: r'updatedAt',
+          value: value,
+        ),
+      );
+    });
+  }
+
+  QueryBuilder<TicketUrgenciaModel, TicketUrgenciaModel, QAfterFilterCondition>
+  updatedAtBetween(
+    DateTime lower,
+    DateTime upper, {
+    bool includeLower = true,
+    bool includeUpper = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.between(
+          property: r'updatedAt',
+          lower: lower,
+          includeLower: includeLower,
+          upper: upper,
+          includeUpper: includeUpper,
+        ),
+      );
+    });
+  }
+}
+
+extension TicketUrgenciaModelQueryObject
+    on
+        QueryBuilder<
+          TicketUrgenciaModel,
+          TicketUrgenciaModel,
+          QFilterCondition
+        > {}
+
+extension TicketUrgenciaModelQueryLinks
+    on
+        QueryBuilder<
+          TicketUrgenciaModel,
+          TicketUrgenciaModel,
+          QFilterCondition
+        > {}
+
+extension TicketUrgenciaModelQuerySortBy
+    on QueryBuilder<TicketUrgenciaModel, TicketUrgenciaModel, QSortBy> {
+  QueryBuilder<TicketUrgenciaModel, TicketUrgenciaModel, QAfterSortBy>
+  sortByBackendId() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'backendId', Sort.asc);
+    });
+  }
+
+  QueryBuilder<TicketUrgenciaModel, TicketUrgenciaModel, QAfterSortBy>
+  sortByBackendIdDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'backendId', Sort.desc);
+    });
+  }
+
+  QueryBuilder<TicketUrgenciaModel, TicketUrgenciaModel, QAfterSortBy>
+  sortByName() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'name', Sort.asc);
+    });
+  }
+
+  QueryBuilder<TicketUrgenciaModel, TicketUrgenciaModel, QAfterSortBy>
+  sortByNameDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'name', Sort.desc);
+    });
+  }
+
+  QueryBuilder<TicketUrgenciaModel, TicketUrgenciaModel, QAfterSortBy>
+  sortByUpdatedAt() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'updatedAt', Sort.asc);
+    });
+  }
+
+  QueryBuilder<TicketUrgenciaModel, TicketUrgenciaModel, QAfterSortBy>
+  sortByUpdatedAtDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'updatedAt', Sort.desc);
+    });
+  }
+}
+
+extension TicketUrgenciaModelQuerySortThenBy
+    on QueryBuilder<TicketUrgenciaModel, TicketUrgenciaModel, QSortThenBy> {
+  QueryBuilder<TicketUrgenciaModel, TicketUrgenciaModel, QAfterSortBy>
+  thenByBackendId() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'backendId', Sort.asc);
+    });
+  }
+
+  QueryBuilder<TicketUrgenciaModel, TicketUrgenciaModel, QAfterSortBy>
+  thenByBackendIdDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'backendId', Sort.desc);
+    });
+  }
+
+  QueryBuilder<TicketUrgenciaModel, TicketUrgenciaModel, QAfterSortBy>
+  thenById() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'id', Sort.asc);
+    });
+  }
+
+  QueryBuilder<TicketUrgenciaModel, TicketUrgenciaModel, QAfterSortBy>
+  thenByIdDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'id', Sort.desc);
+    });
+  }
+
+  QueryBuilder<TicketUrgenciaModel, TicketUrgenciaModel, QAfterSortBy>
+  thenByName() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'name', Sort.asc);
+    });
+  }
+
+  QueryBuilder<TicketUrgenciaModel, TicketUrgenciaModel, QAfterSortBy>
+  thenByNameDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'name', Sort.desc);
+    });
+  }
+
+  QueryBuilder<TicketUrgenciaModel, TicketUrgenciaModel, QAfterSortBy>
+  thenByUpdatedAt() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'updatedAt', Sort.asc);
+    });
+  }
+
+  QueryBuilder<TicketUrgenciaModel, TicketUrgenciaModel, QAfterSortBy>
+  thenByUpdatedAtDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'updatedAt', Sort.desc);
+    });
+  }
+}
+
+extension TicketUrgenciaModelQueryWhereDistinct
+    on QueryBuilder<TicketUrgenciaModel, TicketUrgenciaModel, QDistinct> {
+  QueryBuilder<TicketUrgenciaModel, TicketUrgenciaModel, QDistinct>
+  distinctByBackendId() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addDistinctBy(r'backendId');
+    });
+  }
+
+  QueryBuilder<TicketUrgenciaModel, TicketUrgenciaModel, QDistinct>
+  distinctByName({bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addDistinctBy(r'name', caseSensitive: caseSensitive);
+    });
+  }
+
+  QueryBuilder<TicketUrgenciaModel, TicketUrgenciaModel, QDistinct>
+  distinctByUpdatedAt() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addDistinctBy(r'updatedAt');
+    });
+  }
+}
+
+extension TicketUrgenciaModelQueryProperty
+    on QueryBuilder<TicketUrgenciaModel, TicketUrgenciaModel, QQueryProperty> {
+  QueryBuilder<TicketUrgenciaModel, int, QQueryOperations> idProperty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addPropertyName(r'id');
+    });
+  }
+
+  QueryBuilder<TicketUrgenciaModel, int, QQueryOperations> backendIdProperty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addPropertyName(r'backendId');
+    });
+  }
+
+  QueryBuilder<TicketUrgenciaModel, String, QQueryOperations> nameProperty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addPropertyName(r'name');
+    });
+  }
+
+  QueryBuilder<TicketUrgenciaModel, DateTime, QQueryOperations>
+  updatedAtProperty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addPropertyName(r'updatedAt');
+    });
+  }
+}

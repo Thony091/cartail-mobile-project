@@ -35,12 +35,15 @@ class AdminAllTicketsPageState extends ConsumerState<AdminAllTicketsPage> {
   void initState() {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
+      print('🚀 AdminAllTicketsPageState.initState() - Loading data');
       ref.read(usersProvider.notifier).loadUsers();
       ref.read(clientsProvider.notifier).getClients();
       ref.read(reservationProvider.notifier).getReservations();
-      ref.read(ticketEstadosCrudProvider.notifier).load();
-      ref.read(ticketImportanciasCrudProvider.notifier).load();
-      ref.read(ticketUrgenciasCrudProvider.notifier).load();
+      // Refresh tickets explicitly
+      ref.refresh(ticketsProvider);
+      print('🎫 AdminAllTicketsPageState.initState() - Refreshed ticketsProvider');
+      // Note: ticketEstadosProvider, ticketImportanciasProvider, ticketUrgenciasProvider are FutureProviders
+      // They load automatically when watched, no need to call load() manually
     });
   }
 
@@ -56,9 +59,15 @@ class AdminAllTicketsPageState extends ConsumerState<AdminAllTicketsPage> {
     final ticketsState = ref.watch(ticketsProvider);
     final filtersState = ref.watch(ticketsFiltersProvider);
     final filtersNotifier = ref.read(ticketsFiltersProvider.notifier);
-    final estados = ref.watch(ticketEstadosProvider);
-    final importancias = ref.watch(ticketImportanciasProvider);
-    final urgencias = ref.watch(ticketUrgenciasProvider);
+    final estadosAsync = ref.watch(ticketEstadosProvider);
+    final importanciasAsync = ref.watch(ticketImportanciasProvider);
+    final urgenciasAsync = ref.watch(ticketUrgenciasProvider);
+    final estados =
+        estadosAsync.maybeWhen(data: (items) => items, orElse: () => const <lookup.State>[]);
+    final importancias =
+        importanciasAsync.maybeWhen(data: (items) => items, orElse: () => const <lookup.State>[]);
+    final urgencias =
+        urgenciasAsync.maybeWhen(data: (items) => items, orElse: () => const <lookup.State>[]);
     final servicesState = ref.watch(servicesProvider);
     final clientsState = ref.watch(clientsProvider);
     final reservationsById = ref.watch(reservationsByIdProvider);
@@ -290,9 +299,12 @@ class AdminAllTicketsPageState extends ConsumerState<AdminAllTicketsPage> {
   void _showFilterDialog(BuildContext context) {
     final filtersNotifier = ref.read(ticketsFiltersProvider.notifier);
     final filtersState = ref.read(ticketsFiltersProvider);
-    final estados = ref.read(ticketEstadosProvider);
-    final importancias = ref.read(ticketImportanciasProvider);
-    final urgencias = ref.read(ticketUrgenciasProvider);
+    final estadosCrudState = ref.read(ticketEstadosCrudProvider);
+    final importanciasCrudState = ref.read(ticketImportanciasCrudProvider);
+    final urgenciasCrudState = ref.read(ticketUrgenciasCrudProvider);
+    final estados = estadosCrudState.items;
+    final importancias = importanciasCrudState.items;
+    final urgencias = urgenciasCrudState.items;
     final servicesState = ref.read(servicesProvider);
     showDialog(
       context: context,

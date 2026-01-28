@@ -1,4 +1,5 @@
 import 'package:dio/dio.dart';
+import 'package:flutter/foundation.dart';
 
 import '../../../../config/config.dart';
 import '../../../shared/domain/entities/state.dart' as lookup;
@@ -33,8 +34,9 @@ class TicketLookupCrudDatasourceImpl extends TicketLookupCrudDatasource {
             .toList();
       }
       return [];
-    } catch (_) {
-      return [];
+    } catch (e) {
+      debugPrint('TicketLookupCrudDatasource.getAll() error for path=$path: $e');
+      rethrow;
     }
   }
 

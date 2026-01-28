@@ -18,7 +18,7 @@ class TicketDatasourceImpl extends TicketDatasource {
           baseUrl: Enviroment.baseUrl,
           headers: {
             'Content-Type': 'application/json',
-            // 'Authorization': 'Bearer $accessToken',
+            if (accessToken.isNotEmpty) 'Authorization': 'Bearer $accessToken',
           },
         ),
       );
@@ -38,12 +38,17 @@ class TicketDatasourceImpl extends TicketDatasource {
         options: Options(method: method),
       );
 
+      if (response.statusCode != 200 && response.statusCode != 201) {
+        throw Exception(
+          'createUpdateTicket failed with status ${response.statusCode}',
+        );
+      }
+
       final data = _extractData(response.data);
       if (data is Map<String, dynamic>) {
         return TicketMapper.jsonToEntity(data);
       }
-
-      return _emptyTicket();
+      throw Exception('createUpdateTicket returned empty payload');
     } catch (e) {
       throw Exception(e);
     }
@@ -76,18 +81,24 @@ class TicketDatasourceImpl extends TicketDatasource {
   Future<List<Ticket>> getTickets() async {
     try {
       final response = await dio.get('/ticket');
+      print('✅ TicketDatasource.getTickets() response: ${response.statusCode}');
       final List<Ticket> tickets = [];
       final data = _extractData(response.data);
+      print('📦 Extracted data type: ${data.runtimeType}, length: ${data is List ? data.length : 'N/A'}');
       if (data is List) {
         for (final ticket in data) {
           if (ticket is Map<String, dynamic>) {
-            tickets.add(TicketMapper.jsonToEntity(ticket));
+            final mapped = TicketMapper.jsonToEntity(ticket);
+            print('🎫 Mapped ticket: id=${mapped.id}, nombre=${mapped.nombre}');
+            tickets.add(mapped);
           }
         }
       }
+      print('✅ TicketDatasource.getTickets() returning ${tickets.length} tickets');
       return tickets;
     } catch (e) {
-      return [];
+      print('❌ TicketDatasource.getTickets() error: $e');
+      rethrow;
     }
   }
 

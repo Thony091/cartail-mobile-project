@@ -28,7 +28,7 @@ class VehicleRepositoryImpl extends VehicleRepository {
 
   @override
   Future<List<Vehicle>> getVehicles() {
-    return _offlineFirstExecutor.read<List<Vehicle>>(
+    return _offlineFirstExecutor.readStaleWhileRevalidate<List<Vehicle>>(
       local: () async {
         final models = await _localDatasource.getAll();
         return models.map(_isarToEntity).toList();
@@ -37,12 +37,13 @@ class VehicleRepositoryImpl extends VehicleRepository {
       cache: (vehicles) async {
         await _cacheAll(vehicles);
       },
+      isEmpty: (vehicles) => vehicles.isEmpty,
     );
   }
 
   @override
   Future<Vehicle> getVehicleById(String id) {
-    return _offlineFirstExecutor.read<Vehicle>(
+    return _offlineFirstExecutor.readStaleWhileRevalidate<Vehicle>(
       local: () async {
         final model = await _localDatasource.getByBackendId(id);
         if (model == null) {

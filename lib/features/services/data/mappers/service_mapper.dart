@@ -32,14 +32,26 @@ class ServiceMapper {
   static List<String> _readImages(Map<String, dynamic> json) {
     final images = <String>[];
     if (json['images'] is List) {
-      images.addAll(List<String>.from(json['images']));
-    } else if (json['imagen'] is String && (json['imagen'] as String).isNotEmpty) {
-      images.add(json['imagen'] as String);
+      // Filtra URLs vacías y convierte a strings
+      final imagesList = (json['images'] as List)
+          .map((img) => img?.toString() ?? '')
+          .where((img) => img.trim().isNotEmpty)
+          .toList();
+      images.addAll(imagesList);
+    } else if (json['imagen'] is String && (json['imagen'] as String).trim().isNotEmpty) {
+      images.add((json['imagen'] as String).trim());
     }
 
     return images.map((image) {
-      if (image.startsWith('http') || image.startsWith('https')) return image;
-      return 'https://ar-detailing.images.prod.s3.amazonaws.com/$image';
-    }).toList();
+      final trimmed = image.trim();
+      // Si ya es una URL HTTP/HTTPS, usa tal cual
+      if (trimmed.startsWith('http://') || trimmed.startsWith('https://')) {
+        return trimmed;
+      }
+      // Si está vacío después de trim, no la agregues
+      if (trimmed.isEmpty) return '';
+      // Construye URL de S3 para rutas relativas
+      return 'https://ar-detailing.images.prod.s3.amazonaws.com/$trimmed';
+    }).where((img) => img.isNotEmpty).toList();
   }
 }

@@ -5,26 +5,21 @@ import 'package:intl/intl.dart';
 import '../../../../config/services/error_handler_service.dart';
 import '../../../../presentation/presentation_container.dart';
 import '../../../auth/presentation/providers/better_auth_provider.dart';
+import '../../domain/entities/reservation.dart';
 import '../../../slot/domain/entities/slot.dart';
 import '../../../slot/presentation/providers/slot_repository_provider.dart';
-// import '../../../ticket/presentation/providers/tickets_provider.dart';
+import '../models/reservation_payment_session.dart';
+import 'reservation_payment_usecase_providers.dart';
 
 final reservationFormProvider = StateNotifierProvider.autoDispose<ReservationFormNotifier, ReservationFormState>((ref) {
-  final createReservationCallback = ref.watch(reservationProvider.notifier).createReservation;
-
-  return ReservationFormNotifier(
-    createReservationCallback: createReservationCallback,
-    ref: ref,
-  );
+  return ReservationFormNotifier(ref: ref);
 });
 
 class ReservationFormNotifier extends StateNotifier<ReservationFormState>{
 
-  final Future<bool> Function( Map<String, dynamic> reservationSimilar ) createReservationCallback;
   final Ref ref;
 
   ReservationFormNotifier({
-    required this.createReservationCallback,
     required this.ref,
   }): super( ReservationFormState() );
 
@@ -139,7 +134,7 @@ class ReservationFormNotifier extends StateNotifier<ReservationFormState>{
     );
   }
 
-  Future<bool> onFormSubmit() async {
+  Future<ReservationPaymentSession?> onFormSubmit() async {
     // Limpiar error previo
     state = state.copyWith(errorMessage: '');
 
@@ -154,16 +149,34 @@ class ReservationFormNotifier extends StateNotifier<ReservationFormState>{
             slotErrorMessage: 'Debes seleccionar un horario disponible',
           );
         }
-        return false;
+        return null;
       }
       if (state.importanceId == null || state.urgencyId == null) {
-        return false;
+        state = state.copyWith(
+          errorMessage: 'Debes seleccionar importancia y urgencia',
+        );
+        return null;
       }
 
       state = state.copyWith( isPosting: true );
 
       final clientId = await _ensureClientId();
-      if (clientId == null) return false;
+      if (clientId == null) {
+        final userData = ref.read(betterAuthProvider).user;
+        final needsClientInfo = userData == null ||
+            (userData.name?.isEmpty ?? true) ||
+            userData.email.isEmpty;
+
+        final errorMsg = needsClientInfo
+            ? 'Debes completar nombre y correo electrónico'
+            : 'No se pudo crear el cliente';
+
+        state = state.copyWith(
+          isPosting: false,
+          errorMessage: errorMsg,
+        );
+        return null;
+      }
 
       final slotRepository = ref.read(slotRepositoryProvider);
       final slot = await slotRepository.getSlotById(state.selectedSlotId!);
@@ -174,7 +187,7 @@ class ReservationFormNotifier extends StateNotifier<ReservationFormState>{
           clearSelectedSlotId: true,
         );
         await _loadAvailableSlots(force: true);
-        return false;
+        return null;
       }
 
       final reservationSimilar = {
@@ -189,21 +202,47 @@ class ReservationFormNotifier extends StateNotifier<ReservationFormState>{
         'idSlot': slot.id,
       };
 
-      final created = await createReservationCallback(reservationSimilar);
-      if (created) {
-        await ref.read(ticketsProvider.notifier).getTickets();
-      }
+      // Inicia el pago en backend (no se crea reserva local antes de pagar).
+      final paymentInit = await ref.read(
+        iniciarPagoReservaProvider(ReservationPaymentInitPayload(reservationSimilar)).future,
+      );
 
       state = state.copyWith( isPosting: false );
 
-      return created;
+      final serviceName = _resolveServiceName(state.serviceId);
+      final reservationId = paymentInit.reservationBackendId ??
+          paymentInit.paymentId ??
+          'paid-${DateTime.now().millisecondsSinceEpoch}';
+
+      // Se prepara el borrador local para confirmar después del pago.
+      return ReservationPaymentSession(
+        paymentUrl: paymentInit.paymentUrl,
+        reservation: Reservation(
+          id: reservationId,
+          name: _resolveClientName(),
+          rut: '',
+          email: _resolveClientEmail(),
+          reservationDate: slot.date,
+          reservationTime: slot.startTime,
+          serviceName: serviceName,
+          vehiclePlate: state.vehiclePlate.value,
+          endTimeEstimated: slot.endTime,
+          customerNotes: state.customerNotes.value,
+          mechanicNotes: state.mechanicNotes.value,
+          reminder: state.reminder,
+          statusId: state.statusId,
+          serviceId: int.tryParse(state.serviceId),
+          clientId: clientId,
+          slotId: slot.id,
+        ),
+      );
 
     } catch (e) {
       state = state.copyWith(
         isPosting: false,
         errorMessage: ErrorHandlerService.readableError(e),
       );
-      return false;
+      return null;
     }
 
   }
@@ -256,6 +295,30 @@ class ReservationFormNotifier extends StateNotifier<ReservationFormState>{
       return '${parts[0].padLeft(2, '0')}:${parts[1].padLeft(2, '0')}';
     }
     return value;
+  }
+
+  String _resolveServiceName(String serviceId) {
+    final servicesState = ref.read(servicesProvider);
+    for (final service in servicesState.services) {
+      if (service.id == serviceId) {
+        return service.name;
+      }
+    }
+    return serviceId;
+  }
+
+  String _resolveClientName() {
+    final userData = ref.read(betterAuthProvider).user;
+    return (userData?.name?.isNotEmpty ?? false)
+        ? userData!.name!
+        : state.clientName.value;
+  }
+
+  String _resolveClientEmail() {
+    final userData = ref.read(betterAuthProvider).user;
+    return (userData?.email.isNotEmpty ?? false)
+        ? userData!.email
+        : state.clientEmail.value;
   }
 
   void _touchEveryField() {

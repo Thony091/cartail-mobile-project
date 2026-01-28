@@ -29,8 +29,8 @@ class ProfileHeader extends StatelessWidget {
                 width: 100,
                 height: 100,
                 decoration: BoxDecoration(
-                  gradient: LinearGradient(
-                    colors: [const Color(0xFF3498db), const Color(0xFF2980b9)],
+                  gradient: const LinearGradient(
+                    colors: [Color(0xFF3498db), Color(0xFF2980b9)],
                   ),
                   borderRadius: BorderRadius.circular(50),
                   boxShadow: [
@@ -167,8 +167,16 @@ class PersonalInfoSection extends StatelessWidget {
             label: 'Correo Electrónico',
             value: user.email,
           ),
-          InfoItem(icon: Icons.phone, label: 'Teléfono', value: user.telefono),
-          InfoItem(icon: Icons.badge, label: 'RUT', value: user.rut),
+          InfoItem(
+            icon: Icons.phone,
+            label: 'Teléfono',
+            value: user.telefono,
+          ),
+          InfoItem(
+            icon: Icons.badge,
+            label: 'RUT',
+            value: user.rut,
+          ),
 
           if (user.bio.isNotEmpty) ...[
             const SizedBox(height: 16),
@@ -185,7 +193,7 @@ class PersonalInfoSection extends StatelessWidget {
   }
 }
 
-class InfoItem extends StatelessWidget {
+class InfoItem extends StatefulWidget {
   final IconData icon;
   final String label;
   final String value;
@@ -200,7 +208,23 @@ class InfoItem extends StatelessWidget {
   });
 
   @override
+  State<InfoItem> createState() => _InfoItemState();
+}
+
+class _InfoItemState extends State<InfoItem> {
+  late bool _isExpanded;
+
+  @override
+  void initState() {
+    super.initState();
+    _isExpanded = false;
+  }
+
+  @override
   Widget build(BuildContext context) {
+    final shouldShowExpandButton = widget.value.length > 50 && widget.maxLines > 1;
+    final displayMaxLines = _isExpanded ? null : widget.maxLines;
+
     return Padding(
       padding: const EdgeInsets.only(bottom: 16),
       child: Row(
@@ -210,10 +234,10 @@ class InfoItem extends StatelessWidget {
             width: 40,
             height: 40,
             decoration: BoxDecoration(
-              color: const Color(0xFF3498db).withOpacity(0.1),
+              color: const Color(0xFF3498db).withValues(alpha: 0.1),
               borderRadius: BorderRadius.circular(12),
             ),
-            child: Icon(icon, color: const Color(0xFF3498db), size: 20),
+            child: Icon(widget.icon, color: const Color(0xFF3498db), size: 20),
           ),
 
           const SizedBox(width: 16),
@@ -223,7 +247,7 @@ class InfoItem extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  label,
+                  widget.label,
                   style: const TextStyle(
                     fontSize: 12,
                     fontWeight: FontWeight.w600,
@@ -232,15 +256,30 @@ class InfoItem extends StatelessWidget {
                 ),
                 const SizedBox(height: 4),
                 Text(
-                  value,
+                  widget.value,
                   style: const TextStyle(
                     fontSize: 16,
                     fontWeight: FontWeight.w500,
                     color: Color(0xFF2c3e50),
                   ),
-                  maxLines: maxLines,
-                  overflow: TextOverflow.ellipsis,
+                  maxLines: displayMaxLines,
+                  overflow: _isExpanded ? TextOverflow.visible : TextOverflow.ellipsis,
                 ),
+                if (shouldShowExpandButton)
+                  Padding(
+                    padding: const EdgeInsets.only(top: 8),
+                    child: GestureDetector(
+                      onTap: () => setState(() => _isExpanded = !_isExpanded),
+                      child: Text(
+                        _isExpanded ? 'Ver menos' : 'Ver más',
+                        style: const TextStyle(
+                          fontSize: 12,
+                          fontWeight: FontWeight.w600,
+                          color: Color(0xFF3498db),
+                        ),
+                      ),
+                    ),
+                  ),
               ],
             ),
           ),
@@ -251,60 +290,84 @@ class InfoItem extends StatelessWidget {
 }
 
 class AdminStatsSection extends StatelessWidget {
-  const AdminStatsSection({super.key});
+  final int servicesCount;
+  final int jobsCount;
+  final int reservationsCount;
+  final int messagesCount;
+
+  const AdminStatsSection({
+    super.key,
+    this.servicesCount = 0,
+    this.jobsCount = 0,
+    this.reservationsCount = 0,
+    this.messagesCount = 0,
+  });
 
   @override
   Widget build(BuildContext context) {
-    return ModernCard(
+    return const ModernCard(
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Text(
-            'Estadísticas',
-            style: TextStyle(
-              fontSize: 18,
-              fontWeight: FontWeight.w700,
-              color: Color(0xFF2c3e50),
-            ),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Text(
+                'Estadísticas',
+                style: TextStyle(
+                  fontSize: 18,
+                  fontWeight: FontWeight.w700,
+                  color: Color(0xFF2c3e50),
+                ),
+              ),
+              Text(
+                'Este mes',
+                style: TextStyle(
+                  fontSize: 12,
+                  fontWeight: FontWeight.w500,
+                  color: Color(0xFF95a5a6),
+                ),
+              ),
+            ],
           ),
 
-          const SizedBox(height: 20),
+          SizedBox(height: 20),
 
           Row(
             children: [
               Expanded(
                 child: StatItem(
                   label: 'Servicios',
-                  value: '24',
-                  color: const Color(0xFF3498db),
+                  value: '0',
+                  color: Color(0xFF3498db),
                 ),
               ),
               Expanded(
                 child: StatItem(
                   label: 'Trabajos',
-                  value: '156',
-                  color: const Color(0xFF27ae60),
+                  value: '0',
+                  color: Color(0xFF27ae60),
                 ),
               ),
             ],
           ),
 
-          const SizedBox(height: 16),
+          SizedBox(height: 16),
 
           Row(
             children: [
               Expanded(
                 child: StatItem(
                   label: 'Reservas',
-                  value: '89',
-                  color: const Color(0xFFf39c12),
+                  value: '0',
+                  color: Color(0xFFf39c12),
                 ),
               ),
               Expanded(
                 child: StatItem(
                   label: 'Mensajes',
-                  value: '12',
-                  color: const Color(0xFFe74c3c),
+                  value: '0',
+                  color: Color(0xFFe74c3c),
                 ),
               ),
             ],
@@ -389,7 +452,15 @@ class SettingsSection extends ConsumerWidget {
             subtitle: preferences.isDarkMode ? 'Oscuro' : 'Claro',
             trailing: Switch(
               value: preferences.isDarkMode,
-              onChanged: (_) => ref.read(userPreferencesProvider.notifier).toggleTheme(),
+              onChanged: (value) {
+                ref.read(userPreferencesProvider.notifier).toggleTheme();
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(
+                    content: Text(value ? 'Tema oscuro activado' : 'Tema claro activado'),
+                    duration: const Duration(seconds: 2),
+                  ),
+                );
+              },
             ),
           ),
 
@@ -402,18 +473,26 @@ class SettingsSection extends ConsumerWidget {
             subtitle: 'Gestionar notificaciones push',
             trailing: Switch(
               value: preferences.notificationsEnabled,
-              onChanged: (_) => ref.read(userPreferencesProvider.notifier).toggleNotifications(),
+              onChanged: (value) {
+                ref.read(userPreferencesProvider.notifier).toggleNotifications();
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(
+                    content: Text(value ? 'Notificaciones activadas' : 'Notificaciones desactivadas'),
+                    duration: const Duration(seconds: 2),
+                  ),
+                );
+              },
             ),
           ),
 
           const Divider(height: 1),
 
-
-          // Idioma - Deshabilitado (sin funcionalidad)
+          // Idioma - No disponible
           _SettingItem(
             icon: Icons.language,
             title: 'Idioma',
             subtitle: 'Español (Chile)',
+            isDisabled: true,
             onTap: null,
           ),
 
@@ -437,6 +516,7 @@ class _SettingItem extends StatelessWidget {
   final String subtitle;
   final Widget? trailing;
   final VoidCallback? onTap;
+  final bool isDisabled;
 
   const _SettingItem({
     required this.icon,
@@ -444,36 +524,44 @@ class _SettingItem extends StatelessWidget {
     required this.subtitle,
     this.trailing,
     this.onTap,
+    this.isDisabled = false,
   });
 
   @override
   Widget build(BuildContext context) {
+    final isEnabled = onTap != null || trailing != null;
+    final iconColor = isDisabled ? const Color(0xFFbdc3c7) : const Color(0xFF7f8c8d);
+    final titleColor = isDisabled ? const Color(0xFFbdc3c7) : const Color(0xFF2c3e50);
+    final subtitleColor = isDisabled ? const Color(0xFFecf0f1) : const Color(0xFF7f8c8d);
+
     return ListTile(
       contentPadding: EdgeInsets.zero,
       leading: Container(
         width: 40,
         height: 40,
         decoration: BoxDecoration(
-          color: const Color(0xFF7f8c8d).withOpacity(0.1),
+          color: iconColor.withValues(alpha: 0.1),
           borderRadius: BorderRadius.circular(12),
         ),
-        child: Icon(icon, color: const Color(0xFF7f8c8d), size: 20),
+        child: Icon(icon, color: iconColor, size: 20),
       ),
       title: Text(
         title,
-        style: const TextStyle(
+        style: TextStyle(
           fontSize: 16,
           fontWeight: FontWeight.w600,
-          color: Color(0xFF2c3e50),
+          color: titleColor,
         ),
       ),
       subtitle: Text(
         subtitle,
-        style: const TextStyle(fontSize: 14, color: Color(0xFF7f8c8d)),
+        style: TextStyle(fontSize: 14, color: subtitleColor),
       ),
-      trailing: trailing ?? (onTap != null ? const Icon(Icons.chevron_right, color: Color(0xFF7f8c8d)) : null),
-      onTap: onTap,
-      enabled: onTap != null || trailing != null,
+      trailing: isDisabled
+          ? const Icon(Icons.lock_outline, color: Color(0xFFbdc3c7), size: 18)
+          : trailing ?? (isEnabled ? const Icon(Icons.chevron_right, color: Color(0xFF7f8c8d)) : null),
+      onTap: isDisabled ? null : onTap,
+      enabled: (isEnabled || onTap != null) && !isDisabled,
     );
   }
 }

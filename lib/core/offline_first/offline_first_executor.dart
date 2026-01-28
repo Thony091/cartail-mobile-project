@@ -17,7 +17,7 @@ class OfflineFirstExecutor {
   final SyncQueueRepository syncQueueRepository;
 
   /// Timeout for remote operations when connection is low
-  static const Duration _lowConnectionTimeout = Duration(seconds: 5);
+  static const Duration _lowConnectionTimeout = Duration(seconds: 10);
 
   OfflineFirstExecutor({
     required this.connectivityService,
@@ -31,9 +31,17 @@ class OfflineFirstExecutor {
   }) async {
     final snapshot = await _latest();
 
-    // Always use local in offline mode
+    // For offline mode with read operations, try remote with generous timeout
+    // This allows initial data loading even with very slow connections
     if (snapshot.state == ConnectivityState.offline) {
-      return local();
+      try {
+        final result = await remote().timeout(const Duration(seconds: 15));
+        await cache(result);
+        return result;
+      } catch (e) {
+        // If remote fails/timeout, use local
+        return local();
+      }
     }
 
     // For low connection, try remote with timeout, fallback to local
@@ -52,6 +60,73 @@ class OfflineFirstExecutor {
     final result = await remote();
     await cache(result);
     return result;
+  }
+
+  /// Stale-while-revalidate:
+  /// - Retorna el cache local inmediatamente (si existe).
+  /// - En paralelo intenta remoto y actualiza cache.
+  /// - Si el cache local está vacío o falla, espera remoto.
+  Future<T> readStaleWhileRevalidate<T>({
+    required Future<T> Function() local,
+    required Future<T> Function() remote,
+    required Future<void> Function(T data) cache,
+    bool Function(T data)? isEmpty,
+  }) async {
+    T? localResult;
+    var localOk = false;
+
+    try {
+      localResult = await local();
+      localOk = true;
+    } catch (_) {
+      localOk = false;
+    }
+
+    final snapshot = await _latest();
+
+    Future<T> remoteFuture() async {
+      if (snapshot.state == ConnectivityState.offline) {
+        return remote().timeout(const Duration(seconds: 15));
+      }
+      if (snapshot.state == ConnectivityState.lowConnection) {
+        return remote().timeout(_lowConnectionTimeout);
+      }
+      return remote();
+    }
+
+    Future<void> runRemoteAndCache() async {
+      final result = await remoteFuture();
+      await cache(result);
+    }
+
+    if (localOk) {
+      final shouldWaitRemote =
+          isEmpty != null ? isEmpty(localResult as T) : false;
+      print('📊 OfflineFirstExecutor.readStaleWhileRevalidate() - localOk=$localOk, shouldWaitRemote=$shouldWaitRemote');
+      if (!shouldWaitRemote) {
+        // Fire-and-forget: revalida en background.
+        // ignore: unawaited_futures
+        runRemoteAndCache();
+        print('🔄 OfflineFirstExecutor - Returning local data, revalidating in background');
+        return localResult as T;
+      }
+    }
+
+    try {
+      print('⏳ OfflineFirstExecutor - Waiting for remote...');
+      final result = await remoteFuture();
+      print('✅ OfflineFirstExecutor - Got remote result, caching...');
+      await cache(result);
+      print('✅ OfflineFirstExecutor - Cached, returning result');
+      return result;
+    } catch (e) {
+      print('❌ OfflineFirstExecutor - Remote failed: $e');
+      if (localOk) {
+        print('🔄 OfflineFirstExecutor - Returning local fallback');
+        return localResult as T;
+      }
+      rethrow;
+    }
   }
 
   Future<T> write<T>({

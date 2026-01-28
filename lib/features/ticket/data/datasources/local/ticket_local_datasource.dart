@@ -6,6 +6,8 @@ abstract class TicketLocalDatasource {
   Future<List<TicketModel>> getAll();
   Future<List<TicketModel>> getUnsynced();
   Future<void> upsert(TicketModel model);
+  Future<void> upsertBatch(List<TicketModel> models);
+  Future<void> clearAndUpsertBatch(List<TicketModel> models);
   Future<void> deleteByBackendId(String backendId);
   Future<void> clear();
 }

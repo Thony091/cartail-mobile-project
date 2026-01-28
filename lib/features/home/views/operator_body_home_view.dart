@@ -415,16 +415,16 @@ class _QuickActionsCard extends StatelessWidget {
               fontWeight: FontWeight.w700,
             ),
           ),
-          const SizedBox(height: 20),
-          SizedBox(
-            width: double.infinity,
-            child: ModernButton(
-              text: 'Abrir mis tickets',
-              icon: Icons.label,
-              style: ModernButtonStyle.warning,
-              onPressed: () => context.push('/my-assigned-tickets'),
-            ),
-          ),
+          // const SizedBox(height: 20),
+          // SizedBox(
+          //   width: double.infinity,
+          //   child: ModernButton(
+          //     text: 'Abrir mis tickets',
+          //     icon: Icons.label,
+          //     style: ModernButtonStyle.warning,
+          //     onPressed: () => context.push('/my-assigned-tickets'),
+          //   ),
+          // ),
           const SizedBox(height: 12),
           SizedBox(
             width: double.infinity,
@@ -435,16 +435,16 @@ class _QuickActionsCard extends StatelessWidget {
               onPressed: () => context.push('/operator/work-orders'),
             ),
           ),
-          const SizedBox(height: 12),
-          SizedBox(
-            width: double.infinity,
-            child: ModernButton(
-              text: 'Actualizar estado',
-              icon: Icons.refresh,
-              style: ModernButtonStyle.secondary,
-              onPressed: () => context.push('/operator/work-orders'),
-            ),
-          ),
+          // const SizedBox(height: 12),
+          // SizedBox(
+          //   width: double.infinity,
+          //   child: ModernButton(
+          //     text: 'Actualizar estado',
+          //     icon: Icons.refresh,
+          //     style: ModernButtonStyle.secondary,
+          //     onPressed: () => context.push('/operator/work-orders'),
+          //   ),
+          // ),
         ],
       ),
     );

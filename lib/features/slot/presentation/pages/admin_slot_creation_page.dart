@@ -201,10 +201,12 @@ class _AdminSlotCreationPageState
         _serviceId == null ||
         _startTime == null ||
         _endTime == null) {
-      setState(() => _message = 'Completa todos los campos obligatorios.');
+    setState(() => _message = 'Completa todos los campos obligatorios.');
       return;
     }
-    final serviceId = int.tryParse(_serviceId!);
+    // Parsear serviceId, eliminando prefijo "local-" si existe
+    final serviceIdStr = _serviceId!.replaceFirst('local-', '');
+    final serviceId = int.tryParse(serviceIdStr);
     if (serviceId == null) {
       setState(() => _message = 'Servicio inválido.');
       return;
@@ -232,7 +234,32 @@ class _AdminSlotCreationPageState
         _endTime = null;
       });
     } catch (e) {
-      setState(() => _message = 'Error al crear el slot.');
+      debugPrint('❌ Error al crear el slot: $e');
+      String errorMessage = 'Error al crear el slot.';
+
+      // Intentar extraer mensaje del servidor si está disponible
+      if (e.toString().contains('DioException')) {
+        try {
+          // Buscar el mensaje en el JSON de respuesta
+          if (e.toString().contains('"message"')) {
+            final match = RegExp(r'"message":"([^"]+)"').firstMatch(e.toString());
+            if (match != null) {
+              errorMessage = match.group(1) ?? errorMessage;
+            }
+          }
+        } catch (_) {
+          // Si falla el parsing, usar el mensaje completo pero limitado
+          errorMessage = e.toString().length > 150
+              ? e.toString().substring(0, 150) + '...'
+              : e.toString();
+        }
+      } else {
+        errorMessage = e.toString().length > 150
+            ? e.toString().substring(0, 150) + '...'
+            : e.toString();
+      }
+
+      setState(() => _message = errorMessage);
     } finally {
       setState(() => _isSaving = false);
     }

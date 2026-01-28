@@ -9,14 +9,7 @@ import '../../../shared/presentation/shared/widgets/modern_button.dart';
 import '../../../shared/presentation/shared/widgets/modern_card.dart';
 import '../../../shared/presentation/shared/widgets/modern_input_field.dart';
 import '../providers/reservation_form_provider.dart';
-
-class ServiceOption {
-  final String id;
-  final String name;
-  final Color color;
-
-  ServiceOption(this.id, this.name, this.color);
-}
+import '../../../services/domain/entities/services.dart';
 
 class ReservationHeader extends StatelessWidget {
   const ReservationHeader({super.key});
@@ -72,7 +65,7 @@ class ReservationHeader extends StatelessWidget {
 }
 
 class ReservationForm extends ConsumerWidget {
-  final List<ServiceOption> services;
+  final List<Services> services;
   final GlobalKey<FormState> formKey;
   final VoidCallback onSubmit;
 
@@ -90,13 +83,13 @@ class ReservationForm extends ConsumerWidget {
     final authState = ref.watch(betterAuthProvider);
     final isAuthenticated = authState.isAuthenticated;
     final userData = authState.session?.user;
-    final importancias = ref.watch(ticketImportanciasProvider);
-    final urgencias = ref.watch(ticketUrgenciasProvider);
+    final importanciasAsync = ref.watch(ticketImportanciasProvider);
+    final urgenciasAsync = ref.watch(ticketUrgenciasProvider);
     final needsClientInfo = !isAuthenticated ||
         userData?.name == null ||
         userData?.email == null;
     final selectedService = formState.serviceId.isNotEmpty
-        ? formState.serviceId
+        ? formState.serviceId.replaceFirst('local-', '')
         : null;
     final selectedSlotId = formState.selectedSlotId;
     final selectedImportance = formState.importanceId;
@@ -119,12 +112,41 @@ class ReservationForm extends ConsumerWidget {
               ),
               const SizedBox(height: 20),
 
+              // Error message display
+              if (formState.isFormPosted && formState.errorMessage != null && formState.errorMessage!.isNotEmpty)
+                Container(
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFFe74c3c).withOpacity(0.1),
+                    border: Border.all(color: const Color(0xFFe74c3c), width: 1.5),
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: Row(
+                    children: [
+                      const Icon(Icons.error_outline, color: Color(0xFFe74c3c), size: 20),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: Text(
+                          formState.errorMessage!,
+                          style: const TextStyle(
+                            color: Color(0xFFe74c3c),
+                            fontSize: 13,
+                            fontWeight: FontWeight.w500,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              if (formState.isFormPosted && formState.errorMessage != null && formState.errorMessage!.isNotEmpty)
+                const SizedBox(height: 16),
+
               // Patente
               ModernInputField(
                 label: 'Patente del Vehículo (obligatorio)',
                 hint: 'ABCD12',
                 prefixIcon: const Icon(Icons.directions_car_outlined),
-                errorMessage: formState.vehiclePlate.errorMessage,
+                errorMessage: formState.isFormPosted ? formState.vehiclePlate.errorMessage : null,
                 onChanged: formNotifier.onVehiclePlateChange,
               ),
 
@@ -135,7 +157,7 @@ class ReservationForm extends ConsumerWidget {
                   label: 'Nombre del Cliente (obligatorio)',
                   hint: 'Ingresa tu nombre',
                   prefixIcon: const Icon(Icons.person_outline),
-                  errorMessage: formState.clientName.errorMessage,
+                  errorMessage: formState.isFormPosted ? formState.clientName.errorMessage : null,
                   onChanged: formNotifier.onClientNameChange,
                 ),
                 const SizedBox(height: 16),
@@ -144,15 +166,13 @@ class ReservationForm extends ConsumerWidget {
                   hint: 'ejemplo@correo.com',
                   keyboardType: TextInputType.emailAddress,
                   prefixIcon: const Icon(Icons.email_outlined),
-                  errorMessage: formState.clientEmail.errorMessage,
+                  errorMessage: formState.isFormPosted ? formState.clientEmail.errorMessage : null,
                   onChanged: formNotifier.onClientEmailChange,
                 ),
                 const SizedBox(height: 16),
-                ModernInputField(
+                _PhoneInputField(
                   label: 'Teléfono (opcional)',
                   hint: '+56 9 1234 5678',
-                  keyboardType: TextInputType.phone,
-                  prefixIcon: const Icon(Icons.phone_outlined),
                   onChanged: formNotifier.onClientPhoneChange,
                 ),
                 const SizedBox(height: 16),
@@ -173,50 +193,46 @@ class ReservationForm extends ConsumerWidget {
                 decoration: BoxDecoration(
                   color: Colors.white,
                   borderRadius: BorderRadius.circular(12),
-                  border: Border.all(color: const Color(0xFFe2e8f0)),
-                ),
-                child: DropdownButtonFormField<String>(
-                  value: selectedService,
-                  decoration: const InputDecoration(
-                    border: InputBorder.none,
-                    contentPadding: EdgeInsets.symmetric(
-                      horizontal: 16,
-                      vertical: 16,
-                    ),
-                    hintText: 'Elige una opción',
+                  border: Border.all(
+                    color: formState.isFormPosted && selectedService == null
+                        ? const Color(0xFFe74c3c)
+                        : const Color(0xFFe2e8f0),
                   ),
-                  items: services.map((service) {
-                    return DropdownMenuItem(
-                      value: service.id,
-                      child: Row(
-                        children: [
-                          Container(
-                            width: 8,
-                            height: 8,
-                            decoration: BoxDecoration(
-                              color: service.color,
-                              shape: BoxShape.circle,
-                            ),
-                          ),
-                          const SizedBox(width: 12),
-                          Text(service.name),
-                        ],
-                      ),
-                    );
-                  }).toList(),
-                  validator: (value) {
-                    if (value == null) {
-                      return 'Por favor selecciona un servicio';
-                    }
-                    return null;
-                  },
-                  onChanged: (value) {
-                    if (value != null) {
-                      formNotifier.onServiceIdChange(value);
-                    }
-                  },
+                ),
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                  child: DropdownButton<String>(
+                    value: selectedService,
+                    isExpanded: true,
+                    underline: const SizedBox(),
+                    hint: const Text('Elige una opción'),
+                    items: services.map((service) {
+                      final cleanId = service.id.replaceFirst('local-', '');
+                      return DropdownMenuItem(
+                        value: cleanId,
+                        child: Text(service.name),
+                      );
+                    }).toList(),
+                    onChanged: (value) {
+                      if (value != null) {
+                        formNotifier.onServiceIdChange(value);
+                      }
+                    },
+                  ),
                 ),
               ),
+              if (formState.isFormPosted && selectedService == null)
+                const Padding(
+                  padding: EdgeInsets.only(top: 8, left: 12),
+                  child: Text(
+                    'Por favor selecciona un servicio',
+                    style: TextStyle(
+                      color: Color(0xFFe74c3c),
+                      fontSize: 12,
+                      fontWeight: FontWeight.w500,
+                    ),
+                  ),
+                ),
 
               const SizedBox(height: 16),
 
@@ -254,10 +270,14 @@ class ReservationForm extends ConsumerWidget {
                   decoration: BoxDecoration(
                     color: Colors.white,
                     borderRadius: BorderRadius.circular(12),
-                    border: Border.all(color: const Color(0xFFe2e8f0)),
+                    border: Border.all(
+                      color: formState.isFormPosted && selectedSlotId == null
+                          ? const Color(0xFFe74c3c)
+                          : const Color(0xFFe2e8f0),
+                    ),
                   ),
                   child: DropdownButtonFormField<int>(
-                    value: selectedSlotId,
+                    initialValue: selectedSlotId,
                     decoration: const InputDecoration(
                       border: InputBorder.none,
                       contentPadding: EdgeInsets.symmetric(
@@ -295,6 +315,18 @@ class ReservationForm extends ConsumerWidget {
                       fontWeight: FontWeight.w500,
                     ),
                   ),
+                )
+              else if (formState.isFormPosted && selectedSlotId == null)
+                const Padding(
+                  padding: EdgeInsets.only(top: 8, left: 12),
+                  child: Text(
+                    'Debes seleccionar un horario disponible',
+                    style: TextStyle(
+                      color: Color(0xFFe74c3c),
+                      fontSize: 12,
+                      fontWeight: FontWeight.w500,
+                    ),
+                  ),
                 ),
 
               const SizedBox(height: 16),
@@ -309,11 +341,17 @@ class ReservationForm extends ConsumerWidget {
               ),
               const SizedBox(height: 12),
 
-              _buildLookupDropdown(
-                items: importancias,
-                value: selectedImportance,
-                hintText: 'Elige una importancia',
-                onChanged: formNotifier.onImportanceChange,
+              importanciasAsync.when(
+                loading: () => _buildLoadingDropdown('Elige una importancia'),
+                error: (err, stack) => _buildErrorDropdown('Error: ${err.toString()}'),
+                data: (importancias) => _buildLookupDropdown(
+                  items: importancias,
+                  value: selectedImportance,
+                  hintText: 'Elige una importancia',
+                  onChanged: formNotifier.onImportanceChange,
+                  isFormPosted: formState.isFormPosted,
+                  isLoading: false,
+                ),
               ),
 
               const SizedBox(height: 16),
@@ -328,11 +366,17 @@ class ReservationForm extends ConsumerWidget {
               ),
               const SizedBox(height: 12),
 
-              _buildLookupDropdown(
-                items: urgencias,
-                value: selectedUrgency,
-                hintText: 'Elige una urgencia',
-                onChanged: formNotifier.onUrgencyChange,
+              urgenciasAsync.when(
+                loading: () => _buildLoadingDropdown('Elige una urgencia'),
+                error: (err, stack) => _buildErrorDropdown('Error: ${err.toString()}'),
+                data: (urgencias) => _buildLookupDropdown(
+                  items: urgencias,
+                  value: selectedUrgency,
+                  hintText: 'Elige una urgencia',
+                  onChanged: formNotifier.onUrgencyChange,
+                  isFormPosted: formState.isFormPosted,
+                  isLoading: false,
+                ),
               ),
 
               const SizedBox(height: 16),
@@ -343,7 +387,7 @@ class ReservationForm extends ConsumerWidget {
                 hint: 'Describe cualquier detalle importante...',
                 maxLines: 4,
                 prefixIcon: const Icon(Icons.sticky_note_2_outlined),
-                errorMessage: formState.customerNotes.errorMessage,
+                errorMessage: formState.isFormPosted ? formState.customerNotes.errorMessage : null,
                 onChanged: formNotifier.onCustomerNotesChange,
               ),
 
@@ -377,42 +421,260 @@ class ReservationForm extends ConsumerWidget {
 
 }
 
-Widget _buildLookupDropdown({
-  required List<lookup.State> items,
-  required int? value,
-  required String hintText,
-  required ValueChanged<int?> onChanged,
-}) {
+/// Widget personalizado para entrada de teléfono con contador de dígitos
+class _PhoneInputField extends StatefulWidget {
+  final String label;
+  final String hint;
+  final ValueChanged<String> onChanged;
+
+  const _PhoneInputField({
+    required this.label,
+    required this.hint,
+    required this.onChanged,
+  });
+
+  @override
+  State<_PhoneInputField> createState() => _PhoneInputFieldState();
+}
+
+class _PhoneInputFieldState extends State<_PhoneInputField> {
+  late TextEditingController _controller;
+  int _digitCount = 0;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = TextEditingController();
+    _controller.addListener(_updateDigitCount);
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  void _updateDigitCount() {
+    final digits = _controller.text.replaceAll(RegExp(r'[^0-9]'), '');
+    setState(() => _digitCount = digits.length);
+    // Registra el valor completo en el formProvider
+    widget.onChanged(_controller.text);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          widget.label,
+          style: const TextStyle(
+            fontSize: 14,
+            fontWeight: FontWeight.w600,
+            color: Color(0xFF2c3e50),
+          ),
+        ),
+        const SizedBox(height: 8),
+        Container(
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(12),
+            border: Border.all(
+              color: _digitCount > 0
+                  ? const Color(0xFF27ae60).withValues(alpha: 0.5)
+                  : const Color(0xFFe2e8f0),
+              width: 2,
+            ),
+            boxShadow: _digitCount > 0
+                ? [
+                    BoxShadow(
+                      color: const Color(0xFF27ae60).withValues(alpha: 0.1),
+                      blurRadius: 8,
+                      offset: const Offset(0, 2),
+                    ),
+                  ]
+                : [],
+          ),
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+            child: Row(
+              children: [
+                const Icon(
+                  Icons.phone_outlined,
+                  color: Color(0xFF2c3e50),
+                  size: 20,
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: TextField(
+                    controller: _controller,
+                    keyboardType: TextInputType.phone,
+                    decoration: InputDecoration(
+                      border: InputBorder.none,
+                      hintText: widget.hint,
+                      hintStyle: const TextStyle(
+                        color: Color(0xFFbdc3c7),
+                        fontSize: 14,
+                      ),
+                      contentPadding: const EdgeInsets.symmetric(vertical: 12),
+                    ),
+                    style: const TextStyle(
+                      fontSize: 14,
+                      color: Color(0xFF2c3e50),
+                    ),
+                  ),
+                ),
+                // Contador visual de dígitos
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                  decoration: BoxDecoration(
+                    color: _digitCount > 0
+                        ? const Color(0xFF27ae60).withValues(alpha: 0.1)
+                        : const Color(0xFFecf0f1),
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: Text(
+                    '$_digitCount dígitos',
+                    style: TextStyle(
+                      fontSize: 12,
+                      fontWeight: FontWeight.w600,
+                      color: _digitCount > 0
+                          ? const Color(0xFF27ae60)
+                          : const Color(0xFF95a5a6),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+Widget _buildLoadingDropdown(String hintText) {
   return Container(
     decoration: BoxDecoration(
       color: Colors.white,
       borderRadius: BorderRadius.circular(12),
       border: Border.all(color: const Color(0xFFe2e8f0)),
     ),
-    child: DropdownButtonFormField<int>(
-      value: value,
-      decoration: InputDecoration(
-        border: InputBorder.none,
-        contentPadding: const EdgeInsets.symmetric(
-          horizontal: 16,
-          vertical: 16,
-        ),
-        hintText: hintText,
-      ),
-      items: items
-          .map((item) => DropdownMenuItem<int>(
-                value: item.id,
-                child: Text(item.name),
-              ))
-          .toList(),
-      validator: (value) {
-        if (value == null) {
-          return 'Campo obligatorio';
-        }
-        return null;
-      },
-      onChanged: onChanged,
+    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+    child: const SizedBox(
+      height: 20,
+      width: 20,
+      child: CircularProgressIndicator(strokeWidth: 2),
     ),
+  );
+}
+
+Widget _buildErrorDropdown(String errorMessage) {
+  return Container(
+    decoration: BoxDecoration(
+      color: Colors.white,
+      borderRadius: BorderRadius.circular(12),
+      border: Border.all(color: const Color(0xFFe74c3c)),
+    ),
+    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+    child: Row(
+      children: [
+        const Icon(Icons.error_outline, color: Color(0xFFe74c3c), size: 18),
+        const SizedBox(width: 12),
+        Expanded(
+          child: Text(
+            errorMessage,
+            style: const TextStyle(
+              color: Color(0xFFe74c3c),
+              fontSize: 13,
+            ),
+          ),
+        ),
+      ],
+    ),
+  );
+}
+
+Widget _buildLookupDropdown({
+  required List<lookup.State> items,
+  required int? value,
+  required String hintText,
+  required ValueChanged<int?> onChanged,
+  required bool isFormPosted,
+  required bool isLoading,
+}) {
+  final hasError = isFormPosted && value == null;
+
+  if (isLoading) {
+    return _buildLoadingDropdown(hintText);
+  }
+
+  if (items.isEmpty) {
+    return Container(
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: const Color(0xFFe2e8f0)),
+      ),
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+      child: const Text(
+        'No hay opciones disponibles',
+        style: TextStyle(color: Color(0xFF7f8c8d)),
+      ),
+    );
+  }
+
+  return Column(
+    crossAxisAlignment: CrossAxisAlignment.start,
+    children: [
+      Container(
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(
+            color: hasError
+                ? const Color(0xFFe74c3c)
+                : const Color(0xFFe2e8f0),
+          ),
+        ),
+        child: DropdownButtonFormField<int>(
+          initialValue: value,
+          decoration: InputDecoration(
+            border: InputBorder.none,
+            contentPadding: const EdgeInsets.symmetric(
+              horizontal: 16,
+              vertical: 16,
+            ),
+            hintText: hintText,
+          ),
+          items: items
+              .map((item) => DropdownMenuItem<int>(
+                    value: item.id,
+                    child: Text(item.name),
+                  ))
+              .toList(),
+          validator: (value) {
+            if (isFormPosted && value == null) {
+              return 'Campo obligatorio';
+            }
+            return null;
+          },
+          onChanged: onChanged,
+        ),
+      ),
+      if (hasError)
+        const Padding(
+          padding: EdgeInsets.only(top: 8, left: 12),
+          child: Text(
+            'Campo obligatorio',
+            style: TextStyle(
+              color: Color(0xFFe74c3c),
+              fontSize: 12,
+              fontWeight: FontWeight.w500,
+            ),
+          ),
+        ),
+    ],
   );
 }
 
@@ -449,7 +711,7 @@ class ReservationInfoCard extends StatelessWidget {
             _buildInfoItem(
               Icons.payment,
               'Pago',
-              'Se puede pagar en efectivo o tarjeta al momento del servicio',
+              'El pago se realiza en línea al confirmar la reserva.',
             ),
           ],
         ),

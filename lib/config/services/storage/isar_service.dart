@@ -36,7 +36,11 @@ class IsarService {
         SlotModelSchema,
         ReservationModelSchema,
         TicketModelSchema,
+        TicketEstadoModelSchema,
+        TicketImportanciaModelSchema,
+        TicketUrgenciaModelSchema,
         SyncQueueItemModelSchema,
+        TicketLookupModelSchema,
         // Aquí se pueden agregar más esquemas en el futuro
       ],
       directory: dir.path,

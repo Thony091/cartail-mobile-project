@@ -28,7 +28,7 @@ class SlotRepositoryImpl extends SlotRepository {
 
   @override
   Future<List<Slot>> getSlots() {
-    return _offlineFirstExecutor.read<List<Slot>>(
+    return _offlineFirstExecutor.readStaleWhileRevalidate<List<Slot>>(
       local: () async {
         final models = await _localDatasource.getAll();
         return models.map(_isarToEntity).toList();
@@ -37,12 +37,13 @@ class SlotRepositoryImpl extends SlotRepository {
       cache: (slots) async {
         await _cacheAll(slots);
       },
+      isEmpty: (slots) => slots.isEmpty,
     );
   }
 
   @override
   Future<List<Slot>> getSlotsByService(String serviceId) {
-    return _offlineFirstExecutor.read<List<Slot>>(
+    return _offlineFirstExecutor.readStaleWhileRevalidate<List<Slot>>(
       local: () async {
         final models = await _localDatasource.getAll();
         return models
@@ -54,13 +55,14 @@ class SlotRepositoryImpl extends SlotRepository {
       cache: (slots) async {
         await _cacheAll(slots);
       },
+      isEmpty: (slots) => slots.isEmpty,
     );
   }
 
   @override
   Future<List<Slot>> getAvailableSlots(DateTime date) {
     final dateKey = _formatDate(date);
-    return _offlineFirstExecutor.read<List<Slot>>(
+    return _offlineFirstExecutor.readStaleWhileRevalidate<List<Slot>>(
       local: () async {
         final models = await _localDatasource.getByDate(dateKey);
         return models.map(_isarToEntity).where((slot) => slot.isAvailable).toList();
@@ -69,13 +71,14 @@ class SlotRepositoryImpl extends SlotRepository {
       cache: (slots) async {
         await _cacheAll(slots);
       },
+      isEmpty: (slots) => slots.isEmpty,
     );
   }
 
   @override
   Future<Slot> getSlotById(int id) {
     final backendId = id.toString();
-    return _offlineFirstExecutor.read<Slot>(
+    return _offlineFirstExecutor.readStaleWhileRevalidate<Slot>(
       local: () async {
         final model = await _localDatasource.getByBackendId(backendId);
         if (model == null) {

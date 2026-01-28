@@ -29,12 +29,17 @@ class TicketsNotifier extends StateNotifier<TicketsState> {
   }
 
   Future<void> getTickets() async {
+    print('🎫 TicketsNotifier.getTickets() - Starting');
     state = state.copyWith(isLoading: true, error: '');
 
     try {
+      print('⏳ TicketsNotifier.getTickets() - Calling repository.getTickets()');
       final tickets = await ticketRepository.getTickets();
+      print('✅ TicketsNotifier.getTickets() - Got ${tickets.length} tickets from repository');
       state = state.copyWith(tickets: tickets, isLoading: false);
+      print('✅ TicketsNotifier.getTickets() - Updated state with ${tickets.length} tickets');
     } catch (e) {
+      print('❌ TicketsNotifier.getTickets() - Error: $e');
       state = state.copyWith(
         isLoading: false,
         error: 'Error al obtener los tickets',

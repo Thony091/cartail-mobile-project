@@ -29,7 +29,7 @@ class ServicesRepositoryImpl extends ServicesRepository {
 
   @override
   Future<List<Services>> getServices() {
-    return _offlineFirstExecutor.read<List<Services>>(
+    return _offlineFirstExecutor.readStaleWhileRevalidate<List<Services>>(
       local: () async {
         final models = await _localDatasource.getAll();
         return models.map(_isarToEntity).toList();
@@ -38,12 +38,13 @@ class ServicesRepositoryImpl extends ServicesRepository {
       cache: (services) async {
         await _cacheAll(services);
       },
+      isEmpty: (services) => services.isEmpty,
     );
   }
 
   @override
   Future<Services> getServiceById(String id) {
-    return _offlineFirstExecutor.read<Services>(
+    return _offlineFirstExecutor.readStaleWhileRevalidate<Services>(
       local: () async {
         final model = await _localDatasource.getByBackendId(id);
         if (model == null) {
@@ -139,7 +140,7 @@ class ServicesRepositoryImpl extends ServicesRepository {
   Services _ensureBackendId(Services service) {
     if (service.id.isNotEmpty) return service;
     return Services(
-      id: 'local-${DateTime.now().millisecondsSinceEpoch}',
+      id: _localId(),
       name: service.name,
       description: service.description,
       minPrice: service.minPrice,
@@ -151,6 +152,8 @@ class ServicesRepositoryImpl extends ServicesRepository {
       categoryId: service.categoryId,
     );
   }
+
+  String _localId() => DateTime.now().millisecondsSinceEpoch.toString();
 
   SyncActionType _actionFromMap(Map<String, dynamic> payload) {
     final id = payload['id']?.toString() ?? payload['backendId']?.toString();

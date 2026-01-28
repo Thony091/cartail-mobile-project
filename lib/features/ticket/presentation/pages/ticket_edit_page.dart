@@ -35,9 +35,8 @@ class _TicketEditPageState extends ConsumerState<TicketEditPage> {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
       ref.read(usersProvider.notifier).loadUsers();
-      ref.read(ticketEstadosCrudProvider.notifier).load(force: true);
-      ref.read(ticketImportanciasCrudProvider.notifier).load(force: true);
-      ref.read(ticketUrgenciasCrudProvider.notifier).load(force: true);
+      // Note: ticketEstadosProvider, ticketImportanciasProvider, ticketUrgenciasProvider are CRUD providers
+      // They load automatically when watched, no need to call load() manually
     });
   }
 
@@ -55,9 +54,12 @@ class _TicketEditPageState extends ConsumerState<TicketEditPage> {
       );
     }
 
-    final estados = ref.watch(ticketEstadosProvider);
-    final importancias = ref.watch(ticketImportanciasProvider);
-    final urgencias = ref.watch(ticketUrgenciasProvider);
+    final estadosAsync = ref.watch(ticketEstadosProvider);
+    final importanciasAsync = ref.watch(ticketImportanciasProvider);
+    final urgenciasAsync = ref.watch(ticketUrgenciasProvider);
+    final estados = estadosAsync.maybeWhen(data: (items) => items, orElse: () => const <lookup.State>[]);
+    final importancias = importanciasAsync.maybeWhen(data: (items) => items, orElse: () => const <lookup.State>[]);
+    final urgencias = urgenciasAsync.maybeWhen(data: (items) => items, orElse: () => const <lookup.State>[]);
     final operarios = ref.watch(operariosProvider);
     final operariosById = {
       for (final operator in operarios) operator.id: operator,
@@ -190,9 +192,12 @@ class _TicketEditPageState extends ConsumerState<TicketEditPage> {
 
     setState(() => _isSaving = true);
 
-    final estados = ref.read(ticketEstadosProvider);
-    final importancias = ref.read(ticketImportanciasProvider);
-    final urgencias = ref.read(ticketUrgenciasProvider);
+    final estadosCrudState = ref.read(ticketEstadosCrudProvider);
+    final importanciasCrudState = ref.read(ticketImportanciasCrudProvider);
+    final urgenciasCrudState = ref.read(ticketUrgenciasCrudProvider);
+    final estados = estadosCrudState.items;
+    final importancias = importanciasCrudState.items;
+    final urgencias = urgenciasCrudState.items;
     final estadoName = estados.isNotEmpty
         ? estados.firstWhere(
             (item) => item.id == _stateId,

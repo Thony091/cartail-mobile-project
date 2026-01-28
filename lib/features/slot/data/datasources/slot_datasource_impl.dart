@@ -129,20 +129,15 @@ class SlotDatasourceImpl extends SlotDatasource {
         data: _slotPayload(slot, includeId: false),
       );
 
-      Slot newSlot = Slot(
-        id: 0,
-        date: '',
-        startTime: '',
-        endTime: '',
-        serviceId: 0,
-      );
-      if (response.statusCode == 200 || response.statusCode == 201) {
-        var data = response.data;
-        if (data is Map<String, dynamic> && data.containsKey('data')) {
-          newSlot = SlotMapper.jsonToEntity(data['data']);
-        }
+      if (response.statusCode != 200 && response.statusCode != 201) {
+        throw Exception('createSlot failed with status ${response.statusCode}');
       }
-      return newSlot;
+
+      final data = response.data;
+      if (data is Map<String, dynamic> && data.containsKey('data')) {
+        return SlotMapper.jsonToEntity(data['data']);
+      }
+      throw Exception('createSlot returned empty payload');
     } catch (e) {
       throw Exception(e);
     }
@@ -159,20 +154,15 @@ class SlotDatasourceImpl extends SlotDatasource {
         data: payload,
       );
 
-      Slot updatedSlot = Slot(
-        id: 0,
-        date: '',
-        startTime: '',
-        endTime: '',
-        serviceId: 0,
-      );
-      if (response.statusCode == 200) {
-        var data = response.data;
-        if (data is Map<String, dynamic> && data.containsKey('data')) {
-          updatedSlot = SlotMapper.jsonToEntity(data['data']);
-        }
+      if (response.statusCode != 200 && response.statusCode != 201) {
+        throw Exception('updateSlot failed with status ${response.statusCode}');
       }
-      return updatedSlot;
+
+      final data = response.data;
+      if (data is Map<String, dynamic> && data.containsKey('data')) {
+        return SlotMapper.jsonToEntity(data['data']);
+      }
+      throw Exception('updateSlot returned empty payload');
     } catch (e) {
       throw Exception(e);
     }

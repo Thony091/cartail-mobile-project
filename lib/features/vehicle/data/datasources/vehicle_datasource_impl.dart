@@ -78,11 +78,17 @@ class VehicleDatasourceImpl extends VehicleDatasource {
         options: Options(method: method),
       );
 
+      if (response.statusCode != 200 && response.statusCode != 201) {
+        throw Exception(
+          'createUpdateVehicle failed with status ${response.statusCode}',
+        );
+      }
+
       final data = _extractData(response.data);
       if (data is Map<String, dynamic>) {
         return VehicleMapper.jsonToEntity(data);
       }
-      return _emptyVehicle();
+      throw Exception('createUpdateVehicle returned empty payload');
     } catch (e) {
       throw Exception(e);
     }

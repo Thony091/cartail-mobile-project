@@ -1,10 +1,23 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:portafolio_project/features/auth/presentation/providers/better_auth_provider.dart';
 
+import '../../../../core/providers/isar_service_provider.dart';
 import '../../../shared/domain/entities/state.dart' as lookup;
+import '../../data/datasources/local/ticket_estado_local_datasource.dart';
+import '../../data/datasources/local/ticket_estado_local_datasource_impl.dart';
+import '../../data/datasources/local/ticket_importancia_local_datasource.dart';
+import '../../data/datasources/local/ticket_importancia_local_datasource_impl.dart';
+import '../../data/datasources/local/ticket_urgencia_local_datasource.dart';
+import '../../data/datasources/local/ticket_urgencia_local_datasource_impl.dart';
 import '../../data/datasources/ticket_lookup_crud_datasource_impl.dart';
 import '../../data/repositories/ticket_lookup_crud_repository_impl.dart';
 import '../../domain/repositories/ticket_lookup_crud_repository.dart';
+import '../../data/repositories/ticket_estado_repository_impl.dart';
+import '../../data/repositories/ticket_importancia_repository_impl.dart';
+import '../../data/repositories/ticket_urgencia_repository_impl.dart';
+import '../../domain/repositories/ticket_estado_repository.dart';
+import '../../domain/repositories/ticket_importancia_repository.dart';
+import '../../domain/repositories/ticket_urgencia_repository.dart';
 
 class TicketLookupCrudState {
   final bool isLoading;
@@ -128,23 +141,95 @@ final ticketEstadosCrudProvider =
   return TicketLookupCrudNotifier(repo)..load();
 });
 
-final ticketEstadosProvider = Provider<List<lookup.State>>((ref) {
-  return ref.watch(ticketEstadosCrudProvider).items;
-});
-
 final ticketImportanciasRepositoryProvider =
     Provider<TicketLookupCrudRepository>((ref) {
   return _buildLookupRepository(ref, path: '/importancia-ticket');
 });
 
-final ticketImportanciasCrudProvider =
+final _ticketImportanciasCrudProvider =
     StateNotifierProvider<TicketLookupCrudNotifier, TicketLookupCrudState>((ref) {
   final repo = ref.watch(ticketImportanciasRepositoryProvider);
   return TicketLookupCrudNotifier(repo)..load();
 });
 
-final ticketImportanciasProvider = Provider<List<lookup.State>>((ref) {
-  return ref.watch(ticketImportanciasCrudProvider).items;
+// Local datasources por tipo
+final ticketEstadoLocalDatasourceProvider =
+    Provider<TicketEstadoLocalDatasource>((ref) {
+  return TicketEstadoLocalDatasourceImpl(
+    isarService: ref.watch(isarServiceProvider),
+  );
+});
+
+final ticketImportanciaLocalDatasourceProvider =
+    Provider<TicketImportanciaLocalDatasource>((ref) {
+  return TicketImportanciaLocalDatasourceImpl(
+    isarService: ref.watch(isarServiceProvider),
+  );
+});
+
+final ticketUrgenciaLocalDatasourceProvider =
+    Provider<TicketUrgenciaLocalDatasource>((ref) {
+  return TicketUrgenciaLocalDatasourceImpl(
+    isarService: ref.watch(isarServiceProvider),
+  );
+});
+
+// Repositories offline-first por tipo (si local vacío, va a remoto)
+final ticketEstadoRepositoryProvider =
+    Provider<TicketEstadoRepository>((ref) {
+  final accessToken = ref.watch(betterAuthProvider).token ?? '';
+  return TicketEstadoRepositoryImpl(
+    remoteDatasource: TicketLookupCrudDatasourceImpl(
+      path: '/estado-ticket',
+      accessToken: accessToken,
+    ),
+    localDatasource: ref.watch(ticketEstadoLocalDatasourceProvider),
+  );
+});
+
+final ticketImportanciaRepositoryProvider =
+    Provider<TicketImportanciaRepository>((ref) {
+  final accessToken = ref.watch(betterAuthProvider).token ?? '';
+  return TicketImportanciaRepositoryImpl(
+    remoteDatasource: TicketLookupCrudDatasourceImpl(
+      path: '/importancia-ticket',
+      accessToken: accessToken,
+    ),
+    localDatasource: ref.watch(ticketImportanciaLocalDatasourceProvider),
+  );
+});
+
+final ticketUrgenciaRepositoryProvider =
+    Provider<TicketUrgenciaRepository>((ref) {
+  final accessToken = ref.watch(betterAuthProvider).token ?? '';
+  return TicketUrgenciaRepositoryImpl(
+    remoteDatasource: TicketLookupCrudDatasourceImpl(
+      path: '/urgencia-ticket',
+      accessToken: accessToken,
+    ),
+    localDatasource: ref.watch(ticketUrgenciaLocalDatasourceProvider),
+  );
+});
+
+// Providers de lectura offline-first por tipo
+final ticketEstadosProvider = FutureProvider<List<lookup.State>>((ref) async {
+  final repo = ref.watch(ticketEstadoRepositoryProvider);
+  return repo.getAll();
+});
+
+final ticketImportanciasProvider = FutureProvider<List<lookup.State>>((ref) async {
+  final repo = ref.watch(ticketImportanciaRepositoryProvider);
+  return repo.getAll();
+});
+
+final ticketUrgenciasProvider = FutureProvider<List<lookup.State>>((ref) async {
+  final repo = ref.watch(ticketUrgenciaRepositoryProvider);
+  return repo.getAll();
+});
+
+// CRUD provider for compatibility
+final ticketImportanciasCrudProvider = Provider<TicketLookupCrudState>((ref) {
+  return ref.watch(_ticketImportanciasCrudProvider);
 });
 
 final ticketUrgenciasRepositoryProvider =
@@ -152,12 +237,13 @@ final ticketUrgenciasRepositoryProvider =
   return _buildLookupRepository(ref, path: '/urgencia-ticket');
 });
 
-final ticketUrgenciasCrudProvider =
+final _ticketUrgenciasCrudProvider =
     StateNotifierProvider<TicketLookupCrudNotifier, TicketLookupCrudState>((ref) {
   final repo = ref.watch(ticketUrgenciasRepositoryProvider);
   return TicketLookupCrudNotifier(repo)..load();
 });
 
-final ticketUrgenciasProvider = Provider<List<lookup.State>>((ref) {
-  return ref.watch(ticketUrgenciasCrudProvider).items;
+// CRUD provider for compatibility
+final ticketUrgenciasCrudProvider = Provider<TicketLookupCrudState>((ref) {
+  return ref.watch(_ticketUrgenciasCrudProvider);
 });

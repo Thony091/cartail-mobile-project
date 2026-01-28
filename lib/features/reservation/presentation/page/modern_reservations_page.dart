@@ -1,13 +1,14 @@
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 
 import '../../../../presentation/pages/auth/modern_scaffold_with_drawer.dart';
 import '../../../shared/presentation/shared/widgets/modern_button.dart';
 import 'modern_reservations_widgets.dart';
 import '../providers/reservation_form_provider.dart';
 import '../../../services/presentation/providers/services_provider.dart';
-import '../../../services/domain/entities/services.dart';
+import 'reservation_payment_webview_page.dart';
 
 class ModernReservationsPage extends ConsumerStatefulWidget {
   static const name = 'ModernReservationsPage';
@@ -26,7 +27,6 @@ class ModernReservationsPageState
   Widget build(BuildContext context) {
     final servicesState = ref.watch(servicesProvider);
     final services = servicesState.services;
-    final serviceOptions = _buildServiceOptions(services);
 
     return ModernScaffoldWithDrawer(
       title: 'Agenda tu Hora',
@@ -53,7 +53,7 @@ class ModernReservationsPageState
 
               // Formulario de reserva
               ReservationForm(
-                services: serviceOptions,
+                services: services,
                 formKey: _formKey,
                 onSubmit: _handleReservation,
               ),
@@ -70,56 +70,36 @@ class ModernReservationsPageState
   }
 
   void _handleReservation() async {
-    if (_formKey.currentState?.validate() ?? false) {
-      final providerState = ref.read(reservationFormProvider);
+    final notifier = ref.read(reservationFormProvider.notifier);
 
-      if (providerState.vehiclePlate.value.isEmpty) {
-        _showSnackBar('Por favor ingresa la patente del vehículo');
-        return;
+    try {
+      final paymentSession = await notifier.onFormSubmit();
+
+      if (!mounted) return;
+
+      if (paymentSession != null) {
+        final result = await context.push<ReservationPaymentResult>(
+          '/reservation-payment',
+          extra: paymentSession,
+        );
+        if (!mounted) return;
+        if (result?.success == true) {
+          _showSuccessDialog();
+          _showSuccessSnackBar(result?.message ?? 'Pago confirmado.');
+        } else if (result?.message != null) {
+          _showSnackBar(result!.message!);
+        }
+      } else {
+        final currentState = ref.read(reservationFormProvider);
+        final errorMessage = currentState.errorMessage;
+        if (errorMessage != null && errorMessage.isNotEmpty) {
+          _showSnackBar(errorMessage);
+        }
       }
-
-      if (providerState.serviceId.isEmpty) {
-        _showSnackBar('Por favor selecciona un servicio');
-        return;
-      }
-
-      if (providerState.selectedSlotId == null) {
-        _showSnackBar('Por favor selecciona un horario disponible');
-        return;
-      }
-
-      if (providerState.customerNotes.value.isEmpty) {
-        _showSnackBar('Por favor ingresa las notas del cliente');
-        return;
-      }
-
-      final created = await ref.read(reservationFormProvider.notifier).onFormSubmit();
-
-      if (mounted && created) {
-        _showSuccessDialog();
-      } else if (mounted && !created) {
-        _showSnackBar('No se pudo crear la reserva');
-      }
+    } catch (e) {
+      if (!mounted) return;
+      _showSnackBar('Error de conexión. Por favor, intenta nuevamente.');
     }
-  }
-
-  List<ServiceOption> _buildServiceOptions(List<Services> services) {
-    const colors = [
-      Color(0xFF3498db),
-      Color(0xFF27ae60),
-      Color(0xFFf39c12),
-      Color(0xFFe74c3c),
-      Color(0xFF9b59b6),
-    ];
-
-    return List.generate(services.length, (index) {
-      final service = services[index];
-      return ServiceOption(
-        service.id,
-        service.name,
-        colors[index % colors.length],
-      );
-    });
   }
 
   // String _formatDate(DateTime date) {
@@ -134,6 +114,17 @@ class ModernReservationsPageState
       SnackBar(
         content: Text(message),
         backgroundColor: const Color(0xFFe74c3c),
+        behavior: SnackBarBehavior.floating,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+      ),
+    );
+  }
+
+  void _showSuccessSnackBar(String message) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(message),
+        backgroundColor: const Color(0xFF27ae60),
         behavior: SnackBarBehavior.floating,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
       ),
@@ -163,7 +154,7 @@ class ModernReservationsPageState
             ),
             const SizedBox(height: 24),
             const Text(
-              '¡Reserva Exitosa!',
+              '¡Pago Confirmado!',
               style: TextStyle(
                 fontSize: 24,
                 fontWeight: FontWeight.w700,

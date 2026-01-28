@@ -6,6 +6,7 @@ import 'package:portafolio_project/presentation/pages/auth/modern_scaffold_with_
 
 import '../../../shared/presentation/shared/widgets/modern_button.dart';
 import 'modern_edit_profile_widgets.dart';
+import '../providers/user_usecase_providers.dart';
 
 class ModernEditProfilePage extends ConsumerStatefulWidget {
   static const name = 'ModernEditProfilePage';
@@ -102,7 +103,10 @@ class ModernEditProfilePageState extends ConsumerState<ModernEditProfilePage> {
             child: Column(
               children: [
                 // Avatar section
-                EditProfileAvatarSection(onChangeAvatar: _changeAvatar),
+                EditProfileAvatarSection(
+                  onChangeAvatar: _changeAvatar,
+                  currentImageUrl: ref.watch(betterAuthProvider).user?.image,
+                ),
 
                 const SizedBox(height: 24),
 
@@ -164,15 +168,26 @@ class ModernEditProfilePageState extends ConsumerState<ModernEditProfilePage> {
       setState(() {
         _isLoading = true;
       });
-      // Simular guardado
-      await Future.delayed(const Duration(seconds: 2));
+      try {
+        final payload = {
+          'nombre': _nameController.text.trim(),
+          'rut': _rutController.text.trim(),
+          'birthday': _birthdayController.text.trim(),
+          'phone': _phoneController.text.trim(),
+          'bio': _bioController.text.trim(),
+        };
 
-      setState(() {
-        _isLoading = false;
-      });
+        await ref.read(
+          updateUserProfileProvider(
+            UserProfileUpdateInput(data: payload),
+          ).future,
+        );
 
-      if (mounted) {
-        // Mostrar éxito
+        if (!mounted) return;
+        setState(() {
+          _isLoading = false;
+        });
+
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
             content: Text('Perfil actualizado correctamente'),
@@ -181,6 +196,17 @@ class ModernEditProfilePageState extends ConsumerState<ModernEditProfilePage> {
         );
 
         Navigator.of(context).pop();
+      } catch (_) {
+        if (!mounted) return;
+        setState(() {
+          _isLoading = false;
+        });
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('No se pudo actualizar el perfil'),
+            backgroundColor: Colors.redAccent,
+          ),
+        );
       }
     }
   }

@@ -189,3 +189,59 @@ class TicketModel {
   final service = IsarLink<ServiceModel>();
   final user = IsarLink<UserModel>();
 }
+
+@Collection()
+class TicketLookupModel {
+  Id id = Isar.autoIncrement;
+
+  @Index(unique: true)
+  late String key; // formato: "estado:1" o "importancia:1" o "urgencia:1"
+
+  @Index()
+  late String type; // "estado", "importancia", "urgencia"
+
+  @Index()
+  late int backendId;
+
+  late String name;
+  late DateTime updatedAt;
+}
+
+@Collection()
+class TicketEstadoModel {
+  Id id = Isar.autoIncrement;
+
+  @Index(unique: true)
+  late int backendId;
+
+  @Index()
+  late String name;
+
+  late DateTime updatedAt;
+}
+
+@Collection()
+class TicketImportanciaModel {
+  Id id = Isar.autoIncrement;
+
+  @Index(unique: true)
+  late int backendId;
+
+  @Index()
+  late String name;
+
+  late DateTime updatedAt;
+}
+
+@Collection()
+class TicketUrgenciaModel {
+  Id id = Isar.autoIncrement;
+
+  @Index(unique: true)
+  late int backendId;
+
+  @Index()
+  late String name;
+
+  late DateTime updatedAt;
+}

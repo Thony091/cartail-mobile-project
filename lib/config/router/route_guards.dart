@@ -13,6 +13,7 @@ class RouteGuards {
     '/help',
     '/about-us',
     '/reservations',
+    '/reservation-payment',
   ];
 
   /// Rutas que requieren autenticación (user, operator, admin)
@@ -44,6 +45,7 @@ class RouteGuards {
     '/admin-config-services',
     '/admin-config-works',
     '/admin-config-reservations',
+    '/admin-config-slots',
     '/admin-create-slot',
     '/admin-all-tickets',
     '/admin-assign-ticket',

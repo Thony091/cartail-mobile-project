@@ -40,6 +40,19 @@ class ModernServiceCard extends StatelessWidget {
                   image: NetworkImage(imageUrl),
                   fit: BoxFit.cover,
                   fadeInDuration: const Duration(milliseconds: 300),
+                  imageErrorBuilder: (context, error, stackTrace) {
+                    return Container(
+                      decoration: BoxDecoration(
+                        gradient: const LinearGradient(
+                          colors: [Color(0xFF3498db), Color(0xFF2980b9)],
+                          begin: Alignment.topLeft,
+                          end: Alignment.bottomRight,
+                        ),
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      child: Icon(icon, color: Colors.white, size: 48),
+                    );
+                  },
                 ),
               ),
             )

@@ -129,7 +129,7 @@ class ConnectivityServiceConfig {
     this.windowSize = 8,
     this.maxConsecutiveFailures = 3,
     this.intermitentFailureRateThreshold = 0.45,
-    this.highLatencyThresholdMs = 1200,
+    this.highLatencyThresholdMs = 2000,
     this.enableLogging = false,
   });
 }

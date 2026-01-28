@@ -10,6 +10,7 @@ import 'package:portafolio_project/features/services/presentation/page/modern_co
 import 'package:portafolio_project/features/user/presentation/profile/modern_edit_profile.dart';
 import 'package:portafolio_project/features/category/presentation/page/modern_config_categories_page.dart';
 import 'package:portafolio_project/features/category/presentation/page/modern_category_detail_page.dart';
+import 'package:portafolio_project/features/reservation/presentation/models/reservation_payment_session.dart';
 import 'package:portafolio_project/features/vehicle/presentation/pages/modern_vehicle_detail_page.dart';
 import 'package:portafolio_project/features/vehicle/presentation/pages/modern_vehicles_page.dart';
 import 'package:portafolio_project/features/auth/presentation/login/modern_login_page.dart';
@@ -26,6 +27,7 @@ import '../../features/realized_work/presentation/pages/modern_out_works.dart';
 // import '../../features/product/presentation/product/modern_product_detail_page.dart';
 import '../../features/auth/presentation/register/modern_register_page.dart';
 import '../../features/reservation/presentation/page/modern_reservations_page.dart';
+import '../../features/reservation/presentation/page/reservation_payment_webview_page.dart';
 import '../../features/auth/presentation/reset-password/modern_reset_password_page.dart';
 import '../../features/services/presentation/page/modern_service_detail_page.dart';
 import '../../features/services/presentation/page/modern_service_page.dart';
@@ -36,6 +38,7 @@ import '../../features/ticket/presentation/pages/ticket_edit_page.dart';
 import '../../features/ticket/presentation/pages/operator_assigned_tickets_page.dart';
 import '../../features/admin/presentation/ticket_assignment/admin_ticket_assignment_page.dart';
 import '../../features/slot/presentation/pages/admin_slot_creation_page.dart';
+import '../../features/slot/presentation/pages/admin_config_slots_page.dart';
 import '../../features/history/user_history_page.dart';
 import '../../features/operator/presentation/pages/operator_work_orders_page.dart';
 import '../../features/operator/presentation/pages/work_order_detail_page.dart';
@@ -124,6 +127,17 @@ final goRouterProvider = Provider((ref) {
         path: '/reservations',
         name: ModernReservationsPage.name,
         builder: (context, state) => const ModernReservationsPage(),
+      ),
+      GoRoute(
+        path: '/reservation-payment',
+        name: ReservationPaymentWebViewPage.name,
+        builder: (context, state) {
+          final session = state.extra;
+          if (session is! ReservationPaymentSession) {
+            return const ModernReservationsPage();
+          }
+          return ReservationPaymentWebViewPage(session: session);
+        },
       ),
 
       //* Services
@@ -380,6 +394,12 @@ final goRouterProvider = Provider((ref) {
         path: '/admin-create-slot',
         name: AdminSlotCreationPage.name,
         builder: (context, state) => const AdminSlotCreationPage(),
+      ),
+      //* Admin - Gestión de slots
+      GoRoute(
+        path: '/admin-config-slots',
+        name: AdminConfigSlotsPage.name,
+        builder: (context, state) => const AdminConfigSlotsPage(),
       ),
 
       //* Operator - Home

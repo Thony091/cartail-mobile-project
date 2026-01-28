@@ -44,9 +44,6 @@ class SlotLocalDatasourceImpl implements SlotLocalDatasource {
   Future<void> upsert(SlotModel model) async {
     await _isar.writeTxn(() async {
       await _isar.slotModels.put(model);
-      if (model.service.value != null) {
-        await model.service.save();
-      }
     });
   }
 

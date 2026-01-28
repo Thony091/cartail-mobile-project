@@ -8,7 +8,7 @@ import 'package:portafolio_project/features/client/presentation/providers/client
 import 'package:portafolio_project/features/reservation/domain/entities/reservation.dart';
 import 'package:portafolio_project/features/reservation/presentation/providers/reservation_derived_providers.dart';
 import '../../../../presentation/pages/auth/modern_scaffold_with_drawer.dart';
-import '../../../state/presentation/providers/states_provider.dart';
+import '../providers/ticket_lookup_crud_providers.dart';
 import 'widgets/ticket_widgets.dart';
 import '../providers/operator_ticket_progress_provider.dart';
 import '../providers/tickets_provider.dart';
@@ -350,7 +350,11 @@ class _OperatorTicketCardState extends ConsumerState<OperatorTicketCard> {
       }
     }
     final currentStateId = widget.ticket.estado.id;
-    final states = ref.watch(statesProvider);
+    final statesAsync = ref.watch(ticketEstadosProvider);
+    final states = statesAsync.maybeWhen(
+      data: (items) => items,
+      orElse: () => const [],
+    );
     final hasStates = states.isNotEmpty;
     final selectedStateName = hasStates
         ? states
@@ -436,8 +440,8 @@ class _OperatorTicketCardState extends ConsumerState<OperatorTicketCard> {
                       isExpanded: true,
                       items: hasStates
                           ? states
-                              .map(
-                                (state) => DropdownMenuItem(
+                              .map<DropdownMenuItem<int>>(
+                                (state) => DropdownMenuItem<int>(
                                   value: state.id,
                                   child: Text(state.name),
                                 ),
@@ -699,7 +703,11 @@ class _OperatorTicketCardState extends ConsumerState<OperatorTicketCard> {
     String operatorName,
     String clientName,
   ) async {
-    final states = ref.read(statesProvider);
+    final statesAsync = ref.read(ticketEstadosProvider);
+    final states = statesAsync.maybeWhen(
+      data: (items) => items,
+      orElse: () => const [],
+    );
     final operatorId = ref.read(currentOperatorIdProvider);
     await showModalBottomSheet<void>(
       context: context,
@@ -791,8 +799,8 @@ class _OperatorTicketCardState extends ConsumerState<OperatorTicketCard> {
                       ),
                       items: states.isNotEmpty
                           ? states
-                              .map(
-                                (state) => DropdownMenuItem(
+                              .map<DropdownMenuItem<int>>(
+                                (state) => DropdownMenuItem<int>(
                                   value: state.id,
                                   child: Text(state.name),
                                 ),

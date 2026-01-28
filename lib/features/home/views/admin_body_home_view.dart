@@ -11,6 +11,7 @@ import 'package:portafolio_project/features/ticket/presentation/providers/ticket
 import 'package:portafolio_project/features/reservation/presentation/providers/reservation_provider.dart';
 import 'package:portafolio_project/features/realized_work/presentation/providers/works_provider.dart';
 import 'package:portafolio_project/features/vehicle/presentation/providers/vehicles_provider.dart';
+import 'package:portafolio_project/features/slot/presentation/providers/slots_provider.dart';
 
 class AdminBodyHomeView extends ConsumerWidget {
   const AdminBodyHomeView({super.key});
@@ -24,6 +25,7 @@ class AdminBodyHomeView extends ConsumerWidget {
     final ticketState = ref.watch( ticketsProvider );
     final worksState = ref.watch( worksProvider );
     final vehiclesState = ref.watch( vehiclesProvider );
+    final slotsState = ref.watch( slotsProvider );
 
     return Padding(
       padding: const EdgeInsets.all(20),
@@ -69,6 +71,38 @@ class AdminBodyHomeView extends ConsumerWidget {
                   const Text(
                     'Gestiona tu negocio desde aquí',
                     style: TextStyle(fontSize: 14, color: Color(0xFF7f8c8d)),
+                  ),
+                  const SizedBox(height: 16),
+                  SizedBox(
+                    width: 150,
+                    height: 50,
+                    child: ElevatedButton.icon(
+                      onPressed: () {
+                        // ignore: unused_result
+                        ref.refresh(servicesProvider);
+                        // ignore: unused_result
+                        ref.refresh(messagesProvider);
+                        // ignore: unused_result
+                        ref.refresh(reservationProvider);
+                        // ignore: unused_result
+                        ref.refresh(ticketsProvider);
+                        // ignore: unused_result
+                        ref.refresh(worksProvider);
+                        // ignore: unused_result
+                        ref.refresh(vehiclesProvider);
+                        // ignore: unused_result
+                        ref.refresh(slotsProvider);
+                      },
+                      icon: const Icon(Icons.refresh),
+                      label: const Text('Refrescar'),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: const Color(0xFF3498db),
+                        foregroundColor: Colors.white,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                      ),
+                    ),
                   ),
                 ],
               ),
@@ -150,12 +184,12 @@ class AdminBodyHomeView extends ConsumerWidget {
                   ),
                 ),
                 const SizedBox(width: 16),
-                Expanded(
+                const Expanded(
                   child: StatCardWidget(
                     value: '0',
                     label: 'Operarios',
                     icon: Icons.people,
-                    color: const Color(0xFF16a085),
+                    color: Color(0xFF16a085),
                     modalType: DashboardModalType.operators,
                   ),
                 ),
@@ -179,12 +213,12 @@ class AdminBodyHomeView extends ConsumerWidget {
                   ),
                 ),
                 const SizedBox(width: 16),
-                const Expanded(
+                Expanded(
                   child: StatCardWidget(
-                    value: '0',
+                    value: slotsState.slots.length.toString(),
                     label: 'Espacios',
                     icon: Icons.schedule,
-                    color: Color(0xFF2980b9),
+                    color: const Color(0xFF2980b9),
                     modalType: DashboardModalType.slots,
                   ),
                 ),

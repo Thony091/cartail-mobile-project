@@ -66,9 +66,12 @@ class _TicketDetailPageState extends ConsumerState<TicketDetailPage> {
       for (final client in clientsState.clients) client.id.toString(): client,
     };
     final clientName = _resolveClientName(ticket, clientsById, reservationsById);
-    final estados = ref.watch(ticketEstadosProvider);
-    final importancias = ref.watch(ticketImportanciasProvider);
-    final urgencias = ref.watch(ticketUrgenciasProvider);
+    final estadosCrudState = ref.watch(ticketEstadosCrudProvider);
+    final importanciasCrudState = ref.watch(ticketImportanciasCrudProvider);
+    final urgenciasCrudState = ref.watch(ticketUrgenciasCrudProvider);
+    final estados = estadosCrudState.items;
+    final importancias = importanciasCrudState.items;
+    final urgencias = urgenciasCrudState.items;
     final estado = ticket.estado.nombre.isNotEmpty
         ? ticket.estado.nombre
         : _lookupName(estados, ticket.estado.id);

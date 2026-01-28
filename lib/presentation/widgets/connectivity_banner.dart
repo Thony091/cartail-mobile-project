@@ -27,8 +27,8 @@ class ConnectivityBannerLayer extends ConsumerWidget {
       children: [
         child,
         Positioned(
-          left: ModernAppTheme.paddingMedium,
-          right: ModernAppTheme.paddingMedium,
+          left: 60,
+          right: 60,
           top: MediaQuery.of(context).padding.top + ModernAppTheme.paddingMedium,
           child: snapshotAsync.when(
             data: (snapshot) => ConnectivityBanner(snapshot: snapshot),
@@ -124,8 +124,8 @@ class ConnectivityBanner extends StatelessWidget {
           ),
           child: Padding(
             padding: const EdgeInsets.symmetric(
-              horizontal: ModernAppTheme.paddingLarge,
-              vertical: ModernAppTheme.paddingMedium,
+              horizontal: ModernAppTheme.paddingMedium,
+              vertical: 8,
             ),
             child: Row(
               children: [
@@ -133,9 +133,9 @@ class ConnectivityBanner extends StatelessWidget {
                 Icon(
                   _getIcon(),
                   color: Colors.white,
-                  size: 24,
+                  size: 16,
                 ),
-                const SizedBox(width: ModernAppTheme.paddingLarge),
+                const SizedBox(width: 8),
 
                 // Contenido texto
                 Expanded(
@@ -147,21 +147,21 @@ class ConnectivityBanner extends StatelessWidget {
                         _getMessage(),
                         style: const TextStyle(
                           color: Colors.white,
-                          fontWeight: FontWeight.w800,
-                          fontSize: 15,
-                          letterSpacing: 0.2,
-                          height: 1.2,
+                          fontWeight: FontWeight.w700,
+                          fontSize: 12,
+                          letterSpacing: 0.1,
+                          height: 1.0,
                           decoration: TextDecoration.none,
                         ),
                       ),
-                      const SizedBox(height: 6),
+                      const SizedBox(height: 2),
                       Text(
                         _getSubtitle(),
                         style: TextStyle(
-                          color: Colors.white.withValues(alpha: 0.90),
+                          color: Colors.white.withValues(alpha: 0.85),
                           fontWeight: FontWeight.w500,
-                          fontSize: 13,
-                          height: 1.3,
+                          fontSize: 10,
+                          height: 1.1,
                           decoration: TextDecoration.none,
                         ),
                       ),
@@ -169,7 +169,7 @@ class ConnectivityBanner extends StatelessWidget {
                   ),
                 ),
 
-                const SizedBox(width: ModernAppTheme.paddingLarge),
+                const SizedBox(width: 8),
 
                 // Indicador de calidad (señal + latencia)
                 Column(
@@ -179,31 +179,31 @@ class ConnectivityBanner extends StatelessWidget {
                     // Barras de señal
                     Row(
                       mainAxisSize: MainAxisSize.min,
-                      spacing: 2.5,
+                      spacing: 1.2,
                       children: List.generate(
                         4,
                         (index) => Container(
-                          width: 2.5,
-                          height: 6 + (index * 2.5).toDouble(),
+                          width: 2,
+                          height: 4 + (index * 2).toDouble(),
                           decoration: BoxDecoration(
                             color: index < signalLevel
                                 ? Colors.white
                                 : Colors.white.withValues(alpha: 0.25),
-                            borderRadius: BorderRadius.circular(1.2),
+                            borderRadius: BorderRadius.circular(1),
                           ),
                         ),
                       ),
                     ),
-                    const SizedBox(height: 6),
+                    const SizedBox(height: 2),
                     // Latencia
                     if (hasLatency)
                       Text(
                         '${snapshot.latencyMs}ms',
                         style: TextStyle(
-                          color: Colors.white.withValues(alpha: 0.90),
-                          fontWeight: FontWeight.w700,
-                          fontSize: 12,
-                          height: 1.2,
+                          color: Colors.white.withValues(alpha: 0.85),
+                          fontWeight: FontWeight.w600,
+                          fontSize: 9,
+                          height: 1.0,
                           decoration: TextDecoration.none,
                         ),
                       ),

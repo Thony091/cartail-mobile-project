@@ -1,12 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import 'package:portafolio_project/features/message/presentation/providers/messages_provider.dart';
 import 'package:portafolio_project/features/reservation/presentation/providers/reservation_provider.dart';
 import 'package:portafolio_project/features/services/presentation/providers/services_provider.dart';
 import 'package:portafolio_project/features/ticket/presentation/providers/tickets_provider.dart';
 import 'package:portafolio_project/features/realized_work/presentation/providers/works_provider.dart';
 import 'package:portafolio_project/features/vehicle/presentation/providers/vehicles_provider.dart';
-import 'package:portafolio_project/features/slot/presentation/providers/slot_repository_provider.dart';
+import 'package:portafolio_project/features/slot/presentation/providers/slots_provider.dart';
 
 /// Modal para mostrar información detallada de Servicios
 class ServicesDetailModal extends ConsumerWidget {
@@ -937,6 +938,11 @@ class SlotsDetailModal extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final slotsState = ref.watch(slotsProvider);
+    final totalSlots = slotsState.slots.length;
+    final availableSlots = slotsState.slots.where((s) => s.isAvailable).length;
+    final occupiedSlots = totalSlots - availableSlots;
+
     return Dialog(
       backgroundColor: Colors.transparent,
       child: Container(
@@ -996,21 +1002,21 @@ class SlotsDetailModal extends ConsumerWidget {
                 children: [
                   _buildStatRow(
                     'Total de Slots',
-                    '0',
+                    totalSlots.toString(),
                     Icons.schedule,
                     const Color(0xFF2980b9),
                   ),
                   const SizedBox(height: 16),
                   _buildStatRow(
                     'Slots Disponibles',
-                    '0',
+                    availableSlots.toString(),
                     Icons.check_circle,
                     const Color(0xFF27ae60),
                   ),
                   const SizedBox(height: 16),
                   _buildStatRow(
                     'Slots Ocupados',
-                    '0',
+                    occupiedSlots.toString(),
                     Icons.close,
                     const Color(0xFFe74c3c),
                   ),
@@ -1026,9 +1032,9 @@ class SlotsDetailModal extends ConsumerWidget {
                           borderRadius: BorderRadius.circular(12),
                         ),
                       ),
-                      onPressed: () => Navigator.of(context).pop(),
+                      onPressed: () => context.push('/admin-config-slots'),
                       child: const Text(
-                        'Cerrar',
+                        'Ir a Gestión de Espacios',
                         style: TextStyle(
                           fontSize: 16,
                           fontWeight: FontWeight.w600,

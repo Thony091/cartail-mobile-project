@@ -94,10 +94,13 @@ class VehicleFormNotifier extends StateNotifier<VehicleFormState> {
 
     try {
       final result = await onSubmitCallback!(vehicleSimilar);
-      state = state.copyWith(isLoading: false);
+      state = state.copyWith(isLoading: false, errorMessage: null);
       return result != null;
     } catch (e) {
-      state = state.copyWith(isLoading: false);
+      state = state.copyWith(
+        isLoading: false,
+        errorMessage: e.toString(),
+      );
       return false;
     }
   }
@@ -129,6 +132,7 @@ class VehicleFormState {
   final Name year;
   final Name trim;
   final bool isYearValid;
+  final String? errorMessage;
 
   VehicleFormState({
     required this.id,
@@ -139,6 +143,7 @@ class VehicleFormState {
     this.year = const Name.pure(),
     this.trim = const Name.pure(),
     this.isYearValid = true,
+    this.errorMessage,
   });
 
   VehicleFormState copyWith({
@@ -150,6 +155,7 @@ class VehicleFormState {
     Name? year,
     Name? trim,
     bool? isYearValid,
+    String? errorMessage,
   }) => VehicleFormState(
       id: id ?? this.id,
       isFormValid: isFormValid ?? this.isFormValid,
@@ -159,5 +165,6 @@ class VehicleFormState {
       year: year ?? this.year,
       trim: trim ?? this.trim,
       isYearValid: isYearValid ?? this.isYearValid,
+      errorMessage: errorMessage ?? this.errorMessage,
     );
 }

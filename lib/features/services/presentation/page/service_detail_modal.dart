@@ -324,27 +324,6 @@ class ServiceDetailModal extends StatelessWidget {
       child: SafeArea(
         child: Row(
           children: [
-            // Expanded(
-            //   child: ModernButton(
-            //     text: 'Agregar al Carrito',
-            //     icon: Icons.shopping_cart_outlined,
-            //     style: ModernButtonStyle.primary,
-            //     onPressed: () {
-            //       onAddToCart?.call();
-            //       Navigator.of(context).pop();
-            //       ScaffoldMessenger.of(context).showSnackBar(
-            //         SnackBar(
-            //           content: Text('${service.name} agregado al carrito'),
-            //           backgroundColor: const Color(0xFF27ae60),
-            //           behavior: SnackBarBehavior.floating,
-            //           shape: RoundedRectangleBorder(
-            //             borderRadius: BorderRadius.circular(10),
-            //           ),
-            //         ),
-            //       );
-            //     },
-            //   ),
-            // ),
             const SizedBox(width: 12),
             Expanded(
               child: ModernButton(

@@ -28,24 +28,38 @@ class TicketRepositoryImpl extends TicketRepository {
   final TicketDatasource _remoteDatasource;
   final TicketLocalDatasource _localDatasource;
   final OfflineFirstExecutor _offlineFirstExecutor;
+  Future<void> _cacheChain = Future.value();
 
   @override
   Future<List<Ticket>> getTickets() {
-    return _offlineFirstExecutor.read<List<Ticket>>(
+    return _offlineFirstExecutor.readStaleWhileRevalidate<List<Ticket>>(
       local: () async {
+        print('📥 TicketRepositoryImpl.getTickets() - Reading from local cache');
         final models = await _localDatasource.getAll();
+        print('   📦 Found ${models.length} tickets in local cache');
         return models.map(_isarToEntity).toList();
       },
-      remote: _remoteDatasource.getTickets,
+      remote: () async {
+        print('🌐 TicketRepositoryImpl.getTickets() - Fetching from remote API');
+        final tickets = await _remoteDatasource.getTickets();
+        print('   ✅ Got ${tickets.length} tickets from remote');
+        return tickets;
+      },
       cache: (tickets) async {
+        print('💾 TicketRepositoryImpl.getTickets() - Caching ${tickets.length} tickets');
         await _cacheAll(tickets);
+      },
+      isEmpty: (tickets) {
+        final empty = tickets.isEmpty;
+        print('   📊 isEmpty check: $empty (count: ${tickets.length})');
+        return empty;
       },
     );
   }
 
   @override
   Future<Ticket> getTicketById(String id) {
-    return _offlineFirstExecutor.read<Ticket>(
+    return _offlineFirstExecutor.readStaleWhileRevalidate<Ticket>(
       local: () async {
         final model = await _localDatasource.getByBackendId(id);
         if (model == null) {
@@ -102,9 +116,25 @@ class TicketRepositoryImpl extends TicketRepository {
   }
 
   Future<void> _cacheAll(List<Ticket> tickets) async {
-    for (final ticket in tickets) {
-      await _localDatasource.upsert(_entityToIsar(ticket, isSynced: true));
-    }
+    final next = _cacheChain.then((_) async {
+      print('💾 TicketRepositoryImpl._cacheAll() - Converting ${tickets.length} tickets to Isar models');
+      final Map<String, Ticket> uniqueByBackendId = {};
+      for (final ticket in tickets) {
+        final backendId = ticket.id.toString();
+        if (backendId.isEmpty || backendId == '0') {
+          continue;
+        }
+        uniqueByBackendId[backendId] = ticket;
+      }
+      final models = uniqueByBackendId.values
+          .map((ticket) => _entityToIsar(ticket, isSynced: true))
+          .toList();
+      print('💾 TicketRepositoryImpl._cacheAll() - Clearing old tickets and batch upserting ${models.length} models in single transaction');
+      await _localDatasource.clearAndUpsertBatch(models);
+      print('✅ TicketRepositoryImpl._cacheAll() - Successfully cached ${models.length} tickets');
+    });
+    _cacheChain = next.catchError((_) {});
+    return next;
   }
 
   Ticket _isarToEntity(isar_models.TicketModel model) {
